@@ -14,61 +14,399 @@ if (!isset($_SESSION['login'])) {
 
 <head>
     <title>Dashboard</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+        crossorigin="anonymous">
 </head>
 
 <body>
 
-<h1>Dashboard</h1>
+<div class="container-fluid">
 
-<p>
-    Selamat datang,
-    <?php echo $_SESSION['nama']; ?>
-</p>
+    <div class="row">
 
-<p>
-    Role:
-    <?php echo $_SESSION['role']; ?>
-</p>
+        <!-- SIDEBAR -->
+        <div class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
 
-<hr>
+            <h4 class="text-white mb-4">
+                Sistem Pelanggaran
+            </h4>
 
-<?php if ($_SESSION['role'] == 'admin') { ?>
+            <ul class="nav nav-pills flex-column">
 
-    <h3>Menu Admin</h3>
-
-    <a href="admin/siswa.php">Kelola Siswa</a><br>
-    <a href="admin/kelas.php">Kelola Kelas</a><br>
-    <a href="admin/kategori_pelanggaran.php">
-        Kelola Kategori Pelanggaran
-    </a><br>
-    <a href="admin/pengguna.php">Kelola Pengguna</a><br>
-    <a href="admin/wali_kelas.php">Kelola Wali Kelas</a><br>
-
-<?php } ?>
+                <!-- DASHBOARD -->
+                <li class="nav-item mb-2">
+                    <a href="dashboard.php"
+                       class="nav-link active">
+                        Dashboard
+                    </a>
+                </li>
 
 
-<?php if ($_SESSION['role'] == 'guru') { ?>
+                <!-- ========================= -->
+                <!-- MENU KHUSUS ADMIN -->
+                <!-- ========================= -->
 
-    <h3>Menu Guru</h3>
+                <?php if ($_SESSION['role'] == 'admin') { ?>
 
-    <a href="guru/catat_pelanggaran.php">
-        Catat Pelanggaran
-    </a><br>
+                    <li class="nav-item mb-2">
+                        <a href="siswa.php"
+                           class="nav-link text-white">
+                            Kelola Siswa
+                        </a>
+                    </li>
 
-    <a href="guru/statistik.php">
-        Statistik
-    </a><br>
+                    <li class="nav-item mb-2">
+                        <a href="guru.php"
+                           class="nav-link text-white">
+                            Kelola Guru
+                        </a>
+                    </li>
 
-    <a href="guru/laporan.php">
-        Laporan
-    </a><br>
+                    <li class="nav-item mb-2">
+                        <a href="kelas.php"
+                           class="nav-link text-white">
+                            Kelola Kelas
+                        </a>
+                    </li>
 
-<?php } ?>
+                    <li class="nav-item mb-2">
+                        <a href="tahun_ajaran.php"
+                           class="nav-link text-white">
+                            Tahun Ajaran
+                        </a>
+                    </li>
+
+                    <li class="nav-item mb-2">
+                        <a href="penempatan_siswa.php"
+                           class="nav-link text-white">
+                            Penempatan Siswa
+                        </a>
+                    </li>
+
+                    <li class="nav-item mb-2">
+                        <a href="wali_kelas.php"
+                           class="nav-link text-white">
+                            Wali Kelas
+                        </a>
+                    </li>
+
+                    <li class="nav-item mb-2">
+                        <a href="kategori_pelanggaran.php"
+                           class="nav-link text-white">
+                            Kategori Pelanggaran
+                        </a>
+                    </li>
+
+                    <li class="nav-item mb-2">
+                        <a href="jenis_pelanggaran.php"
+                           class="nav-link text-white">
+                            Jenis Pelanggaran
+                        </a>
+                    </li>
+
+                    <li class="nav-item mb-2">
+                        <a href="cetak_export.php"
+                           class="nav-link text-white">
+                            Cetak / Export
+                        </a>
+                    </li>
+
+                <?php } ?>
 
 
-<br>
+                <!-- ========================= -->
+                <!-- MENU KHUSUS GURU -->
+                <!-- ========================= -->
 
-<a href="logout.php">Logout</a>
+                <?php if ($_SESSION['role'] == 'guru') { ?>
+
+                    <li class="nav-item mb-2">
+                        <a href="catat_pelanggaran.php"
+                           class="nav-link text-white">
+                            Catat Pelanggaran
+                        </a>
+                    </li>
+
+                    <li class="nav-item mb-2">
+                        <a href="tindakan.php"
+                           class="nav-link text-white">
+                            Tindakan
+                        </a>
+                    </li>
+
+                    <li class="nav-item mb-2">
+                        <a href="riwayat.php"
+                           class="nav-link text-white">
+                            Riwayat
+                        </a>
+                    </li>
+
+                    <li class="nav-item mb-2">
+                        <a href="rekap_poin.php"
+                           class="nav-link text-white">
+                            Rekap Poin
+                        </a>
+                    </li>
+
+                <?php } ?>
+
+
+                <hr class="text-secondary">
+
+
+                <li class="nav-item mb-2">
+    <a href="about_me.php" class="nav-link text-white">
+        About Me
+    </a>
+</li>
+
+                <!-- LOGOUT -->
+                <li class="nav-item">
+                    <a href="logout.php"
+                       class="nav-link text-danger">
+                        Logout
+                    </a>
+                </li>
+
+            </ul>
+
+        </div>
+
+
+        <!-- ========================= -->
+        <!-- KONTEN -->
+        <!-- ========================= -->
+
+        <main class="col-md-9 col-lg-10 p-4">
+
+            <?php if ($_SESSION['role'] == 'admin') { ?>
+
+                <!-- DASHBOARD ADMIN -->
+
+                <h2>Dashboard Admin</h2>
+
+                <p>
+                    Selamat datang,
+                    <b><?= $_SESSION['nama']; ?></b>
+                </p>
+
+                <div class="row">
+
+                    <!-- SISWA -->
+                    <div class="col-md-4 mb-3">
+
+                        <div class="card shadow-sm">
+
+                            <div class="card-body">
+
+                                <h5 class="card-title">
+                                   Siswa
+                                </h5>
+
+                                <p class="card-text">
+                                    Kelola data siswa.
+                                </p>
+
+                                <a href="siswa.php"
+                                   class="btn btn-primary">
+                                    Lihat Data
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- GURU -->
+                    <div class="col-md-4 mb-3">
+
+                        <div class="card shadow-sm">
+
+                            <div class="card-body">
+
+                                <h5 class="card-title">
+                                     Guru
+                                </h5>
+
+                                <p class="card-text">
+                                    Kelola data guru.
+                                </p>
+
+                                <a href="guru.php"
+                                   class="btn btn-primary">
+                                    Lihat Data
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- KELAS -->
+                    <div class="col-md-4 mb-3">
+
+                        <div class="card shadow-sm">
+
+                            <div class="card-body">
+
+                                <h5 class="card-title">
+                                 Kelas
+                                </h5>
+
+                                <p class="card-text">
+                                    Kelola data kelas.
+                                </p>
+
+                                <a href="kelas.php"
+                                   class="btn btn-primary">
+                                    Lihat Data
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+            <?php } elseif ($_SESSION['role'] == 'guru') { ?>
+
+                <!-- DASHBOARD GURU -->
+
+                <h2>Dashboard Guru</h2>
+
+                <p>
+                    Selamat datang,
+                    <b><?= $_SESSION['nama']; ?></b>
+                </p>
+
+                <div class="row">
+
+                    <!-- CATAT PELANGGARAN -->
+                    <div class="col-md-4 mb-3">
+
+                        <div class="card shadow-sm">
+
+                            <div class="card-body">
+
+                                <h5 class="card-title">
+                                    Catat Pelanggaran
+                                </h5>
+
+                                <p class="card-text">
+                                    Mencatat pelanggaran siswa.
+                                </p>
+
+                                <a href="catat_pelanggaran.php"
+                                   class="btn btn-primary">
+                                    Buka
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- TINDAKAN -->
+                    <div class="col-md-4 mb-3">
+
+                        <div class="card shadow-sm">
+
+                            <div class="card-body">
+
+                                <h5 class="card-title">
+                                    Tindakan
+                                </h5>
+
+                                <p class="card-text">
+                                    Mengelola tindakan terhadap pelanggaran.
+                                </p>
+
+                                <a href="tindakan.php"
+                                   class="btn btn-primary">
+                                    Buka
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- RIWAYAT -->
+                    <div class="col-md-4 mb-3">
+
+                        <div class="card shadow-sm">
+
+                            <div class="card-body">
+
+                                <h5 class="card-title">
+                                    Riwayat
+                                </h5>
+
+                                <p class="card-text">
+                                    Melihat riwayat pelanggaran siswa.
+                                </p>
+
+                                <a href="riwayat.php"
+                                   class="btn btn-primary">
+                                    Buka
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- REKAP POIN -->
+                    <div class="col-md-4 mb-3">
+
+                        <div class="card shadow-sm">
+
+                            <div class="card-body">
+
+                                <h5 class="card-title">
+                                    Rekap Poin
+                                </h5>
+
+                                <p class="card-text">
+                                    Melihat rekap poin siswa.
+                                </p>
+
+                                <a href="rekap_poin.php"
+                                   class="btn btn-primary">
+                                    Buka
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            <?php } ?>
+
+        </main>
+
+    </div>
+
+</div>
 
 </body>
 
