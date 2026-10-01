@@ -190,7 +190,7 @@ if (!isset($_SESSION['login'])) {
 
                 <p>
                     Selamat datang,
-                    <b><?= $_SESSION['nama']; ?></b>
+                    <b><?= $_SESSION['role']; ?></b>
                 </p>
 
                 <div class="row">
@@ -214,6 +214,7 @@ if (!isset($_SESSION['login'])) {
                                    class="btn btn-primary">
                                     Lihat Data
                                 </a>
+                                
 
                             </div>
 
@@ -275,7 +276,137 @@ if (!isset($_SESSION['login'])) {
 
                     </div>
 
+                        <!-- Tahun Ajaran -->
+                    <div class="col-md-4 mb-3">
+
+                        <div class="card shadow-sm">
+
+                            <div class="card-body">
+
+                                <h5 class="card-title">
+                               Data tahun ajaran
+                                </h5>
+
+                                <p class="card-text">
+                                    Kelola data tahun ajaran.
+                                </p>
+
+                                <a href="tahun_ajaran.php"
+                                   class="btn btn-primary">
+                                    Lihat Data
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                        <!-- Penempatan siswa -->
+                    <div class="col-md-4 mb-3">
+
+                        <div class="card shadow-sm">
+
+                            <div class="card-body">
+
+                                <h5 class="card-title">
+                                Data penempatan siswa
+                                </h5>
+
+                                <p class="card-text">
+                                    Kelola data penempatan siswa.
+                                </p>
+
+                                <a href="penempatan_siswa.php"
+                                   class="btn btn-primary">
+                                    Lihat Data
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                         <!-- Wali KELAS -->
+                    <div class="col-md-4 mb-3">
+
+                        <div class="card shadow-sm">
+
+                            <div class="card-body">
+
+                                <h5 class="card-title">
+                                 Data wali kelas
+                                </h5>
+
+                                <p class="card-text">
+                                    Kelola data wali kelas.
+                                </p>
+
+                                <a href="wali_kelas.php"
+                                   class="btn btn-primary">
+                                    Lihat Data
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                        <!-- Kategori pelanggaran -->
+                    <div class="col-md-4 mb-3">
+
+                        <div class="card shadow-sm">
+
+                            <div class="card-body">
+
+                                <h5 class="card-title">
+                                 Data kategori pelanggaran
+                                </h5>
+
+                                <p class="card-text">
+                                    Kelola data kategori pelanggaran.
+                                </p>
+
+                                <a href="kategori_pelanggaran.php"
+                                   class="btn btn-primary">
+                                    Lihat Data
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                        <!-- Jenis Pelanggran -->
+                    <div class="col-md-4 mb-3">
+
+                        <div class="card shadow-sm">
+
+                            <div class="card-body">
+
+                                <h5 class="card-title">
+                                 Data jenis pelanggaran
+                                </h5>
+
+                                <p class="card-text">
+                                    Kelola data jenis pelanggaran.
+                                </p>
+
+                                <a href="jenis_pelanggaran.php"
+                                   class="btn btn-primary">
+                                    Lihat Data
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                    
                 </div>
+
 
 
             <?php } elseif ($_SESSION['role'] == 'guru') { ?>
@@ -286,7 +417,7 @@ if (!isset($_SESSION['login'])) {
 
                 <p>
                     Selamat datang,
-                    <b><?= $_SESSION['nama']; ?></b>
+                    <b><?= $_SESSION['role']; ?></b>
                 </p>
 
                 <div class="row">
