@@ -1,3 +1,4 @@
+
 <?php
 
 session_start();
@@ -44,11 +45,7 @@ if (!isset($_SESSION['login'])) {
                     </a>
                 </li>
 
-
-                <!-- ========================= -->
                 <!-- MENU KHUSUS ADMIN -->
-                <!-- ========================= -->
-
                 <?php if ($_SESSION['role'] == 'admin') { ?>
 
                     <li class="nav-item mb-2">
@@ -108,19 +105,15 @@ if (!isset($_SESSION['login'])) {
                     </li>
 
                     <li class="nav-item mb-2">
-                        <a href="cetak_export.php"
+                        <a href="laporan.php"
                            class="nav-link text-white">
-                            Cetak / Export
+                            Laporan
                         </a>
                     </li>
 
                 <?php } ?>
 
-
-                <!-- ========================= -->
                 <!-- MENU KHUSUS GURU -->
-                <!-- ========================= -->
-
                 <?php if ($_SESSION['role'] == 'guru') { ?>
 
                     <li class="nav-item mb-2">
@@ -153,15 +146,13 @@ if (!isset($_SESSION['login'])) {
 
                 <?php } ?>
 
-
                 <hr class="text-secondary">
 
-
                 <li class="nav-item mb-2">
-    <a href="about_me.php" class="nav-link text-white">
-        About Me
-    </a>
-</li>
+                    <a href="about_me.php" class="nav-link text-white">
+                        About Me
+                    </a>
+                </li>
 
                 <!-- LOGOUT -->
                 <li class="nav-item">
@@ -175,11 +166,7 @@ if (!isset($_SESSION['login'])) {
 
         </div>
 
-
-        <!-- ========================= -->
         <!-- KONTEN -->
-        <!-- ========================= -->
-
         <main class="col-md-9 col-lg-10 p-4">
 
             <?php if ($_SESSION['role'] == 'admin') { ?>
@@ -197,13 +184,10 @@ if (!isset($_SESSION['login'])) {
 
                     <!-- SISWA -->
                     <div class="col-md-4 mb-3">
-
                         <div class="card shadow-sm">
-
                             <div class="card-body">
-
                                 <h5 class="card-title">
-                                   Siswa
+                                    Siswa
                                 </h5>
 
                                 <p class="card-text">
@@ -214,24 +198,16 @@ if (!isset($_SESSION['login'])) {
                                    class="btn btn-primary">
                                     Lihat Data
                                 </a>
-                                
-
                             </div>
-
                         </div>
-
                     </div>
-
 
                     <!-- GURU -->
                     <div class="col-md-4 mb-3">
-
                         <div class="card shadow-sm">
-
                             <div class="card-body">
-
                                 <h5 class="card-title">
-                                     Guru
+                                    Guru
                                 </h5>
 
                                 <p class="card-text">
@@ -242,23 +218,16 @@ if (!isset($_SESSION['login'])) {
                                    class="btn btn-primary">
                                     Lihat Data
                                 </a>
-
                             </div>
-
                         </div>
-
                     </div>
-
 
                     <!-- KELAS -->
                     <div class="col-md-4 mb-3">
-
                         <div class="card shadow-sm">
-
                             <div class="card-body">
-
                                 <h5 class="card-title">
-                                 Kelas
+                                    Kelas
                                 </h5>
 
                                 <p class="card-text">
@@ -269,22 +238,16 @@ if (!isset($_SESSION['login'])) {
                                    class="btn btn-primary">
                                     Lihat Data
                                 </a>
-
                             </div>
-
                         </div>
-
                     </div>
 
-                        <!-- Tahun Ajaran -->
+                    <!-- Tahun Ajaran -->
                     <div class="col-md-4 mb-3">
-
                         <div class="card shadow-sm">
-
                             <div class="card-body">
-
                                 <h5 class="card-title">
-                               Data tahun ajaran
+                                    Data tahun ajaran
                                 </h5>
 
                                 <p class="card-text">
@@ -295,22 +258,16 @@ if (!isset($_SESSION['login'])) {
                                    class="btn btn-primary">
                                     Lihat Data
                                 </a>
-
                             </div>
-
                         </div>
-
                     </div>
 
-                        <!-- Penempatan siswa -->
+                    <!-- Penempatan siswa -->
                     <div class="col-md-4 mb-3">
-
                         <div class="card shadow-sm">
-
                             <div class="card-body">
-
                                 <h5 class="card-title">
-                                Data penempatan siswa
+                                    Data penempatan siswa
                                 </h5>
 
                                 <p class="card-text">
@@ -321,21 +278,16 @@ if (!isset($_SESSION['login'])) {
                                    class="btn btn-primary">
                                     Lihat Data
                                 </a>
-
                             </div>
-
                         </div>
-
                     </div>
-                         <!-- Wali KELAS -->
+
+                    <!-- Wali Kelas -->
                     <div class="col-md-4 mb-3">
-
                         <div class="card shadow-sm">
-
                             <div class="card-body">
-
                                 <h5 class="card-title">
-                                 Data wali kelas
+                                    Data wali kelas
                                 </h5>
 
                                 <p class="card-text">
@@ -346,22 +298,16 @@ if (!isset($_SESSION['login'])) {
                                    class="btn btn-primary">
                                     Lihat Data
                                 </a>
-
                             </div>
-
                         </div>
-
                     </div>
 
-                        <!-- Kategori pelanggaran -->
+                    <!-- Kategori pelanggaran -->
                     <div class="col-md-4 mb-3">
-
                         <div class="card shadow-sm">
-
                             <div class="card-body">
-
                                 <h5 class="card-title">
-                                 Data kategori pelanggaran
+                                    Data kategori pelanggaran
                                 </h5>
 
                                 <p class="card-text">
@@ -372,22 +318,16 @@ if (!isset($_SESSION['login'])) {
                                    class="btn btn-primary">
                                     Lihat Data
                                 </a>
-
                             </div>
-
                         </div>
-
                     </div>
 
-                        <!-- Jenis Pelanggran -->
+                    <!-- Jenis Pelanggaran -->
                     <div class="col-md-4 mb-3">
-
                         <div class="card shadow-sm">
-
                             <div class="card-body">
-
                                 <h5 class="card-title">
-                                 Data jenis pelanggaran
+                                    Data jenis pelanggaran
                                 </h5>
 
                                 <p class="card-text">
@@ -398,16 +338,11 @@ if (!isset($_SESSION['login'])) {
                                    class="btn btn-primary">
                                     Lihat Data
                                 </a>
-
                             </div>
-
                         </div>
-
                     </div>
-                    
+
                 </div>
-
-
 
             <?php } elseif ($_SESSION['role'] == 'guru') { ?>
 
@@ -424,11 +359,8 @@ if (!isset($_SESSION['login'])) {
 
                     <!-- CATAT PELANGGARAN -->
                     <div class="col-md-4 mb-3">
-
                         <div class="card shadow-sm">
-
                             <div class="card-body">
-
                                 <h5 class="card-title">
                                     Catat Pelanggaran
                                 </h5>
@@ -441,21 +373,14 @@ if (!isset($_SESSION['login'])) {
                                    class="btn btn-primary">
                                     Buka
                                 </a>
-
                             </div>
-
                         </div>
-
                     </div>
-
 
                     <!-- TINDAKAN -->
                     <div class="col-md-4 mb-3">
-
                         <div class="card shadow-sm">
-
                             <div class="card-body">
-
                                 <h5 class="card-title">
                                     Tindakan
                                 </h5>
@@ -468,21 +393,14 @@ if (!isset($_SESSION['login'])) {
                                    class="btn btn-primary">
                                     Buka
                                 </a>
-
                             </div>
-
                         </div>
-
                     </div>
-
 
                     <!-- RIWAYAT -->
                     <div class="col-md-4 mb-3">
-
                         <div class="card shadow-sm">
-
                             <div class="card-body">
-
                                 <h5 class="card-title">
                                     Riwayat
                                 </h5>
@@ -495,21 +413,14 @@ if (!isset($_SESSION['login'])) {
                                    class="btn btn-primary">
                                     Buka
                                 </a>
-
                             </div>
-
                         </div>
-
                     </div>
-
 
                     <!-- REKAP POIN -->
                     <div class="col-md-4 mb-3">
-
                         <div class="card shadow-sm">
-
                             <div class="card-body">
-
                                 <h5 class="card-title">
                                     Rekap Poin
                                 </h5>
@@ -522,11 +433,8 @@ if (!isset($_SESSION['login'])) {
                                    class="btn btn-primary">
                                     Buka
                                 </a>
-
                             </div>
-
                         </div>
-
                     </div>
 
                 </div>

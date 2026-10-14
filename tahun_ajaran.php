@@ -1,10 +1,41 @@
 <?php
 
+session_start();
+
+if (!isset($_SESSION['login'])) {
+    header("Location: login.php");
+    exit;
+}
+
+if ($_SESSION['role'] != 'admin') {
+    echo "Anda tidak memiliki akses";
+    exit;
+}
+
 include "config/koneksi.php";
 
-// Ambil data tahun ajaran
-$query = "SELECT * FROM t_tahun_ajaran ORDER BY id ASC";
+/* EDIT DATA */
+if (isset($_POST['edit'])) {
 
+    $id = $_POST['id'];
+    $nama = $_POST['nama'];
+    $tanggal_mulai = $_POST['tanggal_mulai'];
+    $tanggal_selesai = $_POST['tanggal_selesai'];
+    $status_aktif = $_POST['status_aktif'];
+
+    mysqli_query($koneksi, "UPDATE t_tahun_ajaran SET
+        nama='$nama',
+        tanggal_mulai='$tanggal_mulai',
+        tanggal_selesai='$tanggal_selesai',
+        status_aktif='$status_aktif'
+        WHERE id='$id'");
+
+    header("Location: tahun_ajaran.php");
+    exit;
+}
+
+/* AMBIL DATA TAHUN AJARAN */
+$query = "SELECT * FROM t_tahun_ajaran ORDER BY id ASC";
 $result = mysqli_query($koneksi, $query);
 
 if (!$result) {
@@ -23,218 +54,352 @@ if (!$result) {
 
     <title>Kelola Tahun Ajaran</title>
 
+    <!-- BOOTSTRAP -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <!-- FONT DISAMAKAN DENGAN SISWA -->
     <style>
-
-        * {
-            box-sizing: border-box;
+        body,
+        body * {
+            font-family: var(--bs-body-font-family) !important;
         }
-
-        body {
-            margin: 0;
-            padding: 30px;
-            font-family: Arial, Helvetica, sans-serif;
-            background-color: white;
-            color: #111827;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        h1 {
-            font-size: 30px;
-            margin: 0 0 10px 0;
-            font-weight: 500;
-        }
-
-        .button-area {
-            margin-bottom: 14px;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 9px 14px;
-            border-radius: 5px;
-            text-decoration: none;
-            color: white;
-            font-size: 14px;
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn-dashboard {
-            background-color: #6c757d;
-        }
-
-        .btn-dashboard:hover {
-            background-color: #5c636a;
-        }
-
-        .btn-tambah {
-            background-color: #0d6efd;
-        }
-
-        .btn-tambah:hover {
-            background-color: #0b5ed7;
-        }
-
-        .btn-hapus {
-            background-color: #dc3545;
-            padding: 7px 10px;
-            font-size: 13px;
-        }
-
-        .btn-hapus:hover {
-            background-color: #bb2d3b;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 5px;
-        }
-
-        th,
-        td {
-            border: 1px solid #dee2e6;
-            padding: 14px 9px;
-            text-align: left;
-            font-size: 14px;
-        }
-
-        th {
-            font-weight: bold;
-            background-color: white;
-        }
-
-        .status {
-            display: inline-block;
-            padding: 3px 7px;
-            border-radius: 5px;
-            color: white;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .aktif {
-            background-color: #198754;
-        }
-
-        .tidak-aktif {
-            background-color: #dc3545;
-        }
-
     </style>
 
 </head>
 
 <body>
 
-<div class="container">
+<div class="container-fluid">
+    <div class="row">
 
-    <h1>Kelola Tahun Ajaran</h1>
+        <!-- SIDEBAR -->
+        <div class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
 
-    <div class="button-area">
+            <h4 class="text-white mb-4">Sistem Pelanggaran</h4>
 
-        <a href="dashboard.php" class="btn btn-dashboard">
-            Kembali ke Dashboard
-        </a>
+            <ul class="nav nav-pills flex-column">
 
-        <a href="tambah_tahun_ajaran.php" class="btn btn-tambah">
-            + Tambah Tahun Ajaran
-        </a>
+                <li class="nav-item mb-2">
+                    <a href="dashboard.php" class="nav-link text-white">
+                        Dashboard
+                    </a>
+                </li>
 
-    </div>
+                <?php if ($_SESSION['role'] == 'admin') { ?>
 
-    <table>
+                    <li class="nav-item mb-2">
+                        <a href="siswa.php" class="nav-link text-white">
+                            Kelola Siswa
+                        </a>
+                    </li>
 
-        <thead>
+                    <li class="nav-item mb-2">
+                        <a href="guru.php" class="nav-link text-white">
+                            Kelola Guru
+                        </a>
+                    </li>
 
-            <tr>
-                <th>No</th>
-                <th>Nama</th>
-                <th>Tanggal Mulai</th>
-                <th>Tanggal Selesai</th>
-                <th>Status</th>
-                <th>Aksi</th>
-            </tr>
+                    <li class="nav-item mb-2">
+                        <a href="kelas.php" class="nav-link text-white">
+                            Kelola Kelas
+                        </a>
+                    </li>
 
-        </thead>
+                    <li class="nav-item mb-2">
+                        <a href="tahun_ajaran.php" class="nav-link active">
+                            Tahun Ajaran
+                        </a>
+                    </li>
 
-        <tbody>
+                    <li class="nav-item mb-2">
+                        <a href="penempatan_siswa.php" class="nav-link text-white">
+                            Penempatan Siswa
+                        </a>
+                    </li>
 
-        <?php
+                    <li class="nav-item mb-2">
+                        <a href="wali_kelas.php" class="nav-link text-white">
+                            Wali Kelas
+                        </a>
+                    </li>
 
-        $no = 1;
+                    <li class="nav-item mb-2">
+                        <a href="kategori_pelanggaran.php" class="nav-link text-white">
+                            Kategori Pelanggaran
+                        </a>
+                    </li>
 
-        while ($data = mysqli_fetch_assoc($result)) {
+                    <li class="nav-item mb-2">
+                        <a href="jenis_pelanggaran.php" class="nav-link text-white">
+                            Jenis Pelanggaran
+                        </a>
+                    </li>
 
-        ?>
+                    <li class="nav-item mb-2">
+                        <a href="laporan.php" class="nav-link text-white">
+                            Laporan
+                        </a>
+                    </li>
 
-            <tr>
+                <?php } ?>
 
-                <td>
-                    <?= $no++; ?>
-                </td>
+                <?php if ($_SESSION['role'] == 'guru') { ?>
 
-                <td>
-                    <?= htmlspecialchars($data['nama']); ?>
-                </td>
+                    <li class="nav-item mb-2">
+                        <a href="catat_pelanggaran.php" class="nav-link text-white">
+                            Catat Pelanggaran
+                        </a>
+                    </li>
 
-                <td>
-                    <?= htmlspecialchars($data['tanggal_mulai']); ?>
-                </td>
+                    <li class="nav-item mb-2">
+                        <a href="tindakan.php" class="nav-link text-white">
+                            Tindakan
+                        </a>
+                    </li>
 
-                <td>
-                    <?= htmlspecialchars($data['tanggal_selesai']); ?>
-                </td>
+                    <li class="nav-item mb-2">
+                        <a href="riwayat.php" class="nav-link text-white">
+                            Riwayat
+                        </a>
+                    </li>
 
-                <td>
+                    <li class="nav-item mb-2">
+                        <a href="rekap_poin.php" class="nav-link text-white">
+                            Rekap Poin
+                        </a>
+                    </li>
 
-                    <?php if ($data['status_aktif'] == 1) { ?>
+                <?php } ?>
 
-                        <span class="status aktif">
-                            Aktif
-                        </span>
+                <hr class="text-secondary">
 
-                    <?php } else { ?>
+                <li class="nav-item mb-2">
+                    <a href="about_me.php" class="nav-link text-white">
+                        About Me
+                    </a>
+                </li>
 
-                        <span class="status tidak-aktif">
-                            Tidak Aktif
-                        </span>
+                <li class="nav-item">
+                    <a href="logout.php" class="nav-link text-danger">
+                        Logout
+                    </a>
+                </li>
+
+            </ul>
+
+        </div>
+
+        <!-- KONTEN UTAMA -->
+        <main class="col-md-9 col-lg-10 p-4">
+
+            <h2>Data Tahun Ajaran</h2>
+
+            <a href="dashboard.php" class="btn btn-secondary mb-3">
+                Kembali ke Dashboard
+            </a>
+
+            <a href="tambah_tahun_ajaran.php" class="btn btn-primary mb-3">
+                + Tambah Tahun Ajaran
+            </a>
+
+            <!-- TABEL TAHUN AJARAN -->
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-hover align-middle">
+
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Nama</th>
+                            <th>Tanggal Mulai</th>
+                            <th>Tanggal Selesai</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                    <?php
+                    $no = 1;
+
+                    while ($data = mysqli_fetch_assoc($result)) {
+                    ?>
+
+                        <tr>
+
+                            <td><?= $no++; ?></td>
+
+                            <td>
+                                <?= htmlspecialchars($data['nama']); ?>
+                            </td>
+
+                            <td>
+                                <?= htmlspecialchars($data['tanggal_mulai']); ?>
+                            </td>
+
+                            <td>
+                                <?= htmlspecialchars($data['tanggal_selesai']); ?>
+                            </td>
+
+                            <td>
+                                <?php if ($data['status_aktif'] == 1) { ?>
+                                    <span class="badge bg-success">
+                                        Aktif
+                                    </span>
+                                <?php } else { ?>
+                                    <span class="badge bg-secondary">
+                                        Tidak Aktif
+                                    </span>
+                                <?php } ?>
+                            </td>
+
+                            <!-- AKSI EDIT DAN HAPUS -->
+                            <td>
+
+                                <button type="button"
+                                        class="btn btn-primary btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalEdit<?= $data['id']; ?>">
+                                    Edit
+                                </button>
+
+                                <a href="hapus_tahun_ajaran.php?id=<?= $data['id']; ?>"
+                                   class="btn btn-danger btn-sm"
+                                   onclick="return confirm('Yakin ingin menghapus tahun ajaran ini?')">
+                                    Hapus
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                        <!-- MODAL EDIT -->
+                        <div class="modal fade"
+                             id="modalEdit<?= $data['id']; ?>"
+                             tabindex="-1">
+
+                            <div class="modal-dialog">
+
+                                <div class="modal-content">
+
+                                    <form method="POST">
+
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">
+                                                Edit Tahun Ajaran
+                                            </h5>
+
+                                            <button type="button"
+                                                    class="btn-close"
+                                                    data-bs-dismiss="modal">
+                                            </button>
+                                        </div>
+
+                                        <div class="modal-body">
+
+                                            <input type="hidden"
+                                                   name="id"
+                                                   value="<?= $data['id']; ?>">
+
+                                            <div class="mb-3">
+                                                <label class="form-label">
+                                                    Nama Tahun Ajaran
+                                                </label>
+
+                                                <input type="text"
+                                                       name="nama"
+                                                       class="form-control"
+                                                       value="<?= htmlspecialchars($data['nama']); ?>"
+                                                       required>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">
+                                                    Tanggal Mulai
+                                                </label>
+
+                                                <input type="date"
+                                                       name="tanggal_mulai"
+                                                       class="form-control"
+                                                       value="<?= htmlspecialchars($data['tanggal_mulai']); ?>"
+                                                       required>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">
+                                                    Tanggal Selesai
+                                                </label>
+
+                                                <input type="date"
+                                                       name="tanggal_selesai"
+                                                       class="form-control"
+                                                       value="<?= htmlspecialchars($data['tanggal_selesai']); ?>"
+                                                       required>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">
+                                                    Status
+                                                </label>
+
+                                                <select name="status_aktif"
+                                                        class="form-select"
+                                                        required>
+                                                    <option value="1"
+                                                        <?= $data['status_aktif'] == 1 ? 'selected' : ''; ?>>
+                                                        Aktif
+                                                    </option>
+
+                                                    <option value="0"
+                                                        <?= $data['status_aktif'] == 0 ? 'selected' : ''; ?>>
+                                                        Tidak Aktif
+                                                    </option>
+                                                </select>
+                                            </div>
+
+                                        </div>
+
+                                        <div class="modal-footer">
+
+                                            <button type="button"
+                                                    class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">
+                                                Batal
+                                            </button>
+
+                                            <button type="submit"
+                                                    name="edit"
+                                                    class="btn btn-primary">
+                                                Simpan Perubahan
+                                            </button>
+
+                                        </div>
+
+                                    </form>
+
+                                </div>
+
+                            </div>
+
+                        </div>
 
                     <?php } ?>
 
-                </td>
+                    </tbody>
 
-                <td>
+                </table>
 
-                    <a
-                        href="hapus_tahun_ajaran.php?id=<?= $data['id']; ?>"
-                        class="btn btn-hapus"
-                        onclick="return confirm('Yakin ingin menghapus tahun ajaran ini?')">
+            </div>
 
-                        Hapus
+        </main>
 
-                    </a>
-
-                </td>
-
-            </tr>
-
-        <?php
-
-        }
-
-        ?>
-
-        </tbody>
-
-    </table>
-
+    </div>
 </div>
 
-</body>
+<!-- BOOTSTRAP JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
+</body>
 </html>
