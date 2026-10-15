@@ -164,11 +164,21 @@ if (!$result) {
 
                     <li class="nav-item mb-2">
 
-                        <a href="cetak_export.php"
+                        <a href="laporan.php"
                            class="nav-link text-white">
 
-                            Cetak / Export
+                          Laporan
 
+                              <li class="nav-item mb-2">
+
+                        <a href="about_me.php"
+                           class="nav-link text-white">
+
+                        About Me
+
+                        </a>
+
+                    </li>
                         </a>
 
                     </li>
@@ -226,17 +236,7 @@ if (!$result) {
 
                 <hr class="text-secondary">
 
-                <!-- ABOUT ME -->
-                <li class="nav-item mb-2">
-
-                    <a href="about_me.php"
-                       class="nav-link text-white">
-
-                        About Me
-
-                    </a>
-
-                </li>
+          
 
                 <!-- LOGOUT -->
                 <li class="nav-item">

@@ -1,254 +1,228 @@
 <?php
+session_start();
+
+if (!isset($_SESSION['login'])) {
+    header("Location: login.php");
+    exit;
+}
+
+if (strtolower($_SESSION['role'] ?? '') != 'admin') {
+    echo "Anda tidak memiliki akses";
+    exit;
+}
 
 include "config/koneksi.php";
 
-$id = $_GET['id'];
+$id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 
-$query = "SELECT * FROM t_guru WHERE id = '$id'";
-$result = mysqli_query($koneksi, $query);
+if ($id <= 0) {
+    die("ID guru tidak valid.");
+}
 
+/* AMBIL DATA GURU */
+$stmt = mysqli_prepare($koneksi, "SELECT * FROM t_guru WHERE id = ?");
+mysqli_stmt_bind_param($stmt, "i", $id);
+mysqli_stmt_execute($stmt);
+
+$result = mysqli_stmt_get_result($stmt);
 $data = mysqli_fetch_assoc($result);
 
 if (!$data) {
     die("Data guru tidak ditemukan.");
 }
 
+/* UPDATE DATA GURU */
 if (isset($_POST['update'])) {
 
-    $nip = $_POST['nip'];
-    $nama = $_POST['nama'];
-    $email = $_POST['email'];
-    $user_id = $_POST['user_id'];
-    $status_aktif = $_POST['status_aktif'];
+    $nip = trim($_POST['nip']);
+    $nama = trim($_POST['nama']);
+    $email = trim($_POST['email']);
+    $user_id = (int) $_POST['user_id'];
+    $status_aktif = (int) $_POST['status_aktif'];
 
-    $query = "UPDATE t_guru SET
-                nip = '$nip',
-                nama = '$nama',
-                email = '$email',
-                user_id = '$user_id',
-                status_aktif = '$status_aktif'
-              WHERE id = '$id'";
+    $update = mysqli_prepare(
+        $koneksi,
+        "UPDATE t_guru
+         SET nip = ?, nama = ?, email = ?,
+             user_id = ?, status_aktif = ?
+         WHERE id = ?"
+    );
 
-    $result = mysqli_query($koneksi, $query);
+    mysqli_stmt_bind_param(
+        $update,
+        "sssiii",
+        $nip,
+        $nama,
+        $email,
+        $user_id,
+        $status_aktif,
+        $id
+    );
 
-    if ($result) {
+    if (mysqli_stmt_execute($update)) {
         header("Location: guru.php");
         exit;
     } else {
-        echo "Data gagal diubah: " . mysqli_error($koneksi);
+        $pesan_error = "Data gagal diubah: " . mysqli_error($koneksi);
     }
 }
-
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
 
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Edit Guru</title>
 
-    <style>
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            padding: 30px;
-            font-family: Arial, Helvetica, sans-serif;
-            background-color: #ffffff;
-            color: #111827;
-        }
-
-        .container {
-            max-width: 700px;
-            margin: 0 auto;
-        }
-
-        h1 {
-            font-size: 30px;
-            margin-bottom: 20px;
-            font-weight: 500;
-        }
-
-        .form-box {
-            border: 1px solid #dee2e6;
-            padding: 25px;
-            border-radius: 5px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 7px;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        input,
-        select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ced4da;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-
-        input:focus,
-        select:focus {
-            outline: none;
-            border-color: #0d6efd;
-        }
-
-        .button-area {
-            margin-top: 20px;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 9px 14px;
-            border-radius: 5px;
-            text-decoration: none;
-            color: white;
-            font-size: 14px;
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn-update {
-            background-color: #0d6efd;
-        }
-
-        .btn-update:hover {
-            background-color: #0b5ed7;
-        }
-
-        .btn-kembali {
-            background-color: #6c757d;
-            margin-left: 5px;
-        }
-
-        .btn-kembali:hover {
-            background-color: #5c636a;
-        }
-
-    </style>
-
+    <!-- BOOTSTRAP 5.3.8 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+          rel="stylesheet">
 </head>
 
-<body>
+<body class="bg-light">
 
-<div class="container">
+<div class="container py-5">
 
-    <h1>Edit Guru</h1>
+    <div class="row justify-content-center">
 
-    <div class="form-box">
+        <div class="col-md-8 col-lg-7">
 
-        <form method="POST">
+            <div class="card shadow-sm">
 
-            <div class="form-group">
+                <div class="card-header bg-primary text-white py-3">
+                    <h4 class="mb-0">Edit Guru</h4>
+                </div>
 
-                <label>NIP</label>
+                <div class="card-body p-4">
 
-                <input
-                    type="text"
-                    name="nip"
-                    value="<?= htmlspecialchars($data['nip']); ?>"
-                    required
-                >
+                    <?php if (isset($pesan_error)) { ?>
+                        <div class="alert alert-danger">
+                            <?= htmlspecialchars($pesan_error); ?>
+                        </div>
+                    <?php } ?>
 
+                    <form method="POST">
+
+                        <!-- NIP -->
+                        <div class="mb-3">
+                            <label for="nip" class="form-label">
+                                NIP
+                            </label>
+
+                            <input
+                                type="text"
+                                id="nip"
+                                name="nip"
+                                class="form-control"
+                                value="<?= htmlspecialchars($data['nip'] ?? ''); ?>"
+                                required
+                            >
+                        </div>
+
+                        <!-- NAMA -->
+                        <div class="mb-3">
+                            <label for="nama" class="form-label">
+                                Nama Guru
+                            </label>
+
+                            <input
+                                type="text"
+                                id="nama"
+                                name="nama"
+                                class="form-control"
+                                value="<?= htmlspecialchars($data['nama'] ?? ''); ?>"
+                                required
+                            >
+                        </div>
+
+                        <!-- EMAIL -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label">
+                                Email
+                            </label>
+
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                class="form-control"
+                                value="<?= htmlspecialchars($data['email'] ?? ''); ?>"
+                                required
+                            >
+                        </div>
+
+                        <!-- USER ID -->
+                        <div class="mb-3">
+                            <label for="user_id" class="form-label">
+                                User ID
+                            </label>
+
+                            <input
+                                type="number"
+                                id="user_id"
+                                name="user_id"
+                                class="form-control"
+                                value="<?= htmlspecialchars($data['user_id'] ?? ''); ?>"
+                                required
+                            >
+                        </div>
+
+                        <!-- STATUS -->
+                        <div class="mb-4">
+                            <label for="status_aktif" class="form-label">
+                                Status
+                            </label>
+
+                            <select
+                                id="status_aktif"
+                                name="status_aktif"
+                                class="form-select"
+                                required
+                            >
+                                <option value="1"
+                                    <?= ($data['status_aktif'] ?? 0) == 1 ? 'selected' : ''; ?>>
+                                    Aktif
+                                </option>
+
+                                <option value="0"
+                                    <?= ($data['status_aktif'] ?? 0) == 0 ? 'selected' : ''; ?>>
+                                    Tidak Aktif
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- TOMBOL -->
+                        <div class="d-flex gap-2">
+
+                            <button
+                                type="submit"
+                                name="update"
+                                class="btn btn-primary"
+                            >
+                                Simpan Perubahan
+                            </button>
+
+                            <a href="guru.php" class="btn btn-secondary">
+                                Kembali
+                            </a>
+
+                        </div>
+
+                    </form>
+
+                </div>
             </div>
 
-            <div class="form-group">
-
-                <label>Nama Guru</label>
-
-                <input
-                    type="text"
-                    name="nama"
-                    value="<?= htmlspecialchars($data['nama']); ?>"
-                    required
-                >
-
-            </div>
-
-            <div class="form-group">
-
-                <label>Email</label>
-
-                <input
-                    type="email"
-                    name="email"
-                    value="<?= htmlspecialchars($data['email']); ?>"
-                    required
-                >
-
-            </div>
-
-            <div class="form-group">
-
-                <label>User ID</label>
-
-                <input
-                    type="number"
-                    name="user_id"
-                    value="<?= htmlspecialchars($data['user_id']); ?>"
-                    required
-                >
-
-            </div>
-
-            <div class="form-group">
-
-                <label>Status</label>
-
-                <select name="status_aktif" required>
-
-                    <option value="1"
-                        <?= $data['status_aktif'] == 1 ? 'selected' : ''; ?>>
-                        Aktif
-                    </option>
-
-                    <option value="0"
-                        <?= $data['status_aktif'] == 0 ? 'selected' : ''; ?>>
-                        Tidak Aktif
-                    </option>
-
-                </select>
-
-            </div>
-
-            <div class="button-area">
-
-                <button
-                    type="submit"
-                    name="update"
-                    class="btn btn-update">
-                    Update
-                </button>
-
-                <a
-                    href="guru.php"
-                    class="btn btn-kembali">
-                    Kembali
-                </a>
-
-            </div>
-
-        </form>
+        </div>
 
     </div>
 
 </div>
 
-</body>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
+</body>
 </html>

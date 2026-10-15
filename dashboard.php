@@ -342,6 +342,24 @@ if (!isset($_SESSION['login'])) {
                         </div>
                     </div>
 
+                    
+<!-- CARD LAPORAN -->
+<div class="col-md-6 col-lg-4">
+    <div class="card h-100 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">Laporan</h5>
+
+            <p class="card-text">
+                Melihat laporan data pelanggaran siswa.
+            </p>
+
+            <a href="laporan.php" class="btn btn-primary">
+                Lihat Data
+            </a>
+        </div>
+    </div>
+</div>
+
                 </div>
 
             <?php } elseif ($_SESSION['role'] == 'guru') { ?>
