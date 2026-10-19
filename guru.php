@@ -31,8 +31,12 @@ if (!$result) {
 
     <title>Kelola Guru</title>
 
-    <!-- Bootstrap 5.3.8 -->
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <!-- DataTables Bootstrap CSS -->
+    <link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css"
           rel="stylesheet">
 </head>
 
@@ -125,7 +129,8 @@ if (!$result) {
 
                     <div class="table-responsive">
 
-                        <table class="table table-bordered table-hover align-middle">
+                        <table id="tabelGuru"
+                               class="table table-bordered table-hover align-middle">
 
                             <thead class="table-light">
                                 <tr>
@@ -168,22 +173,17 @@ if (!$result) {
 
                                         <td>
                                             <?php if (($data['status_aktif'] ?? 0) == 1) { ?>
-
                                                 <span class="badge bg-success">
                                                     Aktif
                                                 </span>
-
                                             <?php } else { ?>
-
                                                 <span class="badge bg-danger">
                                                     Tidak Aktif
                                                 </span>
-
                                             <?php } ?>
                                         </td>
 
                                         <td class="text-nowrap">
-
                                             <a href="edit_guru.php?id=<?= (int) $data['id']; ?>"
                                                class="btn btn-primary btn-sm">
                                                 Edit
@@ -194,7 +194,6 @@ if (!$result) {
                                                onclick="return confirm('Yakin ingin menghapus data guru ini?')">
                                                 Hapus
                                             </a>
-
                                         </td>
                                     </tr>
 
@@ -224,8 +223,53 @@ if (!$result) {
     </div>
 </div>
 
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
+
+<!-- Pengaturan DataTables -->
+<script>
+$(document).ready(function () {
+
+    $('#tabelGuru').DataTable({
+        pageLength: 10,
+        lengthMenu: [5, 10, 25, 50],
+        searching: true,
+        ordering: true,
+
+        columnDefs: [
+            {
+                orderable: false,
+                targets: [0, 6]
+            }
+        ],
+
+        language: {
+            search: "Cari:",
+            lengthMenu: "Tampilkan _MENU_ data",
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+            infoEmpty: "Tidak ada data",
+            infoFiltered: "(difilter dari _MAX_ data)",
+            zeroRecords: "Data tidak ditemukan",
+            emptyTable: "Belum ada data guru",
+
+            paginate: {
+                first: "Pertama",
+                last: "Terakhir",
+                next: "Selanjutnya",
+                previous: "Sebelumnya"
+            }
+        }
+    });
+
+});
+</script>
 
 </body>
 </html>

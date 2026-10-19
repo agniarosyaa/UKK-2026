@@ -28,9 +28,15 @@ if (!$result) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Kelola Tahun Ajaran</title>
 
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <!-- DataTables Bootstrap CSS -->
+    <link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css"
           rel="stylesheet">
 </head>
 
@@ -41,6 +47,7 @@ if (!$result) {
 
         <!-- SIDEBAR -->
         <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
+
             <h4 class="text-white mb-4">Sistem Pelanggaran</h4>
 
             <ul class="nav nav-pills flex-column gap-2">
@@ -108,7 +115,9 @@ if (!$result) {
                 <hr class="text-secondary">
 
                 <li class="nav-item">
-                    <a href="logout.php" class="nav-link text-danger">
+                    <a href="logout.php"
+                       class="nav-link text-danger"
+                       onclick="return confirm('Yakin ingin logout?')">
                         Logout
                     </a>
                 </li>
@@ -132,9 +141,11 @@ if (!$result) {
             <!-- TABEL TAHUN AJARAN -->
             <div class="card shadow-sm">
                 <div class="card-body">
+
                     <div class="table-responsive">
 
-                        <table class="table table-bordered table-hover align-middle">
+                        <table id="tabelTahunAjaran"
+                               class="table table-bordered table-hover align-middle">
 
                             <thead class="table-light">
                                 <tr>
@@ -160,19 +171,19 @@ if (!$result) {
                                     <td><?= $no++; ?></td>
 
                                     <td>
-                                        <?= htmlspecialchars($data['nama']); ?>
+                                        <?= htmlspecialchars($data['nama'] ?? '-'); ?>
                                     </td>
 
                                     <td>
-                                        <?= htmlspecialchars($data['tanggal_mulai']); ?>
+                                        <?= htmlspecialchars($data['tanggal_mulai'] ?? '-'); ?>
                                     </td>
 
                                     <td>
-                                        <?= htmlspecialchars($data['tanggal_selesai']); ?>
+                                        <?= htmlspecialchars($data['tanggal_selesai'] ?? '-'); ?>
                                     </td>
 
                                     <td>
-                                        <?php if ($data['status_aktif'] == 1) { ?>
+                                        <?php if (($data['status_aktif'] ?? 0) == 1) { ?>
                                             <span class="badge bg-success">
                                                 Aktif
                                             </span>
@@ -183,13 +194,13 @@ if (!$result) {
                                         <?php } ?>
                                     </td>
 
-                                    <td>
-                                        <a href="edit_tahun_ajaran.php?id=<?= $data['id']; ?>"
+                                    <td class="text-nowrap">
+                                        <a href="edit_tahun_ajaran.php?id=<?= (int) $data['id']; ?>"
                                            class="btn btn-primary btn-sm">
                                             Edit
                                         </a>
 
-                                        <a href="hapus_tahun_ajaran.php?id=<?= $data['id']; ?>"
+                                        <a href="hapus_tahun_ajaran.php?id=<?= (int) $data['id']; ?>"
                                            class="btn btn-danger btn-sm"
                                            onclick="return confirm('Yakin ingin menghapus tahun ajaran ini?')">
                                             Hapus
@@ -203,7 +214,7 @@ if (!$result) {
                             ?>
 
                                 <tr>
-                                    <td colspan="6" class="text-center">
+                                    <td colspan="6" class="text-center text-secondary py-4">
                                         Belum ada data tahun ajaran.
                                     </td>
                                 </tr>
@@ -223,7 +234,53 @@ if (!$result) {
     </div>
 </div>
 
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
+
+<!-- AKTIFKAN DATATABLES -->
+<script>
+$(document).ready(function () {
+
+    $('#tabelTahunAjaran').DataTable({
+        pageLength: 10,
+        lengthMenu: [5, 10, 25, 50],
+        searching: true,
+        ordering: true,
+
+        columnDefs: [
+            {
+                orderable: false,
+                targets: [0, 5]
+            }
+        ],
+
+        language: {
+            search: "Cari:",
+            lengthMenu: "Tampilkan _MENU_ data",
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+            infoEmpty: "Tidak ada data",
+            infoFiltered: "(difilter dari _MAX_ data)",
+            zeroRecords: "Data tidak ditemukan",
+            emptyTable: "Belum ada data tahun ajaran",
+
+            paginate: {
+                first: "Pertama",
+                last: "Terakhir",
+                next: "Selanjutnya",
+                previous: "Sebelumnya"
+            }
+        }
+    });
+
+});
+</script>
 
 </body>
 </html>

@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 
@@ -6,7 +7,7 @@ if (!isset($_SESSION['login'])) {
     exit;
 }
 
-if ($_SESSION['role'] != 'admin') {
+if (strtolower($_SESSION['role'] ?? '') != 'admin') {
     echo "Anda tidak memiliki akses";
     exit;
 }
@@ -19,6 +20,8 @@ $result = mysqli_query($koneksi, $query);
 if (!$result) {
     die("Gagal mengambil data laporan: " . mysqli_error($koneksi));
 }
+
+$total_data = mysqli_num_rows($result);
 ?>
 
 <!DOCTYPE html>
@@ -30,7 +33,12 @@ if (!$result) {
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
           rel="stylesheet">
+
+    <!-- CSS DataTables -->
+    <link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css"
+          rel="stylesheet">
 </head>
+
 <body class="bg-light">
 
 <div class="container-fluid">
@@ -42,50 +50,18 @@ if (!$result) {
             <h5 class="text-white mb-4">Sistem Pelanggaran</h5>
 
             <nav class="nav nav-pills flex-column gap-2">
-                <a class="nav-link text-white" href="dashboard.php">
-                    Dashboard
-                </a>
+                <a class="nav-link text-white" href="dashboard.php">Dashboard</a>
+                <a class="nav-link text-white" href="siswa.php">Kelola Siswa</a>
+                <a class="nav-link text-white" href="guru.php">Kelola Guru</a>
+                <a class="nav-link text-white" href="kelas.php">Kelola Kelas</a>
+                <a class="nav-link text-white" href="tahun_ajaran.php">Tahun Ajaran</a>
+                <a class="nav-link text-white" href="penempatan_siswa.php">Penempatan Siswa</a>
+                <a class="nav-link text-white" href="wali_kelas.php">Wali Kelas</a>
+                <a class="nav-link text-white" href="kategori_pelanggaran.php">Kategori Pelanggaran</a>
+                <a class="nav-link text-white" href="jenis_pelanggaran.php">Jenis Pelanggaran</a>
+                <a class="nav-link active" href="laporan.php">Laporan</a>
+                <a class="nav-link text-white" href="about_me.php">About Me</a>
 
-                <a class="nav-link text-white" href="siswa.php">
-                    Kelola Siswa
-                </a>
-
-                <a class="nav-link text-white" href="guru.php">
-                    Kelola Guru
-                </a>
-
-                <a class="nav-link text-white" href="kelas.php">
-                    Kelola Kelas
-                </a>
-
-                <a class="nav-link text-white" href="tahun_ajaran.php">
-                    Tahun Ajaran
-                </a>
-
-                <a class="nav-link text-white" href="penempatan_siswa.php">
-                    Penempatan Siswa
-                </a>
-
-                <a class="nav-link text-white" href="wali_kelas.php">
-                    Wali Kelas
-                </a>
-
-                <a class="nav-link text-white" href="kategori_pelanggaran.php">
-                    Kategori Pelanggaran
-                </a>
-
-                <a class="nav-link text-white" href="jenis_pelanggaran.php">
-                    Jenis Pelanggaran
-                </a>
-
-                <a class="nav-link active" href="laporan.php">
-                    Laporan
-                </a>
-
-             
-<a class="nav-link text-white" href="about_me.php">
-    About Me
-</a>
                 <hr class="border-secondary">
 
                 <a class="nav-link text-danger" href="logout.php"
@@ -99,9 +75,7 @@ if (!$result) {
         <!-- KONTEN -->
         <main class="col-md-9 col-lg-10 p-3 p-md-4">
 
-            <div class="d-flex flex-wrap justify-content-between
-                        align-items-center gap-2 mb-4">
-
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
                 <div>
                     <h3 class="mb-1">Laporan Pelanggaran Siswa</h3>
                     <p class="text-muted mb-0">
@@ -113,14 +87,14 @@ if (!$result) {
                         class="btn btn-primary d-print-none">
                     Cetak Laporan
                 </button>
-
             </div>
 
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
 
                     <div class="table-responsive">
-                        <table class="table table-bordered table-hover align-middle">
+                        <table id="tabelLaporan"
+                               class="table table-bordered table-hover align-middle">
 
                             <thead class="table-dark">
                                 <tr>
@@ -142,8 +116,7 @@ if (!$result) {
                             <?php
                             $no = 1;
 
-                            if (mysqli_num_rows($result) > 0) {
-                                while ($row = mysqli_fetch_assoc($result)) {
+                            while ($row = mysqli_fetch_assoc($result)) {
                             ?>
                                 <tr>
                                     <td><?= $no++; ?></td>
@@ -207,34 +180,63 @@ if (!$result) {
                                     </td>
                                 </tr>
                             <?php
-                                }
-                            } else {
+                            }
                             ?>
-                                <tr>
-                                    <td colspan="11" class="text-center text-muted">
-                                        Belum ada data pelanggaran.
-                                    </td>
-                                </tr>
-                            <?php } ?>
                             </tbody>
 
                         </table>
                     </div>
 
-                    <p class="text-muted mb-0">
+                    <p class="text-muted mb-0 mt-3">
                         Total data pelanggaran:
-                        <strong><?= mysqli_num_rows($result); ?></strong>
+                        <strong><?= $total_data; ?></strong>
                     </p>
 
                 </div>
             </div>
 
         </main>
-
     </div>
 </div>
 
+<!-- JavaScript -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+$(document).ready(function () {
+    $('#tabelLaporan').DataTable({
+        pageLength: 10,
+        lengthMenu: [5, 10, 25, 50],
+        searching: true,
+        ordering: true,
+        order: [[6, 'desc']],
+        columnDefs: [
+            {
+                orderable: false,
+                targets: 0
+            }
+        ],
+        language: {
+            search: "Cari:",
+            lengthMenu: "Tampilkan _MENU_ data",
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+            infoEmpty: "Tidak ada data",
+            infoFiltered: "(difilter dari _MAX_ data)",
+            zeroRecords: "Data tidak ditemukan",
+            emptyTable: "Belum ada data pelanggaran.",
+            paginate: {
+                first: "Pertama",
+                last: "Terakhir",
+                next: "Selanjutnya",
+                previous: "Sebelumnya"
+            }
+        }
+    });
+});
+</script>
 
 </body>
 </html>

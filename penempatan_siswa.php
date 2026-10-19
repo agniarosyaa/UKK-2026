@@ -58,12 +58,19 @@ if (!$result) {
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Penempatan Siswa</title>
 
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <!-- DataTables Bootstrap CSS -->
+    <link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css"
           rel="stylesheet">
 </head>
 
@@ -74,9 +81,11 @@ if (!$result) {
 
         <!-- SIDEBAR -->
         <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
+
             <h5 class="text-white mb-4">Sistem Pelanggaran</h5>
 
             <nav class="nav nav-pills flex-column gap-2">
+
                 <a class="nav-link text-white" href="dashboard.php">Dashboard</a>
                 <a class="nav-link text-white" href="siswa.php">Kelola Siswa</a>
                 <a class="nav-link text-white" href="guru.php">Kelola Guru</a>
@@ -90,14 +99,20 @@ if (!$result) {
 
                 <hr class="text-secondary">
 
-                <a class="nav-link text-danger" href="logout.php">Logout</a>
+                <a class="nav-link text-danger"
+                   href="logout.php"
+                   onclick="return confirm('Yakin ingin logout?')">
+                    Logout
+                </a>
+
             </nav>
         </aside>
 
-        <!-- KONTEN -->
+        <!-- KONTEN UTAMA -->
         <main class="col-md-9 col-lg-10 p-4">
 
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+
                 <div>
                     <h3 class="mb-1">Penempatan Siswa</h3>
                     <p class="text-muted mb-0">
@@ -108,10 +123,14 @@ if (!$result) {
                 <a href="tambah_penempatan_siswa.php" class="btn btn-primary">
                     + Tambah Penempatan
                 </a>
+
             </div>
 
+            <!-- NOTIFIKASI -->
             <?php if (isset($_GET['pesan']) && $_GET['pesan'] == 'hapus') { ?>
-                <div class="alert alert-success">Data berhasil dihapus.</div>
+                <div class="alert alert-success">
+                    Data berhasil dihapus.
+                </div>
             <?php } ?>
 
             <?php if (isset($_GET['pesan']) && $_GET['pesan'] == 'gagal') { ?>
@@ -120,11 +139,15 @@ if (!$result) {
                 </div>
             <?php } ?>
 
+            <!-- TABEL PENEMPATAN SISWA -->
             <div class="card shadow-sm">
                 <div class="card-body">
+
                     <div class="table-responsive">
 
-                        <table class="table table-bordered table-hover align-middle">
+                        <table id="tabelPenempatan"
+                               class="table table-bordered table-hover align-middle">
+
                             <thead class="table-dark">
                                 <tr>
                                     <th>No</th>
@@ -136,18 +159,31 @@ if (!$result) {
                             </thead>
 
                             <tbody>
+
                             <?php
                             $no = 1;
 
                             if (mysqli_num_rows($result) > 0) {
                                 while ($row = mysqli_fetch_assoc($result)) {
                             ?>
+
                                 <tr>
                                     <td><?= $no++; ?></td>
-                                    <td><?= htmlspecialchars($row['nama_siswa'] ?? '-'); ?></td>
-                                    <td><?= htmlspecialchars($row['nama_kelas'] ?? '-'); ?></td>
-                                    <td><?= htmlspecialchars($row['tahun_ajaran'] ?? '-'); ?></td>
+
                                     <td>
+                                        <?= htmlspecialchars($row['nama_siswa'] ?? '-'); ?>
+                                    </td>
+
+                                    <td>
+                                        <?= htmlspecialchars($row['nama_kelas'] ?? '-'); ?>
+                                    </td>
+
+                                    <td>
+                                        <?= htmlspecialchars($row['tahun_ajaran'] ?? '-'); ?>
+                                    </td>
+
+                                    <td class="text-nowrap">
+
                                         <a href="edit_penempatan_siswa.php?id=<?= (int) $row['id']; ?>"
                                            class="btn btn-primary btn-sm">
                                             Edit
@@ -158,19 +194,17 @@ if (!$result) {
                                            onclick="return confirm('Yakin ingin menghapus penempatan siswa ini?')">
                                             Hapus
                                         </a>
+
                                     </td>
                                 </tr>
+
                             <?php
                                 }
-                            } else {
+                            }
                             ?>
-                                <tr>
-                                    <td colspan="5" class="text-center">
-                                        Belum ada data penempatan siswa.
-                                    </td>
-                                </tr>
-                            <?php } ?>
+
                             </tbody>
+
                         </table>
 
                     </div>
@@ -178,9 +212,57 @@ if (!$result) {
             </div>
 
         </main>
+
     </div>
 </div>
 
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
+
+<!-- AKTIFKAN DATATABLES -->
+<script>
+$(document).ready(function () {
+
+    $('#tabelPenempatan').DataTable({
+        pageLength: 10,
+        lengthMenu: [5, 10, 25, 50],
+        searching: true,
+        ordering: true,
+
+        columnDefs: [
+            {
+                orderable: false,
+                targets: [0, 4]
+            }
+        ],
+
+        language: {
+            search: "Cari:",
+            lengthMenu: "Tampilkan _MENU_ data",
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+            infoEmpty: "Tidak ada data",
+            infoFiltered: "(difilter dari _MAX_ data)",
+            zeroRecords: "Data tidak ditemukan",
+            emptyTable: "Belum ada data penempatan siswa",
+
+            paginate: {
+                first: "Pertama",
+                last: "Terakhir",
+                next: "Selanjutnya",
+                previous: "Sebelumnya"
+            }
+        }
+    });
+
+});
+</script>
+
 </body>
 </html>
