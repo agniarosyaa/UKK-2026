@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 
@@ -124,6 +123,12 @@ if (!$data) {
                 </li>
 
                 <hr class="text-secondary">
+
+                <li class="nav-item">
+                    <a href="about_me.php" class="nav-link text-white">
+                        About Me
+                    </a>
+                </li>
 
                 <li class="nav-item">
                     <a href="logout.php"

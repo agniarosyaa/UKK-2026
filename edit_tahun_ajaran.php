@@ -85,7 +85,7 @@ if (isset($_POST['update'])) {
         }
     }
 
-    // Pertahankan data yang sudah diisi jika terjadi kesalahan
+    // Pertahankan data jika terjadi kesalahan
     $data['nama'] = $nama;
     $data['tanggal_mulai'] = $tanggal_mulai;
     $data['tanggal_selesai'] = $tanggal_selesai;
@@ -108,13 +108,104 @@ if (isset($_POST['update'])) {
 
 <body class="bg-light">
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-7">
+<div class="container-fluid">
+    <div class="row">
+
+        <!-- SIDEBAR -->
+        <div class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
+            <h5 class="text-white mb-4">Sistem Pelanggaran</h5>
+
+            <ul class="nav nav-pills flex-column gap-1">
+
+                <li class="nav-item">
+                    <a href="dashboard.php" class="nav-link text-white">
+                        Dashboard
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="siswa.php" class="nav-link text-white">
+                        Kelola Siswa
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="guru.php" class="nav-link text-white">
+                        Kelola Guru
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="kelas.php" class="nav-link text-white">
+                        Kelola Kelas
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="tahun_ajaran.php" class="nav-link active">
+                        Tahun Ajaran
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="penempatan_siswa.php" class="nav-link text-white">
+                        Penempatan Siswa
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="wali_kelas.php" class="nav-link text-white">
+                        Wali Kelas
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="kategori_pelanggaran.php" class="nav-link text-white">
+                        Kategori Pelanggaran
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="jenis_pelanggaran.php" class="nav-link text-white">
+                        Jenis Pelanggaran
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="cetak_export.php" class="nav-link text-white">
+                        Laporan
+                    </a>
+                </li>
+
+                <hr class="text-white">
+
+                <li class="nav-item">
+                    <a href="about_me.php" class="nav-link text-white">
+                        About Me
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a
+                        href="logout.php"
+                        class="nav-link text-white"
+                        onclick="return confirm('Yakin ingin logout?')">
+                        Logout
+                    </a>
+                </li>
+
+            </ul>
+        </div>
+
+        <!-- KONTEN UTAMA -->
+        <div class="col-md-9 col-lg-10 p-4">
+
+            <h2 class="mb-4">Edit Tahun Ajaran</h2>
 
             <div class="card shadow-sm">
+
                 <div class="card-header bg-primary text-white py-3">
-                    <h4 class="mb-0">Edit Tahun Ajaran</h4>
+                    <h5 class="mb-0">Form Edit Tahun Ajaran</h5>
                 </div>
 
                 <div class="card-body p-4">
@@ -181,12 +272,14 @@ if (isset($_POST['update'])) {
                                 class="form-select"
                                 required>
 
-                                <option value="1"
+                                <option
+                                    value="1"
                                     <?= ($data['status_aktif'] ?? 0) == 1 ? 'selected' : ''; ?>>
                                     Aktif
                                 </option>
 
-                                <option value="0"
+                                <option
+                                    value="0"
                                     <?= ($data['status_aktif'] ?? 0) == 0 ? 'selected' : ''; ?>>
                                     Tidak Aktif
                                 </option>

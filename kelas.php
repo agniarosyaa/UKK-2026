@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 
@@ -53,23 +52,61 @@ if (!$data) {
             <h4 class="text-white mb-4">Sistem Pelanggaran</h4>
 
             <nav class="nav nav-pills flex-column gap-2">
-                <a href="dashboard.php" class="nav-link text-white">Dashboard</a>
-                <a href="siswa.php" class="nav-link text-white">Kelola Siswa</a>
-                <a href="guru.php" class="nav-link text-white">Kelola Guru</a>
-                <a href="kelas.php" class="nav-link active">Kelola Kelas</a>
-                <a href="tahun_ajaran.php" class="nav-link text-white">Tahun Ajaran</a>
-                <a href="penempatan_siswa.php" class="nav-link text-white">Penempatan Siswa</a>
-                <a href="wali_kelas.php" class="nav-link text-white">Wali Kelas</a>
-                <a href="kategori_pelanggaran.php" class="nav-link text-white">Kategori Pelanggaran</a>
-                <a href="jenis_pelanggaran.php" class="nav-link text-white">Jenis Pelanggaran</a>
-                <a href="laporan.php" class="nav-link text-white">Laporan</a>
 
+                <a href="dashboard.php" class="nav-link text-white">
+                    Dashboard
+                </a>
+
+                <a href="siswa.php" class="nav-link text-white">
+                    Kelola Siswa
+                </a>
+
+                <a href="guru.php" class="nav-link text-white">
+                    Kelola Guru
+                </a>
+
+                <a href="kelas.php" class="nav-link active">
+                    Kelola Kelas
+                </a>
+
+                <a href="tahun_ajaran.php" class="nav-link text-white">
+                    Tahun Ajaran
+                </a>
+
+                <a href="penempatan_siswa.php" class="nav-link text-white">
+                    Penempatan Siswa
+                </a>
+
+                <a href="wali_kelas.php" class="nav-link text-white">
+                    Wali Kelas
+                </a>
+
+                <a href="kategori_pelanggaran.php" class="nav-link text-white">
+                    Kategori Pelanggaran
+                </a>
+
+                <a href="jenis_pelanggaran.php" class="nav-link text-white">
+                    Jenis Pelanggaran
+                </a>
+
+                <a href="laporan.php" class="nav-link text-white">
+                    Laporan
+                </a>
+
+                <!-- GARIS PEMISAH DI BAWAH LAPORAN -->
                 <hr class="text-secondary">
 
-                <a href="logout.php" class="nav-link text-danger"
+                <!-- ABOUT ME DI BAWAH GARIS -->
+                <a href="about_me.php" class="nav-link text-white">
+                    About Me
+                </a>
+
+                <a href="logout.php"
+                   class="nav-link text-danger"
                    onclick="return confirm('Yakin ingin logout?')">
                     Logout
                 </a>
+
             </nav>
 
         </aside>
@@ -163,9 +200,13 @@ if (!$data) {
 
                                     <td>
                                         <?php if (($row['status_aktif'] ?? 0) == 1) { ?>
-                                            <span class="badge bg-success">Aktif</span>
+                                            <span class="badge bg-success">
+                                                Aktif
+                                            </span>
                                         <?php } else { ?>
-                                            <span class="badge bg-secondary">Tidak Aktif</span>
+                                            <span class="badge bg-secondary">
+                                                Tidak Aktif
+                                            </span>
                                         <?php } ?>
                                     </td>
 

@@ -26,54 +26,80 @@ mysqli_stmt_execute($stmt);
 
 $result = mysqli_stmt_get_result($stmt);
 $data = mysqli_fetch_assoc($result);
+mysqli_stmt_close($stmt);
 
 if (!$data) {
     die("Data siswa tidak ditemukan.");
 }
 
+$pesan_error = "";
+
 /* UPDATE DATA SISWA */
 if (isset($_POST['update'])) {
 
-    $nis = trim($_POST['nis']);
-    $nisn = trim($_POST['nisn']);
-    $nama = trim($_POST['nama']);
-    $jenis_kelamin = $_POST['jenis_kelamin'];
-    $tanggal_lahir = $_POST['tanggal_lahir'];
-    $alamat = trim($_POST['alamat']);
-    $status_aktif = (int) $_POST['status_aktif'];
+    $nis = trim($_POST['nis'] ?? '');
+    $nisn = trim($_POST['nisn'] ?? '');
+    $nama = trim($_POST['nama'] ?? '');
+    $jenis_kelamin = $_POST['jenis_kelamin'] ?? '';
+    $tanggal_lahir = $_POST['tanggal_lahir'] ?? '';
+    $alamat = trim($_POST['alamat'] ?? '');
+    $status_aktif = (int) ($_POST['status_aktif'] ?? 0);
 
-    $update = mysqli_prepare(
-        $koneksi,
-        "UPDATE t_siswa SET
-            nis = ?,
-            nisn = ?,
-            nama = ?,
-            jenis_kelamin = ?,
-            tanggal_lahir = ?,
-            alamat = ?,
-            status_aktif = ?
-         WHERE id = ?"
-    );
-
-    mysqli_stmt_bind_param(
-        $update,
-        "ssssssii",
-        $nis,
-        $nisn,
-        $nama,
-        $jenis_kelamin,
-        $tanggal_lahir,
-        $alamat,
-        $status_aktif,
-        $id
-    );
-
-    if (mysqli_stmt_execute($update)) {
-        header("Location: siswa.php");
-        exit;
+    if (
+        $nis == "" || $nisn == "" || $nama == "" ||
+        $jenis_kelamin == "" || $tanggal_lahir == "" ||
+        $alamat == "" || !in_array($status_aktif, [0, 1], true)
+    ) {
+        $pesan_error = "Semua data wajib diisi.";
+    } elseif (!in_array($jenis_kelamin, ['L', 'P'], true)) {
+        $pesan_error = "Jenis kelamin tidak valid.";
     } else {
-        $pesan_error = "Gagal mengubah data siswa.";
+
+        $update = mysqli_prepare(
+            $koneksi,
+            "UPDATE t_siswa SET
+                nis = ?,
+                nisn = ?,
+                nama = ?,
+                jenis_kelamin = ?,
+                tanggal_lahir = ?,
+                alamat = ?,
+                status_aktif = ?
+             WHERE id = ?"
+        );
+
+        mysqli_stmt_bind_param(
+            $update,
+            "ssssssii",
+            $nis,
+            $nisn,
+            $nama,
+            $jenis_kelamin,
+            $tanggal_lahir,
+            $alamat,
+            $status_aktif,
+            $id
+        );
+
+        if (mysqli_stmt_execute($update)) {
+            mysqli_stmt_close($update);
+            header("Location: siswa.php");
+            exit;
+        } else {
+            $pesan_error = "Gagal mengubah data siswa.";
+        }
+
+        mysqli_stmt_close($update);
     }
+
+    /* TAMPILKAN KEMBALI DATA JIKA UPDATE GAGAL */
+    $data['nis'] = $nis;
+    $data['nisn'] = $nisn;
+    $data['nama'] = $nama;
+    $data['jenis_kelamin'] = $jenis_kelamin;
+    $data['tanggal_lahir'] = $tanggal_lahir;
+    $data['alamat'] = $alamat;
+    $data['status_aktif'] = $status_aktif;
 }
 ?>
 
@@ -86,28 +112,116 @@ if (isset($_POST['update'])) {
 
     <title>Edit Siswa</title>
 
-    <!-- BOOTSTRAP 5.3.8 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet">
 </head>
 
-<body class="bg-light">
+<body>
 
-<div class="container py-5">
+<div class="container-fluid">
+    <div class="row">
 
-    <div class="row justify-content-center">
+        <!-- SIDEBAR -->
+        <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
 
-        <div class="col-md-8 col-lg-7">
+            <h4 class="text-white mb-4">Sistem Pelanggaran</h4>
+
+            <ul class="nav nav-pills flex-column gap-2">
+
+                <li class="nav-item">
+                    <a href="dashboard.php" class="nav-link text-white">
+                        Dashboard
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="siswa.php" class="nav-link active">
+                        Kelola Siswa
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="guru.php" class="nav-link text-white">
+                        Kelola Guru
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="kelas.php" class="nav-link text-white">
+                        Kelola Kelas
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="tahun_ajaran.php" class="nav-link text-white">
+                        Tahun Ajaran
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="penempatan_siswa.php" class="nav-link text-white">
+                        Penempatan Siswa
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="wali_kelas.php" class="nav-link text-white">
+                        Wali Kelas
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="kategori_pelanggaran.php" class="nav-link text-white">
+                        Kategori Pelanggaran
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="jenis_pelanggaran.php" class="nav-link text-white">
+                        Jenis Pelanggaran
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="laporan.php" class="nav-link text-white">
+                        Laporan
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="about_me.php" class="nav-link text-white">
+                        About Me
+                    </a>
+                </li>
+
+                <hr class="text-secondary">
+
+                <li class="nav-item">
+                    <a href="logout.php"
+                       class="nav-link text-danger"
+                       onclick="return confirm('Yakin ingin logout?')">
+                        Logout
+                    </a>
+                </li>
+
+            </ul>
+        </aside>
+
+        <!-- KONTEN -->
+        <main class="col-md-9 col-lg-10 p-4">
+
+            <h2 class="mb-4">Edit Siswa</h2>
 
             <div class="card shadow-sm">
 
-                <div class="card-header bg-primary text-white py-3">
-                    <h4 class="mb-0">Edit Siswa</h4>
+                <div class="card-header bg-primary text-white">
+                    Form Edit Siswa
                 </div>
 
-                <div class="card-body p-4">
+                <div class="card-body">
 
-                    <?php if (isset($pesan_error)) { ?>
+                    <?php if ($pesan_error != "") { ?>
                         <div class="alert alert-danger">
                             <?= htmlspecialchars($pesan_error); ?>
                         </div>
@@ -115,52 +229,51 @@ if (isset($_POST['update'])) {
 
                     <form method="POST">
 
-                        <!-- NIS -->
                         <div class="mb-3">
                             <label for="nis" class="form-label">NIS</label>
-
-                            <input type="text"
-                                   id="nis"
-                                   name="nis"
-                                   class="form-control"
-                                   value="<?= htmlspecialchars($data['nis'] ?? ''); ?>"
-                                   required>
+                            <input
+                                type="text"
+                                name="nis"
+                                id="nis"
+                                class="form-control"
+                                value="<?= htmlspecialchars($data['nis'] ?? ''); ?>"
+                                required>
                         </div>
 
-                        <!-- NISN -->
                         <div class="mb-3">
                             <label for="nisn" class="form-label">NISN</label>
-
-                            <input type="text"
-                                   id="nisn"
-                                   name="nisn"
-                                   class="form-control"
-                                   value="<?= htmlspecialchars($data['nisn'] ?? ''); ?>"
-                                   required>
+                            <input
+                                type="text"
+                                name="nisn"
+                                id="nisn"
+                                class="form-control"
+                                value="<?= htmlspecialchars($data['nisn'] ?? ''); ?>"
+                                required>
                         </div>
 
-                        <!-- NAMA -->
                         <div class="mb-3">
                             <label for="nama" class="form-label">Nama Siswa</label>
-
-                            <input type="text"
-                                   id="nama"
-                                   name="nama"
-                                   class="form-control"
-                                   value="<?= htmlspecialchars($data['nama'] ?? ''); ?>"
-                                   required>
+                            <input
+                                type="text"
+                                name="nama"
+                                id="nama"
+                                class="form-control"
+                                value="<?= htmlspecialchars($data['nama'] ?? ''); ?>"
+                                required>
                         </div>
 
-                        <!-- JENIS KELAMIN -->
                         <div class="mb-3">
                             <label for="jenis_kelamin" class="form-label">
                                 Jenis Kelamin
                             </label>
 
-                            <select id="jenis_kelamin"
-                                    name="jenis_kelamin"
-                                    class="form-select"
-                                    required>
+                            <select
+                                name="jenis_kelamin"
+                                id="jenis_kelamin"
+                                class="form-select"
+                                required>
+
+                                <option value="">-- Pilih Jenis Kelamin --</option>
 
                                 <option value="L"
                                     <?= ($data['jenis_kelamin'] ?? '') == 'L' ? 'selected' : ''; ?>>
@@ -175,41 +288,41 @@ if (isset($_POST['update'])) {
                             </select>
                         </div>
 
-                        <!-- TANGGAL LAHIR -->
                         <div class="mb-3">
                             <label for="tanggal_lahir" class="form-label">
                                 Tanggal Lahir
                             </label>
 
-                            <input type="date"
-                                   id="tanggal_lahir"
-                                   name="tanggal_lahir"
-                                   class="form-control"
-                                   value="<?= htmlspecialchars($data['tanggal_lahir'] ?? ''); ?>"
-                                   required>
+                            <input
+                                type="date"
+                                name="tanggal_lahir"
+                                id="tanggal_lahir"
+                                class="form-control"
+                                value="<?= htmlspecialchars($data['tanggal_lahir'] ?? ''); ?>"
+                                required>
                         </div>
 
-                        <!-- ALAMAT -->
                         <div class="mb-3">
                             <label for="alamat" class="form-label">Alamat</label>
 
-                            <textarea id="alamat"
-                                      name="alamat"
-                                      class="form-control"
-                                      rows="3"
-                                      required><?= htmlspecialchars($data['alamat'] ?? ''); ?></textarea>
+                            <textarea
+                                name="alamat"
+                                id="alamat"
+                                class="form-control"
+                                rows="3"
+                                required><?= htmlspecialchars($data['alamat'] ?? ''); ?></textarea>
                         </div>
 
-                        <!-- STATUS -->
-                        <div class="mb-4">
+                        <div class="mb-3">
                             <label for="status_aktif" class="form-label">
                                 Status
                             </label>
 
-                            <select id="status_aktif"
-                                    name="status_aktif"
-                                    class="form-select"
-                                    required>
+                            <select
+                                name="status_aktif"
+                                id="status_aktif"
+                                class="form-select"
+                                required>
 
                                 <option value="1"
                                     <?= ($data['status_aktif'] ?? 0) == 1 ? 'selected' : ''; ?>>
@@ -224,30 +337,25 @@ if (isset($_POST['update'])) {
                             </select>
                         </div>
 
-                        <!-- TOMBOL -->
-                        <div class="d-flex gap-2">
+                        <button
+                            type="submit"
+                            name="update"
+                            class="btn btn-primary">
+                            Simpan Perubahan
+                        </button>
 
-                            <button type="submit"
-                                    name="update"
-                                    class="btn btn-primary">
-                                Simpan Perubahan
-                            </button>
-
-                            <a href="siswa.php" class="btn btn-secondary">
-                                Kembali
-                            </a>
-
-                        </div>
+                        <a href="siswa.php" class="btn btn-secondary">
+                            Kembali
+                        </a>
 
                     </form>
 
                 </div>
             </div>
 
-        </div>
+        </main>
 
     </div>
-
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>

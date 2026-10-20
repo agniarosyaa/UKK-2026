@@ -17,6 +17,11 @@ include "config/koneksi.php";
 if (isset($_GET['hapus'])) {
     $id = (int) $_GET['hapus'];
 
+    if ($id <= 0) {
+        header("Location: penempatan_siswa.php?pesan=gagal");
+        exit;
+    }
+
     $stmt = mysqli_prepare(
         $koneksi,
         "DELETE FROM t_kelas_siswa WHERE id = ?"
@@ -66,12 +71,14 @@ if (!$result) {
     <title>Penempatan Siswa</title>
 
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet">
 
-    <!-- DataTables Bootstrap CSS -->
-    <link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css"
-          rel="stylesheet">
+    <!-- DataTables CSS -->
+    <link
+        href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css"
+        rel="stylesheet">
 </head>
 
 <body class="bg-light">
@@ -82,26 +89,60 @@ if (!$result) {
         <!-- SIDEBAR -->
         <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
 
-            <h5 class="text-white mb-4">Sistem Pelanggaran</h5>
+            <h4 class="text-white mb-4">Sistem Pelanggaran</h4>
 
             <nav class="nav nav-pills flex-column gap-2">
 
-                <a class="nav-link text-white" href="dashboard.php">Dashboard</a>
-                <a class="nav-link text-white" href="siswa.php">Kelola Siswa</a>
-                <a class="nav-link text-white" href="guru.php">Kelola Guru</a>
-                <a class="nav-link text-white" href="kelas.php">Kelola Kelas</a>
-                <a class="nav-link text-white" href="tahun_ajaran.php">Tahun Ajaran</a>
-                <a class="nav-link active" href="penempatan_siswa.php">Penempatan Siswa</a>
-                <a class="nav-link text-white" href="wali_kelas.php">Wali Kelas</a>
-                <a class="nav-link text-white" href="kategori_pelanggaran.php">Kategori Pelanggaran</a>
-                <a class="nav-link text-white" href="jenis_pelanggaran.php">Jenis Pelanggaran</a>
-                <a class="nav-link text-white" href="laporan.php">Laporan</a>
+                <a href="dashboard.php" class="nav-link text-white">
+                    Dashboard
+                </a>
+
+                <a href="siswa.php" class="nav-link text-white">
+                    Kelola Siswa
+                </a>
+
+                <a href="guru.php" class="nav-link text-white">
+                    Kelola Guru
+                </a>
+
+                <a href="kelas.php" class="nav-link text-white">
+                    Kelola Kelas
+                </a>
+
+                <a href="tahun_ajaran.php" class="nav-link text-white">
+                    Tahun Ajaran
+                </a>
+
+                <a href="penempatan_siswa.php" class="nav-link active">
+                    Penempatan Siswa
+                </a>
+
+                <a href="wali_kelas.php" class="nav-link text-white">
+                    Wali Kelas
+                </a>
+
+                <a href="kategori_pelanggaran.php" class="nav-link text-white">
+                    Kategori Pelanggaran
+                </a>
+
+                <a href="jenis_pelanggaran.php" class="nav-link text-white">
+                    Jenis Pelanggaran
+                </a>
+
+                <a href="laporan.php" class="nav-link text-white">
+                    Laporan
+                </a>
 
                 <hr class="text-secondary">
 
-                <a class="nav-link text-danger"
-                   href="logout.php"
-                   onclick="return confirm('Yakin ingin logout?')">
+                <a href="about_me.php" class="nav-link text-white">
+                    About Me
+                </a>
+
+                <a
+                    href="logout.php"
+                    class="nav-link text-danger"
+                    onclick="return confirm('Yakin ingin logout?')">
                     Logout
                 </a>
 
@@ -111,14 +152,31 @@ if (!$result) {
         <!-- KONTEN UTAMA -->
         <main class="col-md-9 col-lg-10 p-4">
 
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+            <h2 class="mb-3">Data Penempatan Siswa</h2>
 
-                <div>
-                    <h3 class="mb-1">Penempatan Siswa</h3>
-                    <p class="text-muted mb-0">
-                        Mengatur kelas siswa berdasarkan tahun ajaran.
-                    </p>
-                </div>
+            <!-- NOTIFIKASI -->
+            <?php if (isset($_GET['pesan'])) { ?>
+
+                <?php if ($_GET['pesan'] == 'hapus') { ?>
+                    <div class="alert alert-success">
+                        Data penempatan siswa berhasil dihapus.
+                    </div>
+                <?php } ?>
+
+                <?php if ($_GET['pesan'] == 'gagal') { ?>
+                    <div class="alert alert-danger">
+                        Data penempatan siswa gagal dihapus.
+                    </div>
+                <?php } ?>
+
+            <?php } ?>
+
+            <!-- TOMBOL -->
+            <div class="d-flex flex-wrap gap-2 mb-3">
+
+                <a href="dashboard.php" class="btn btn-secondary">
+                    Kembali ke Dashboard
+                </a>
 
                 <a href="tambah_penempatan_siswa.php" class="btn btn-primary">
                     + Tambah Penempatan
@@ -126,29 +184,18 @@ if (!$result) {
 
             </div>
 
-            <!-- NOTIFIKASI -->
-            <?php if (isset($_GET['pesan']) && $_GET['pesan'] == 'hapus') { ?>
-                <div class="alert alert-success">
-                    Data berhasil dihapus.
-                </div>
-            <?php } ?>
-
-            <?php if (isset($_GET['pesan']) && $_GET['pesan'] == 'gagal') { ?>
-                <div class="alert alert-danger">
-                    Data gagal dihapus.
-                </div>
-            <?php } ?>
-
-            <!-- TABEL PENEMPATAN SISWA -->
+            <!-- TABEL -->
             <div class="card shadow-sm">
+
                 <div class="card-body">
 
                     <div class="table-responsive">
 
-                        <table id="tabelPenempatan"
-                               class="table table-bordered table-hover align-middle">
+                        <table
+                            id="tabelPenempatan"
+                            class="table table-bordered table-hover align-middle">
 
-                            <thead class="table-dark">
+                            <thead class="table-light">
                                 <tr>
                                     <th>No</th>
                                     <th>Nama Siswa</th>
@@ -160,48 +207,44 @@ if (!$result) {
 
                             <tbody>
 
-                            <?php
-                            $no = 1;
+                                <?php
+                                $no = 1;
 
-                            if (mysqli_num_rows($result) > 0) {
                                 while ($row = mysqli_fetch_assoc($result)) {
-                            ?>
+                                ?>
+                                    <tr>
+                                        <td><?= $no++; ?></td>
 
-                                <tr>
-                                    <td><?= $no++; ?></td>
+                                        <td>
+                                            <?= htmlspecialchars($row['nama_siswa'] ?? '-'); ?>
+                                        </td>
 
-                                    <td>
-                                        <?= htmlspecialchars($row['nama_siswa'] ?? '-'); ?>
-                                    </td>
+                                        <td>
+                                            <?= htmlspecialchars($row['nama_kelas'] ?? '-'); ?>
+                                        </td>
 
-                                    <td>
-                                        <?= htmlspecialchars($row['nama_kelas'] ?? '-'); ?>
-                                    </td>
+                                        <td>
+                                            <?= htmlspecialchars($row['tahun_ajaran'] ?? '-'); ?>
+                                        </td>
 
-                                    <td>
-                                        <?= htmlspecialchars($row['tahun_ajaran'] ?? '-'); ?>
-                                    </td>
+                                        <td class="text-nowrap">
 
-                                    <td class="text-nowrap">
+                                            <a
+                                                href="edit_penempatan_siswa.php?id=<?= (int) $row['id']; ?>"
+                                                class="btn btn-primary btn-sm">
+                                                Edit
+                                            </a>
 
-                                        <a href="edit_penempatan_siswa.php?id=<?= (int) $row['id']; ?>"
-                                           class="btn btn-primary btn-sm">
-                                            Edit
-                                        </a>
+                                            <a
+                                                href="penempatan_siswa.php?hapus=<?= (int) $row['id']; ?>"
+                                                class="btn btn-danger btn-sm"
+                                                onclick="return confirm('Yakin ingin menghapus penempatan siswa ini?')">
+                                                Hapus
+                                            </a>
 
-                                        <a href="penempatan_siswa.php?hapus=<?= (int) $row['id']; ?>"
-                                           class="btn btn-danger btn-sm"
-                                           onclick="return confirm('Yakin ingin menghapus penempatan siswa ini?')">
-                                            Hapus
-                                        </a>
-
-                                    </td>
-                                </tr>
-
-                            <?php
-                                }
-                            }
-                            ?>
+                                        </td>
+                                    </tr>
+                                <?php } ?>
 
                             </tbody>
 
@@ -226,10 +269,9 @@ if (!$result) {
 <script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
 
-<!-- AKTIFKAN DATATABLES -->
+<!-- DATATABLES -->
 <script>
 $(document).ready(function () {
-
     $('#tabelPenempatan').DataTable({
         pageLength: 10,
         lengthMenu: [5, 10, 25, 50],
@@ -260,7 +302,6 @@ $(document).ready(function () {
             }
         }
     });
-
 });
 </script>
 

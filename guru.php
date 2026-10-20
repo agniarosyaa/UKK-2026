@@ -94,7 +94,13 @@ if (!$result) {
                     Laporan
                 </a>
 
+                <!-- GARIS PEMISAH DI BAWAH LAPORAN -->
                 <hr class="text-secondary">
+
+                <!-- ABOUT ME DI BAWAH GARIS -->
+                <a href="about_me.php" class="nav-link text-white">
+                    About Me
+                </a>
 
                 <a href="logout.php"
                    class="nav-link text-danger"

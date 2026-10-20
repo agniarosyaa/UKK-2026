@@ -119,7 +119,7 @@ if (!isset($_SESSION['login'])) {
                     <li class="nav-item mb-2">
                         <a href="catat_pelanggaran.php"
                            class="nav-link text-white">
-                            Catat Pelanggaran
+                            Catatan Pelanggaran
                         </a>
                     </li>
 
@@ -380,7 +380,7 @@ if (!isset($_SESSION['login'])) {
                         <div class="card shadow-sm">
                             <div class="card-body">
                                 <h5 class="card-title">
-                                    Catat Pelanggaran
+                                    Catatan Pelanggaran
                                 </h5>
 
                                 <p class="card-text">

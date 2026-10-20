@@ -32,7 +32,6 @@ $error = $result ? '' : mysqli_error($koneksi);
 <div class="container-fluid">
 <div class="row">
 
-    <!-- SIDEBAR -->
     <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
         <h4 class="text-white mb-4">Sistem Pelanggaran</h4>
 
@@ -48,37 +47,40 @@ $error = $result ? '' : mysqli_error($koneksi);
                 <a href="wali_kelas.php" class="nav-link text-white">Wali Kelas</a>
                 <a href="kategori_pelanggaran.php" class="nav-link text-white">Kategori Pelanggaran</a>
                 <a href="jenis_pelanggaran.php" class="nav-link text-white">Jenis Pelanggaran</a>
-                <a href="catatan_pelanggaran.php" class="nav-link active">Catatan Pelanggaran</a>
+                <a href="catat_pelanggaran.php" class="nav-link active">Catatan Pelanggaran</a>
                 <a href="laporan.php" class="nav-link text-white">Laporan</a>
             <?php } ?>
 
             <?php if ($role == 'guru') { ?>
-                <a href="catatan_pelanggaran.php" class="nav-link active">Catatan Pelanggaran</a>
+                <a href="catat_pelanggaran.php" class="nav-link active">Catatan Pelanggaran</a>
                 <a href="tindakan.php" class="nav-link text-white">Tindakan</a>
                 <a href="riwayat.php" class="nav-link text-white">Riwayat</a>
                 <a href="rekap_poin.php" class="nav-link text-white">Rekap Poin</a>
             <?php } ?>
 
-            <hr class="text-secondary">
+            <hr class="border-secondary">
+
+            <a href="about_me.php" class="nav-link text-white">About Me</a>
             <a href="logout.php" class="nav-link text-danger"
                onclick="return confirm('Yakin ingin logout?')">Logout</a>
         </nav>
     </aside>
 
-    <!-- KONTEN -->
     <main class="col-md-9 col-lg-10 p-4">
         <h2 class="mb-2">Catatan Pelanggaran Siswa</h2>
         <p class="text-secondary">Daftar catatan pelanggaran siswa.</p>
 
         <div class="d-flex gap-2 mb-3">
             <a href="dashboard.php" class="btn btn-secondary">Kembali ke Dashboard</a>
-            <a href="catat_pelanggaran.php" class="btn btn-primary">
+            <a href="tambah_catat_pelanggaran.php" class="btn btn-primary">
                 + Tambah Catat Pelanggaran
             </a>
         </div>
 
         <?php if (isset($_GET['pesan']) && $_GET['pesan'] == 'tambah') { ?>
-            <div class="alert alert-success">Catatan pelanggaran berhasil ditambahkan.</div>
+            <div class="alert alert-success">
+                Catatan pelanggaran berhasil ditambahkan.
+            </div>
         <?php } ?>
 
         <?php if ($error != '') { ?>
@@ -117,15 +119,19 @@ $error = $result ? '' : mysqli_error($koneksi);
                         <?php } ?>
                     <?php } else { ?>
                         <tr>
-                            <td colspan="7" class="text-center">Belum ada catatan pelanggaran.</td>
+                            <td colspan="7" class="text-center">
+                                Belum ada catatan pelanggaran.
+                            </td>
                         </tr>
                     <?php } ?>
                     </tbody>
                 </table>
             </div>
         </div>
+
         <?php } ?>
     </main>
+
 </div>
 </div>
 </body>
