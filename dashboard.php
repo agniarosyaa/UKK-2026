@@ -31,138 +31,96 @@ if (!isset($_SESSION['login'])) {
         <!-- SIDEBAR -->
         <div class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
 
-            <h4 class="text-white mb-4">
-                Sistem Pelanggaran
-            </h4>
+          <h5 class="text-white mb-4">
+    Sistem Pelanggaran
+</h5>
+            
+<ul class="nav nav-pills flex-column gap-2">
 
-            <ul class="nav nav-pills flex-column">
+    <li class="nav-item">
+        <a href="dashboard.php" class="nav-link active">
+            Dashboard
+        </a>
+    </li>
 
-                <!-- DASHBOARD -->
-                <li class="nav-item mb-2">
-                    <a href="dashboard.php"
-                       class="nav-link active">
-                        Dashboard
-                    </a>
-                </li>
+    <?php if ($_SESSION['role'] == 'admin') { ?>
 
-                <!-- MENU KHUSUS ADMIN -->
-                <?php if ($_SESSION['role'] == 'admin') { ?>
+        <li class="nav-item">
+            <a href="siswa.php" class="nav-link text-white">Kelola Siswa</a>
+        </li>
 
-                    <li class="nav-item mb-2">
-                        <a href="siswa.php"
-                           class="nav-link text-white">
-                            Kelola Siswa
-                        </a>
-                    </li>
+        <li class="nav-item">
+            <a href="guru.php" class="nav-link text-white">Kelola Guru</a>
+        </li>
 
-                    <li class="nav-item mb-2">
-                        <a href="guru.php"
-                           class="nav-link text-white">
-                            Kelola Guru
-                        </a>
-                    </li>
+        <li class="nav-item">
+            <a href="kelas.php" class="nav-link text-white">Kelola Kelas</a>
+        </li>
 
-                    <li class="nav-item mb-2">
-                        <a href="kelas.php"
-                           class="nav-link text-white">
-                            Kelola Kelas
-                        </a>
-                    </li>
+        <li class="nav-item">
+            <a href="tahun_ajaran.php" class="nav-link text-white">Tahun Ajaran</a>
+        </li>
 
-                    <li class="nav-item mb-2">
-                        <a href="tahun_ajaran.php"
-                           class="nav-link text-white">
-                            Tahun Ajaran
-                        </a>
-                    </li>
+        <li class="nav-item">
+            <a href="penempatan_siswa.php" class="nav-link text-white">Penempatan Siswa</a>
+        </li>
 
-                    <li class="nav-item mb-2">
-                        <a href="penempatan_siswa.php"
-                           class="nav-link text-white">
-                            Penempatan Siswa
-                        </a>
-                    </li>
+        <li class="nav-item">
+            <a href="wali_kelas.php" class="nav-link text-white">Wali Kelas</a>
+        </li>
 
-                    <li class="nav-item mb-2">
-                        <a href="wali_kelas.php"
-                           class="nav-link text-white">
-                            Wali Kelas
-                        </a>
-                    </li>
+        <li class="nav-item">
+            <a href="kategori_pelanggaran.php" class="nav-link text-white">Kategori Pelanggaran</a>
+        </li>
 
-                    <li class="nav-item mb-2">
-                        <a href="kategori_pelanggaran.php"
-                           class="nav-link text-white">
-                            Kategori Pelanggaran
-                        </a>
-                    </li>
+        <li class="nav-item">
+            <a href="jenis_pelanggaran.php" class="nav-link text-white">Jenis Pelanggaran</a>
+        </li>
 
-                    <li class="nav-item mb-2">
-                        <a href="jenis_pelanggaran.php"
-                           class="nav-link text-white">
-                            Jenis Pelanggaran
-                        </a>
-                    </li>
+        <li class="nav-item">
+            <a href="laporan.php" class="nav-link text-white">Laporan</a>
+        </li>
 
-                    <li class="nav-item mb-2">
-                        <a href="laporan.php"
-                           class="nav-link text-white">
-                            Laporan
-                        </a>
-                    </li>
+    <?php } ?>
 
-                <?php } ?>
+    <?php if ($_SESSION['role'] == 'guru') { ?>
 
-                <!-- MENU KHUSUS GURU -->
-                <?php if ($_SESSION['role'] == 'guru') { ?>
+        <li class="nav-item">
+            <a href="catat_pelanggaran.php" class="nav-link text-white">Catatan Pelanggaran</a>
+        </li>
 
-                    <li class="nav-item mb-2">
-                        <a href="catat_pelanggaran.php"
-                           class="nav-link text-white">
-                            Catatan Pelanggaran
-                        </a>
-                    </li>
+        <li class="nav-item">
+            <a href="tindakan.php" class="nav-link text-white">Tindakan</a>
+        </li>
 
-                    <li class="nav-item mb-2">
-                        <a href="tindakan.php"
-                           class="nav-link text-white">
-                            Tindakan
-                        </a>
-                    </li>
+        <li class="nav-item">
+            <a href="riwayat.php" class="nav-link text-white">Riwayat</a>
+        </li>
 
-                    <li class="nav-item mb-2">
-                        <a href="riwayat.php"
-                           class="nav-link text-white">
-                            Riwayat
-                        </a>
-                    </li>
+        <li class="nav-item">
+            <a href="rekap_poin.php" class="nav-link text-white">Rekap Poin</a>
+        </li>
 
-                    <li class="nav-item mb-2">
-                        <a href="rekap_poin.php"
-                           class="nav-link text-white">
-                            Rekap Poin
-                        </a>
-                    </li>
+    <?php } ?>
 
-                <?php } ?>
+    <hr class="text-secondary">
 
-                <hr class="text-secondary">
+    <li class="nav-item">
+        <a href="about_me.php" class="nav-link text-white">
+            About Me
+        </a>
+    </li>
 
-                <li class="nav-item mb-2">
-                    <a href="about_me.php" class="nav-link text-white">
-                        About Me
-                    </a>
-                </li>
+    <li class="nav-item">
+        <a href="logout.php"
+           class="nav-link text-danger"
+           onclick="return confirm('Yakin ingin logout?')">
+            Logout
+        </a>
+    </li>
 
-                <!-- LOGOUT -->
-                <li class="nav-item">
-                    <a href="logout.php"
-                       class="nav-link text-danger">
-                        Logout
-                    </a>
-                </li>
+</ul>
 
-            </ul>
 
         </div>
 

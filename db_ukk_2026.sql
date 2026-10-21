@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 23, 2026 at 07:28 AM
--- Server version: 10.4.27-MariaDB
--- PHP Version: 8.2.0
+-- Waktu pembuatan: 21 Okt 2026 pada 04.01
+-- Versi server: 10.4.27-MariaDB
+-- Versi PHP: 8.2.0
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -24,7 +24,7 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `t_guru`
+-- Struktur dari tabel `t_guru`
 --
 
 CREATE TABLE `t_guru` (
@@ -39,7 +39,7 @@ CREATE TABLE `t_guru` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `t_guru`
+-- Dumping data untuk tabel `t_guru`
 --
 
 INSERT INTO `t_guru` (`id`, `nip`, `nama`, `email`, `status_aktif`, `user_id`, `created_at`, `update_at`) VALUES
@@ -97,7 +97,7 @@ INSERT INTO `t_guru` (`id`, `nip`, `nama`, `email`, `status_aktif`, `user_id`, `
 -- --------------------------------------------------------
 
 --
--- Table structure for table `t_kelas`
+-- Struktur dari tabel `t_kelas`
 --
 
 CREATE TABLE `t_kelas` (
@@ -111,7 +111,7 @@ CREATE TABLE `t_kelas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `t_kelas`
+-- Dumping data untuk tabel `t_kelas`
 --
 
 INSERT INTO `t_kelas` (`id`, `nama`, `tingkat`, `jurusan`, `status_aktif`, `created_at`, `update_at`) VALUES
@@ -169,7 +169,7 @@ INSERT INTO `t_kelas` (`id`, `nama`, `tingkat`, `jurusan`, `status_aktif`, `crea
 -- --------------------------------------------------------
 
 --
--- Table structure for table `t_kelas_siswa`
+-- Struktur dari tabel `t_kelas_siswa`
 --
 
 CREATE TABLE `t_kelas_siswa` (
@@ -185,7 +185,7 @@ CREATE TABLE `t_kelas_siswa` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `t_kelas_siswa`
+-- Dumping data untuk tabel `t_kelas_siswa`
 --
 
 INSERT INTO `t_kelas_siswa` (`id`, `siswa_id`, `tahun_ajaran_id`, `kelas_id`, `tanggal_mulai`, `tanggal_selesai`, `status_aktif`, `created_at`, `update_at`) VALUES
@@ -243,7 +243,7 @@ INSERT INTO `t_kelas_siswa` (`id`, `siswa_id`, `tahun_ajaran_id`, `kelas_id`, `t
 -- --------------------------------------------------------
 
 --
--- Table structure for table `t_pelanggaran`
+-- Struktur dari tabel `t_pelanggaran`
 --
 
 CREATE TABLE `t_pelanggaran` (
@@ -259,7 +259,7 @@ CREATE TABLE `t_pelanggaran` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `t_pelanggaran`
+-- Dumping data untuk tabel `t_pelanggaran`
 --
 
 INSERT INTO `t_pelanggaran` (`id`, `pelanggaran_kategori_id`, `kode`, `nama`, `poin`, `deskripsi`, `status_aktif`, `created_at`, `update_at`) VALUES
@@ -317,7 +317,7 @@ INSERT INTO `t_pelanggaran` (`id`, `pelanggaran_kategori_id`, `kode`, `nama`, `p
 -- --------------------------------------------------------
 
 --
--- Table structure for table `t_pelanggaran_kategori`
+-- Struktur dari tabel `t_pelanggaran_kategori`
 --
 
 CREATE TABLE `t_pelanggaran_kategori` (
@@ -330,7 +330,7 @@ CREATE TABLE `t_pelanggaran_kategori` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `t_pelanggaran_kategori`
+-- Dumping data untuk tabel `t_pelanggaran_kategori`
 --
 
 INSERT INTO `t_pelanggaran_kategori` (`id`, `nama`, `deskripsi`, `status_aktif`, `created_at`, `update_at`) VALUES
@@ -388,7 +388,7 @@ INSERT INTO `t_pelanggaran_kategori` (`id`, `nama`, `deskripsi`, `status_aktif`,
 -- --------------------------------------------------------
 
 --
--- Table structure for table `t_pelanggaran_siswa`
+-- Struktur dari tabel `t_pelanggaran_siswa`
 --
 
 CREATE TABLE `t_pelanggaran_siswa` (
@@ -413,7 +413,7 @@ CREATE TABLE `t_pelanggaran_siswa` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `t_pelanggaran_siswa`
+-- Dumping data untuk tabel `t_pelanggaran_siswa`
 --
 
 INSERT INTO `t_pelanggaran_siswa` (`id`, `tahun_ajaran_id`, `siswa_id`, `nama_siswa`, `kelas_id`, `nama_kelas`, `pelanggaran_id`, `nama_pelanggaran`, `pelanggaran_kategori_id`, `guru_id`, `nama_guru`, `tanggal`, `keterangan`, `poin`, `tindakan`, `status`, `created_at`, `update_at`) VALUES
@@ -471,7 +471,7 @@ INSERT INTO `t_pelanggaran_siswa` (`id`, `tahun_ajaran_id`, `siswa_id`, `nama_si
 -- --------------------------------------------------------
 
 --
--- Table structure for table `t_siswa`
+-- Struktur dari tabel `t_siswa`
 --
 
 CREATE TABLE `t_siswa` (
@@ -488,7 +488,7 @@ CREATE TABLE `t_siswa` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `t_siswa`
+-- Dumping data untuk tabel `t_siswa`
 --
 
 INSERT INTO `t_siswa` (`id`, `nis`, `nisn`, `nama`, `jenis_kelamin`, `tanggal_lahir`, `alamat`, `status_aktif`, `created_at`, `update_at`) VALUES
@@ -546,7 +546,7 @@ INSERT INTO `t_siswa` (`id`, `nis`, `nisn`, `nama`, `jenis_kelamin`, `tanggal_la
 -- --------------------------------------------------------
 
 --
--- Table structure for table `t_tahun_ajaran`
+-- Struktur dari tabel `t_tahun_ajaran`
 --
 
 CREATE TABLE `t_tahun_ajaran` (
@@ -560,7 +560,7 @@ CREATE TABLE `t_tahun_ajaran` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `t_tahun_ajaran`
+-- Dumping data untuk tabel `t_tahun_ajaran`
 --
 
 INSERT INTO `t_tahun_ajaran` (`id`, `nama`, `tanggal_mulai`, `tanggal_selesai`, `status_aktif`, `created_at`, `update_at`) VALUES
@@ -618,12 +618,12 @@ INSERT INTO `t_tahun_ajaran` (`id`, `nama`, `tanggal_mulai`, `tanggal_selesai`, 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `t_users`
+-- Struktur dari tabel `t_users`
 --
 
 CREATE TABLE `t_users` (
   `id` int(11) NOT NULL,
-  `name` int(11) NOT NULL,
+  `name` varchar(11) NOT NULL,
   `email` varchar(255) NOT NULL,
   `email_verified_at` timestamp NULL DEFAULT NULL,
   `password` varchar(255) NOT NULL,
@@ -634,65 +634,65 @@ CREATE TABLE `t_users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `t_users`
+-- Dumping data untuk tabel `t_users`
 --
 
 INSERT INTO `t_users` (`id`, `name`, `email`, `email_verified_at`, `password`, `remember_token`, `role`, `created_at`, `update_at`) VALUES
-(1, 0, 'user01@sekolah.test', '2026-01-01 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(2, 0, 'user02@sekolah.test', '2026-01-02 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-02 01:00:00', '2026-01-02 01:00:00'),
-(3, 0, 'user03@sekolah.test', '2026-01-03 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'staff', '2026-01-03 01:00:00', '2026-01-03 01:00:00'),
-(4, 0, 'user04@sekolah.test', '2026-01-04 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'operator', '2026-01-04 01:00:00', '2026-01-04 01:00:00'),
-(5, 0, 'user05@sekolah.test', '2026-01-05 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-05 01:00:00', '2026-01-05 01:00:00'),
-(6, 0, 'user06@sekolah.test', '2026-01-06 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-06 01:00:00', '2026-01-06 01:00:00'),
-(7, 0, 'user07@sekolah.test', '2026-01-07 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'staff', '2026-01-07 01:00:00', '2026-01-07 01:00:00'),
-(8, 0, 'user08@sekolah.test', '2026-01-08 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'operator', '2026-01-08 01:00:00', '2026-01-08 01:00:00'),
-(9, 0, 'user09@sekolah.test', '2026-01-09 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-09 01:00:00', '2026-01-09 01:00:00'),
-(10, 0, 'user10@sekolah.test', '2026-01-10 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-10 01:00:00', '2026-01-10 01:00:00'),
-(11, 0, 'user11@sekolah.test', '2026-01-11 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'staff', '2026-01-11 01:00:00', '2026-01-11 01:00:00'),
-(12, 0, 'user12@sekolah.test', '2026-01-12 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'operator', '2026-01-12 01:00:00', '2026-01-12 01:00:00'),
-(13, 0, 'user13@sekolah.test', '2026-01-13 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-13 01:00:00', '2026-01-13 01:00:00'),
-(14, 0, 'user14@sekolah.test', '2026-01-14 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-14 01:00:00', '2026-01-14 01:00:00'),
-(15, 0, 'user15@sekolah.test', '2026-01-15 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'staff', '2026-01-15 01:00:00', '2026-01-15 01:00:00'),
-(16, 0, 'user16@sekolah.test', '2026-01-16 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'operator', '2026-01-16 01:00:00', '2026-01-16 01:00:00'),
-(17, 0, 'user17@sekolah.test', '2026-01-17 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-17 01:00:00', '2026-01-17 01:00:00'),
-(18, 0, 'user18@sekolah.test', '2026-01-18 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-18 01:00:00', '2026-01-18 01:00:00'),
-(19, 0, 'user19@sekolah.test', '2026-01-19 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'staff', '2026-01-19 01:00:00', '2026-01-19 01:00:00'),
-(20, 0, 'user20@sekolah.test', '2026-01-20 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'operator', '2026-01-20 01:00:00', '2026-01-20 01:00:00'),
-(21, 0, 'user21@sekolah.test', '2026-01-21 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-21 01:00:00', '2026-01-21 01:00:00'),
-(22, 0, 'user22@sekolah.test', '2026-01-22 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-22 01:00:00', '2026-01-22 01:00:00'),
-(23, 0, 'user23@sekolah.test', '2026-01-23 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'staff', '2026-01-23 01:00:00', '2026-01-23 01:00:00'),
-(24, 0, 'user24@sekolah.test', '2026-01-24 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'operator', '2026-01-24 01:00:00', '2026-01-24 01:00:00'),
-(25, 0, 'user25@sekolah.test', '2026-01-25 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-25 01:00:00', '2026-01-25 01:00:00'),
-(26, 0, 'user26@sekolah.test', '2026-01-26 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-26 01:00:00', '2026-01-26 01:00:00'),
-(27, 0, 'user27@sekolah.test', '2026-01-27 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'staff', '2026-01-27 01:00:00', '2026-01-27 01:00:00'),
-(28, 0, 'user28@sekolah.test', '2026-01-28 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'operator', '2026-01-28 01:00:00', '2026-01-28 01:00:00'),
-(29, 0, 'user29@sekolah.test', '2026-01-01 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(30, 0, 'user30@sekolah.test', '2026-01-02 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-02 01:00:00', '2026-01-02 01:00:00'),
-(31, 0, 'user31@sekolah.test', '2026-01-03 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'staff', '2026-01-03 01:00:00', '2026-01-03 01:00:00'),
-(32, 0, 'user32@sekolah.test', '2026-01-04 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'operator', '2026-01-04 01:00:00', '2026-01-04 01:00:00'),
-(33, 0, 'user33@sekolah.test', '2026-01-05 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-05 01:00:00', '2026-01-05 01:00:00'),
-(34, 0, 'user34@sekolah.test', '2026-01-06 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-06 01:00:00', '2026-01-06 01:00:00'),
-(35, 0, 'user35@sekolah.test', '2026-01-07 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'staff', '2026-01-07 01:00:00', '2026-01-07 01:00:00'),
-(36, 0, 'user36@sekolah.test', '2026-01-08 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'operator', '2026-01-08 01:00:00', '2026-01-08 01:00:00'),
-(37, 0, 'user37@sekolah.test', '2026-01-09 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-09 01:00:00', '2026-01-09 01:00:00'),
-(38, 0, 'user38@sekolah.test', '2026-01-10 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-10 01:00:00', '2026-01-10 01:00:00'),
-(39, 0, 'user39@sekolah.test', '2026-01-11 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'staff', '2026-01-11 01:00:00', '2026-01-11 01:00:00'),
-(40, 0, 'user40@sekolah.test', '2026-01-12 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'operator', '2026-01-12 01:00:00', '2026-01-12 01:00:00'),
-(41, 0, 'user41@sekolah.test', '2026-01-13 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-13 01:00:00', '2026-01-13 01:00:00'),
-(42, 0, 'user42@sekolah.test', '2026-01-14 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-14 01:00:00', '2026-01-14 01:00:00'),
-(43, 0, 'user43@sekolah.test', '2026-01-15 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'staff', '2026-01-15 01:00:00', '2026-01-15 01:00:00'),
-(44, 0, 'user44@sekolah.test', '2026-01-16 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'operator', '2026-01-16 01:00:00', '2026-01-16 01:00:00'),
-(45, 0, 'user45@sekolah.test', '2026-01-17 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-17 01:00:00', '2026-01-17 01:00:00'),
-(46, 0, 'user46@sekolah.test', '2026-01-18 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-18 01:00:00', '2026-01-18 01:00:00'),
-(47, 0, 'user47@sekolah.test', '2026-01-19 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'staff', '2026-01-19 01:00:00', '2026-01-19 01:00:00'),
-(48, 0, 'user48@sekolah.test', '2026-01-20 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'operator', '2026-01-20 01:00:00', '2026-01-20 01:00:00'),
-(49, 0, 'user49@sekolah.test', '2026-01-21 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-21 01:00:00', '2026-01-21 01:00:00'),
-(50, 0, 'user50@sekolah.test', '2026-01-22 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-22 01:00:00', '2026-01-22 01:00:00');
+(1, 'User 01', 'user01@sekolah.test', '2026-01-01 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(2, 'User 02', 'user02@sekolah.test', '2026-01-02 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-02 01:00:00', '2026-01-02 01:00:00'),
+(3, 'User 03', 'user03@sekolah.test', '2026-01-03 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-03 01:00:00', '2026-01-03 01:00:00'),
+(4, 'User 04', 'user04@sekolah.test', '2026-01-04 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-04 01:00:00', '2026-01-04 01:00:00'),
+(5, 'User 05', 'user05@sekolah.test', '2026-01-05 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-05 01:00:00', '2026-01-05 01:00:00'),
+(6, 'User 06', 'user06@sekolah.test', '2026-01-06 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-06 01:00:00', '2026-01-06 01:00:00'),
+(7, 'User 07', 'user07@sekolah.test', '2026-01-07 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-07 01:00:00', '2026-01-07 01:00:00'),
+(8, 'User 08', 'user08@sekolah.test', '2026-01-08 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-08 01:00:00', '2026-01-08 01:00:00'),
+(9, 'User 09', 'user09@sekolah.test', '2026-01-09 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-09 01:00:00', '2026-01-09 01:00:00'),
+(10, 'User 10', 'user10@sekolah.test', '2026-01-10 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-10 01:00:00', '2026-01-10 01:00:00'),
+(11, 'User 11', 'user11@sekolah.test', '2026-01-11 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-11 01:00:00', '2026-01-11 01:00:00'),
+(12, 'User 12', 'user12@sekolah.test', '2026-01-12 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-12 01:00:00', '2026-01-12 01:00:00'),
+(13, 'User 13', 'user13@sekolah.test', '2026-01-13 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-13 01:00:00', '2026-01-13 01:00:00'),
+(14, 'User 14', 'user14@sekolah.test', '2026-01-14 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-14 01:00:00', '2026-01-14 01:00:00'),
+(15, 'User 15', 'user15@sekolah.test', '2026-01-15 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-15 01:00:00', '2026-01-15 01:00:00'),
+(16, 'User 16', 'user16@sekolah.test', '2026-01-16 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-16 01:00:00', '2026-01-16 01:00:00'),
+(17, 'User 17', 'user17@sekolah.test', '2026-01-17 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-17 01:00:00', '2026-01-17 01:00:00'),
+(18, 'User 18', 'user18@sekolah.test', '2026-01-18 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-18 01:00:00', '2026-01-18 01:00:00'),
+(19, 'User 19', 'user19@sekolah.test', '2026-01-19 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-19 01:00:00', '2026-01-19 01:00:00'),
+(20, 'User 20', 'user20@sekolah.test', '2026-01-20 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-20 01:00:00', '2026-01-20 01:00:00'),
+(21, 'User 21', 'user21@sekolah.test', '2026-01-21 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-21 01:00:00', '2026-01-21 01:00:00'),
+(22, 'User 22', 'user22@sekolah.test', '2026-01-22 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-22 01:00:00', '2026-01-22 01:00:00'),
+(23, 'User 23', 'user23@sekolah.test', '2026-01-23 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-23 01:00:00', '2026-01-23 01:00:00'),
+(24, 'User 24', 'user24@sekolah.test', '2026-01-24 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-24 01:00:00', '2026-01-24 01:00:00'),
+(25, 'User 25', 'user25@sekolah.test', '2026-01-25 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-25 01:00:00', '2026-01-25 01:00:00'),
+(26, '0', 'user26@sekolah.test', '2026-01-26 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-26 01:00:00', '2026-01-26 01:00:00'),
+(27, '0', 'user27@sekolah.test', '2026-01-27 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-27 01:00:00', '2026-01-27 01:00:00'),
+(28, '0', 'user28@sekolah.test', '2026-01-28 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-28 01:00:00', '2026-01-28 01:00:00'),
+(29, '0', 'user29@sekolah.test', '2026-01-01 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(30, '0', 'user30@sekolah.test', '2026-01-02 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-02 01:00:00', '2026-01-02 01:00:00'),
+(31, '0', 'user31@sekolah.test', '2026-01-03 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-03 01:00:00', '2026-01-03 01:00:00'),
+(32, '0', 'user32@sekolah.test', '2026-01-04 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-04 01:00:00', '2026-01-04 01:00:00'),
+(33, '0', 'user33@sekolah.test', '2026-01-05 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-05 01:00:00', '2026-01-05 01:00:00'),
+(34, '0', 'user34@sekolah.test', '2026-01-06 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-06 01:00:00', '2026-01-06 01:00:00'),
+(35, '0', 'user35@sekolah.test', '2026-01-07 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-07 01:00:00', '2026-01-07 01:00:00'),
+(36, '0', 'user36@sekolah.test', '2026-01-08 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-08 01:00:00', '2026-01-08 01:00:00'),
+(37, '0', 'user37@sekolah.test', '2026-01-09 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-09 01:00:00', '2026-01-09 01:00:00'),
+(38, '0', 'user38@sekolah.test', '2026-01-10 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-10 01:00:00', '2026-01-10 01:00:00'),
+(39, '0', 'user39@sekolah.test', '2026-01-11 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-11 01:00:00', '2026-01-11 01:00:00'),
+(40, '0', 'user40@sekolah.test', '2026-01-12 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-12 01:00:00', '2026-01-12 01:00:00'),
+(41, '0', 'user41@sekolah.test', '2026-01-13 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-13 01:00:00', '2026-01-13 01:00:00'),
+(42, '0', 'user42@sekolah.test', '2026-01-14 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-14 01:00:00', '2026-01-14 01:00:00'),
+(43, '0', 'user43@sekolah.test', '2026-01-15 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-15 01:00:00', '2026-01-15 01:00:00'),
+(44, '0', 'user44@sekolah.test', '2026-01-16 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-16 01:00:00', '2026-01-16 01:00:00'),
+(45, '0', 'user45@sekolah.test', '2026-01-17 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-17 01:00:00', '2026-01-17 01:00:00'),
+(46, '0', 'user46@sekolah.test', '2026-01-18 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-18 01:00:00', '2026-01-18 01:00:00'),
+(47, '0', 'user47@sekolah.test', '2026-01-19 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-19 01:00:00', '2026-01-19 01:00:00'),
+(48, '0', 'user48@sekolah.test', '2026-01-20 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-20 01:00:00', '2026-01-20 01:00:00'),
+(49, '0', 'user49@sekolah.test', '2026-01-21 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-21 01:00:00', '2026-01-21 01:00:00'),
+(50, '0', 'user50@sekolah.test', '2026-01-22 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-22 01:00:00', '2026-01-22 01:00:00');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `t_wali_kelas`
+-- Struktur dari tabel `t_wali_kelas`
 --
 
 CREATE TABLE `t_wali_kelas` (
@@ -708,7 +708,7 @@ CREATE TABLE `t_wali_kelas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `t_wali_kelas`
+-- Dumping data untuk tabel `t_wali_kelas`
 --
 
 INSERT INTO `t_wali_kelas` (`id`, `tahun_ajaran_id`, `kelas_id`, `guru_id`, `tanggal_mulai`, `tanggal_selesai`, `status_aktif`, `created_at`, `update_at`) VALUES
@@ -768,20 +768,20 @@ INSERT INTO `t_wali_kelas` (`id`, `tahun_ajaran_id`, `kelas_id`, `guru_id`, `tan
 --
 
 --
--- Indexes for table `t_guru`
+-- Indeks untuk tabel `t_guru`
 --
 ALTER TABLE `t_guru`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
 
 --
--- Indexes for table `t_kelas`
+-- Indeks untuk tabel `t_kelas`
 --
 ALTER TABLE `t_kelas`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `t_kelas_siswa`
+-- Indeks untuk tabel `t_kelas_siswa`
 --
 ALTER TABLE `t_kelas_siswa`
   ADD PRIMARY KEY (`id`),
@@ -790,20 +790,20 @@ ALTER TABLE `t_kelas_siswa`
   ADD KEY `kelas_id` (`kelas_id`);
 
 --
--- Indexes for table `t_pelanggaran`
+-- Indeks untuk tabel `t_pelanggaran`
 --
 ALTER TABLE `t_pelanggaran`
   ADD PRIMARY KEY (`id`),
   ADD KEY `pelanggaran_kategori_id` (`pelanggaran_kategori_id`);
 
 --
--- Indexes for table `t_pelanggaran_kategori`
+-- Indeks untuk tabel `t_pelanggaran_kategori`
 --
 ALTER TABLE `t_pelanggaran_kategori`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `t_pelanggaran_siswa`
+-- Indeks untuk tabel `t_pelanggaran_siswa`
 --
 ALTER TABLE `t_pelanggaran_siswa`
   ADD PRIMARY KEY (`id`),
@@ -815,25 +815,25 @@ ALTER TABLE `t_pelanggaran_siswa`
   ADD KEY `guru_id` (`guru_id`);
 
 --
--- Indexes for table `t_siswa`
+-- Indeks untuk tabel `t_siswa`
 --
 ALTER TABLE `t_siswa`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `t_tahun_ajaran`
+-- Indeks untuk tabel `t_tahun_ajaran`
 --
 ALTER TABLE `t_tahun_ajaran`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `t_users`
+-- Indeks untuk tabel `t_users`
 --
 ALTER TABLE `t_users`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `t_wali_kelas`
+-- Indeks untuk tabel `t_wali_kelas`
 --
 ALTER TABLE `t_wali_kelas`
   ADD PRIMARY KEY (`id`),
@@ -842,81 +842,81 @@ ALTER TABLE `t_wali_kelas`
   ADD KEY `guru_id` (`guru_id`);
 
 --
--- AUTO_INCREMENT for dumped tables
+-- AUTO_INCREMENT untuk tabel yang dibuang
 --
 
 --
--- AUTO_INCREMENT for table `t_guru`
+-- AUTO_INCREMENT untuk tabel `t_guru`
 --
 ALTER TABLE `t_guru`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
--- AUTO_INCREMENT for table `t_kelas`
+-- AUTO_INCREMENT untuk tabel `t_kelas`
 --
 ALTER TABLE `t_kelas`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
--- AUTO_INCREMENT for table `t_kelas_siswa`
+-- AUTO_INCREMENT untuk tabel `t_kelas_siswa`
 --
 ALTER TABLE `t_kelas_siswa`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
--- AUTO_INCREMENT for table `t_pelanggaran`
+-- AUTO_INCREMENT untuk tabel `t_pelanggaran`
 --
 ALTER TABLE `t_pelanggaran`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
--- AUTO_INCREMENT for table `t_pelanggaran_kategori`
+-- AUTO_INCREMENT untuk tabel `t_pelanggaran_kategori`
 --
 ALTER TABLE `t_pelanggaran_kategori`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
--- AUTO_INCREMENT for table `t_pelanggaran_siswa`
+-- AUTO_INCREMENT untuk tabel `t_pelanggaran_siswa`
 --
 ALTER TABLE `t_pelanggaran_siswa`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
--- AUTO_INCREMENT for table `t_siswa`
+-- AUTO_INCREMENT untuk tabel `t_siswa`
 --
 ALTER TABLE `t_siswa`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
--- AUTO_INCREMENT for table `t_tahun_ajaran`
+-- AUTO_INCREMENT untuk tabel `t_tahun_ajaran`
 --
 ALTER TABLE `t_tahun_ajaran`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
--- AUTO_INCREMENT for table `t_users`
+-- AUTO_INCREMENT untuk tabel `t_users`
 --
 ALTER TABLE `t_users`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
--- AUTO_INCREMENT for table `t_wali_kelas`
+-- AUTO_INCREMENT untuk tabel `t_wali_kelas`
 --
 ALTER TABLE `t_wali_kelas`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
--- Constraints for dumped tables
+-- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)
 --
 
 --
--- Constraints for table `t_guru`
+-- Ketidakleluasaan untuk tabel `t_guru`
 --
 ALTER TABLE `t_guru`
   ADD CONSTRAINT `t_guru_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `t_users` (`id`) ON UPDATE CASCADE;
 
 --
--- Constraints for table `t_kelas_siswa`
+-- Ketidakleluasaan untuk tabel `t_kelas_siswa`
 --
 ALTER TABLE `t_kelas_siswa`
   ADD CONSTRAINT `t_kelas_siswa_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `t_siswa` (`id`) ON UPDATE CASCADE,
@@ -924,13 +924,13 @@ ALTER TABLE `t_kelas_siswa`
   ADD CONSTRAINT `t_kelas_siswa_ibfk_3` FOREIGN KEY (`kelas_id`) REFERENCES `t_kelas` (`id`) ON UPDATE CASCADE;
 
 --
--- Constraints for table `t_pelanggaran`
+-- Ketidakleluasaan untuk tabel `t_pelanggaran`
 --
 ALTER TABLE `t_pelanggaran`
   ADD CONSTRAINT `t_pelanggaran_ibfk_1` FOREIGN KEY (`pelanggaran_kategori_id`) REFERENCES `t_pelanggaran_kategori` (`id`) ON UPDATE CASCADE;
 
 --
--- Constraints for table `t_pelanggaran_siswa`
+-- Ketidakleluasaan untuk tabel `t_pelanggaran_siswa`
 --
 ALTER TABLE `t_pelanggaran_siswa`
   ADD CONSTRAINT `t_pelanggaran_siswa_ibfk_1` FOREIGN KEY (`tahun_ajaran_id`) REFERENCES `t_tahun_ajaran` (`id`) ON UPDATE CASCADE,
@@ -941,7 +941,7 @@ ALTER TABLE `t_pelanggaran_siswa`
   ADD CONSTRAINT `t_pelanggaran_siswa_ibfk_6` FOREIGN KEY (`guru_id`) REFERENCES `t_guru` (`id`) ON UPDATE CASCADE;
 
 --
--- Constraints for table `t_wali_kelas`
+-- Ketidakleluasaan untuk tabel `t_wali_kelas`
 --
 ALTER TABLE `t_wali_kelas`
   ADD CONSTRAINT `t_wali_kelas_ibfk_1` FOREIGN KEY (`tahun_ajaran_id`) REFERENCES `t_tahun_ajaran` (`id`) ON UPDATE CASCADE,

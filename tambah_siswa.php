@@ -21,6 +21,7 @@ $nama = "";
 $jenis_kelamin = "";
 $tanggal_lahir = "";
 $alamat = "";
+$status_aktif = "1";
 
 if (isset($_POST['simpan'])) {
     $nis = trim($_POST['nis'] ?? '');
@@ -29,6 +30,7 @@ if (isset($_POST['simpan'])) {
     $jenis_kelamin = $_POST['jenis_kelamin'] ?? '';
     $tanggal_lahir = $_POST['tanggal_lahir'] ?? '';
     $alamat = trim($_POST['alamat'] ?? '');
+    $status_aktif = $_POST['status_aktif'] ?? '1';
 
     if (
         $nis == "" || $nisn == "" || $nama == "" ||
@@ -53,7 +55,8 @@ if (isset($_POST['simpan'])) {
                 $nama,
                 $jenis_kelamin,
                 $tanggal_lahir,
-                $alamat
+                $alamat,
+                $status_aktif
             );
 
             if (mysqli_stmt_execute($stmt)) {
@@ -280,6 +283,20 @@ if (isset($_POST['simpan'])) {
                                 class="form-control"
                                 rows="3"
                                 required><?= htmlspecialchars($alamat); ?></textarea>
+                        </div>
+                           <div class="mb-4">
+                            <label class="form-label">Status Aktif</label>
+                            <select name="status_aktif"
+                                    class="form-select" required>
+                                <option value="1"
+                                    <?= $status_aktif === '1' ? 'selected' : '' ?>>
+                                    Aktif
+                                </option>
+                                <option value="0"
+                                    <?= $status_aktif === '0' ? 'selected' : '' ?>>
+                                    Tidak Aktif
+                                </option>
+                            </select>
                         </div>
 
                         <button

@@ -103,7 +103,7 @@ if (!$result) {
                                     <th>No</th>
                                     <th>Kategori</th>
                                     <th>Kode</th>
-                                    <th>Nama Pelanggaran</th>
+                                    <th>Jenis Pelanggaran</th>
                                     <th>Poin</th>
                                     <th>Deskripsi</th>
                                     <th>Aksi</th>
@@ -134,7 +134,7 @@ if (!$result) {
                                     </td>
                                 </tr>
                             <?php } ?>
-                            </tbody>
+                            </body>
                         </table>
                     </div>
 

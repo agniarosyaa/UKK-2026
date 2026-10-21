@@ -7,8 +7,7 @@ if (!isset($_SESSION['login'])) {
 }
 
 if (strtolower($_SESSION['role'] ?? '') != 'admin') {
-    echo "Anda tidak memiliki akses";
-    exit;
+    exit("Anda tidak memiliki akses");
 }
 
 include "config/koneksi.php";
@@ -20,7 +19,6 @@ if (!$result) {
     die("Gagal mengambil data laporan: " . mysqli_error($koneksi));
 }
 
-/* AMBIL DATA DAN HITUNG RINGKASAN */
 $rows = [];
 $total_data = 0;
 $total_selesai = 0;
@@ -33,9 +31,9 @@ while ($row = mysqli_fetch_assoc($result)) {
 
     $status = strtolower(trim($row['status'] ?? ''));
 
-    if ($status === 'selesai') {
+    if ($status == 'selesai') {
         $total_selesai++;
-    } elseif ($status === 'diproses') {
+    } elseif ($status == 'diproses') {
         $total_diproses++;
     }
 
@@ -45,385 +43,188 @@ while ($row = mysqli_fetch_assoc($result)) {
 
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Laporan Pelanggaran Siswa</title>
 
-    <!-- Bootstrap CSS -->
+    <!-- BOOTSTRAP CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
           rel="stylesheet">
 
-    <!-- DataTables CSS -->
+    <!-- DATATABLES CSS -->
     <link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css"
           rel="stylesheet">
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            color: #263238;
-        }
-
-        .sidebar {
-            min-height: 100vh;
-        }
-
-        .sidebar .nav-link {
-            font-size: 14px;
-            padding: 10px 12px;
-            border-radius: 7px;
-        }
-
-        .page-title {
-            font-weight: 700;
-            color: #212529;
-        }
-
-        .summary-card {
-            border: 0;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            height: 100%;
-        }
-
-        .summary-label {
-            color: #6c757d;
-            font-size: 13px;
-            margin-bottom: 8px;
-        }
-
-        .summary-number {
-            font-size: 27px;
-            font-weight: 700;
-            margin-bottom: 0;
-        }
-
-        .summary-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 21px;
-            flex-shrink: 0;
-        }
-
-        .report-card {
-            border: 0;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
-
-        #tabelLaporan {
-            width: 100% !important;
-            font-size: 13px;
-        }
-
-        #tabelLaporan thead th {
-            white-space: nowrap;
-            vertical-align: middle;
-            padding: 13px 10px;
-        }
-
-        #tabelLaporan tbody td {
-            padding: 12px 10px;
-            vertical-align: middle;
-        }
-
-        .filter-label {
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 6px;
-        }
-
-        .table-responsive {
-            border-radius: 8px;
-        }
-
-        .report-subtitle {
-            color: #6c757d;
-            font-size: 14px;
-        }
-
-        @media print {
-            @page {
-                size: landscape;
-                margin: 10mm;
-            }
-
-            body {
-                background: #fff !important;
-                font-size: 10px;
-                color: #000;
-            }
-
-            .sidebar,
-            .no-print,
-            .dataTables_length,
-            .dataTables_filter,
-            .dataTables_info,
-            .dataTables_paginate {
-                display: none !important;
-            }
-
-            main {
-                width: 100% !important;
-                max-width: 100% !important;
-                flex: 0 0 100% !important;
-                padding: 0 !important;
-            }
-
-            .container-fluid,
-            .row {
-                display: block !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-
-            .report-card,
-            .summary-card {
-                box-shadow: none !important;
-                border: 1px solid #ddd !important;
-            }
-
-            .summary-card {
-                padding: 10px !important;
-            }
-
-            .summary-number {
-                font-size: 18px;
-            }
-
-            .table-responsive {
-                overflow: visible !important;
-            }
-
-            #tabelLaporan {
-                width: 100% !important;
-                font-size: 8px !important;
-            }
-
-            #tabelLaporan thead th,
-            #tabelLaporan tbody td {
-                padding: 5px !important;
-                white-space: normal !important;
-            }
-
-            #tabelLaporan thead {
-                display: table-header-group;
-            }
-
-            #tabelLaporan tr {
-                break-inside: avoid;
-            }
-
-            .badge {
-                color: #000 !important;
-                background: transparent !important;
-                border: 1px solid #777;
-            }
-
-            .print-only {
-                display: block !important;
-            }
-        }
-
-        .print-only {
-            display: none;
-        }
-    </style>
 </head>
 
-<body class="bg-light">
+<body>
 
 <div class="container-fluid">
     <div class="row">
 
-        <!-- SIDEBAR -->
-        <aside class="sidebar col-md-3 col-lg-2 bg-dark p-3 no-print">
+        <!-- SIDEBAR: DISAMAKAN DENGAN SISWA.PHP -->
+        <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
 
-            <h5 class="text-white mb-4">
-                Sistem Pelanggaran
-            </h5>
+            <h4 class="text-white mb-4">Sistem Pelanggaran</h4>
 
-            <nav class="nav nav-pills flex-column gap-2">
+            <ul class="nav nav-pills flex-column gap-2">
 
-                <a class="nav-link text-white" href="dashboard.php">
-                    Dashboard
-                </a>
+                <li class="nav-item">
+                    <a href="dashboard.php" class="nav-link text-white">
+                        Dashboard
+                    </a>
+                </li>
 
-                <a class="nav-link text-white" href="siswa.php">
-                    Kelola Siswa
-                </a>
+                <li class="nav-item">
+                    <a href="siswa.php" class="nav-link text-white">
+                        Kelola Siswa
+                    </a>
+                </li>
 
-                <a class="nav-link text-white" href="guru.php">
-                    Kelola Guru
-                </a>
+                <li class="nav-item">
+                    <a href="guru.php" class="nav-link text-white">
+                        Kelola Guru
+                    </a>
+                </li>
 
-                <a class="nav-link text-white" href="kelas.php">
-                    Kelola Kelas
-                </a>
+                <li class="nav-item">
+                    <a href="kelas.php" class="nav-link text-white">
+                        Kelola Kelas
+                    </a>
+                </li>
 
-                <a class="nav-link text-white" href="tahun_ajaran.php">
-                    Tahun Ajaran
-                </a>
+                <li class="nav-item">
+                    <a href="tahun_ajaran.php" class="nav-link text-white">
+                        Tahun Ajaran
+                    </a>
+                </li>
 
-                <a class="nav-link text-white" href="penempatan_siswa.php">
-                    Penempatan Siswa
-                </a>
+                <li class="nav-item">
+                    <a href="penempatan_siswa.php" class="nav-link text-white">
+                        Penempatan Siswa
+                    </a>
+                </li>
 
-                <a class="nav-link text-white" href="wali_kelas.php">
-                    Wali Kelas
-                </a>
+                <li class="nav-item">
+                    <a href="wali_kelas.php" class="nav-link text-white">
+                        Wali Kelas
+                    </a>
+                </li>
 
-                <a class="nav-link text-white" href="kategori_pelanggaran.php">
-                    Kategori Pelanggaran
-                </a>
+                <li class="nav-item">
+                    <a href="kategori_pelanggaran.php" class="nav-link text-white">
+                        Kategori Pelanggaran
+                    </a>
+                </li>
 
-                <a class="nav-link text-white" href="jenis_pelanggaran.php">
-                    Jenis Pelanggaran
-                </a>
+                <li class="nav-item">
+                    <a href="jenis_pelanggaran.php" class="nav-link text-white">
+                        Jenis Pelanggaran
+                    </a>
+                </li>
 
-                <a class="nav-link active" href="laporan.php">
-                    Laporan
-                </a>
+                <li class="nav-item">
+                    <a href="laporan.php" class="nav-link active">
+                        Laporan
+                    </a>
+                </li>
 
-                <a class="nav-link text-white" href="about_me.php">
-                    About Me
-                </a>
+                <!-- GARIS PEMISAH DI BAWAH LAPORAN -->
+                <hr class="text-secondary">
 
-                <hr class="border-secondary">
+                <li class="nav-item">
+                    <a href="about_me.php" class="nav-link text-white">
+                        About Me
+                    </a>
+                </li>
 
-                <a class="nav-link text-danger"
-                   href="logout.php"
-                   onclick="return confirm('Yakin ingin logout?')">
-                    Logout
-                </a>
+                <li class="nav-item">
+                    <a href="logout.php"
+                       class="nav-link text-danger"
+                       onclick="return confirm('Yakin ingin logout?')">
+                        Logout
+                    </a>
+                </li>
 
-            </nav>
+            </ul>
         </aside>
 
         <!-- KONTEN UTAMA -->
-        <main class="col-md-9 col-lg-10 p-3 p-md-4 p-lg-4">
+        <main class="col-md-9 col-lg-10 p-4">
 
-            <!-- HEADER LAPORAN -->
+            <!-- HEADER -->
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
 
                 <div>
-                    <h3 class="page-title mb-1">
+                    <h3 class="fw-bold mb-1">
                         Laporan Pelanggaran Siswa
                     </h3>
 
-                    <p class="report-subtitle mb-0">
+                    <p class="text-muted mb-0">
                         Rekap dan pemantauan data pelanggaran siswa
                     </p>
                 </div>
 
-                <div class="d-flex gap-2 no-print">
-
+                <div class="d-flex gap-2">
                     <button type="button"
-                            onclick="resetFilter()"
-                            class="btn btn-outline-secondary">
+                            class="btn btn-outline-secondary"
+                            onclick="resetFilter()">
                         Reset Filter
                     </button>
 
                     <button type="button"
-                            onclick="window.print()"
-                            class="btn btn-primary px-4">
+                            class="btn btn-primary"
+                            onclick="window.print()">
                         Cetak Laporan
                     </button>
-
                 </div>
+
             </div>
 
-            <!-- JUDUL KHUSUS CETAK -->
-            <div class="print-only mb-3">
-                <h4 class="fw-bold">Laporan Pelanggaran Siswa</h4>
-                <p>Dicetak pada: <?= date('d-m-Y H:i'); ?></p>
-            </div>
-
-            <!-- KARTU RINGKASAN -->
+            <!-- RINGKASAN -->
             <div class="row g-3 mb-4">
 
                 <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="card summary-card">
-                        <div class="card-body d-flex align-items-center justify-content-between">
-
-                            <div>
-                                <p class="summary-label">Total Pelanggaran</p>
-                                <h4 class="summary-number">
-                                    <?= number_format($total_data, 0, ',', '.'); ?>
-                                </h4>
-                                <small class="text-muted">Seluruh data</small>
-                            </div>
-
-                            <div class="summary-icon bg-primary-subtle text-primary">
-                                <span>📋</span>
-                            </div>
-
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <p class="text-muted mb-2">Total Pelanggaran</p>
+                            <h3 class="fw-bold text-primary">
+                                <?= number_format($total_data, 0, ',', '.'); ?>
+                            </h3>
                         </div>
                     </div>
                 </div>
 
                 <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="card summary-card">
-                        <div class="card-body d-flex align-items-center justify-content-between">
-
-                            <div>
-                                <p class="summary-label">Pelanggaran Selesai</p>
-                                <h4 class="summary-number text-success">
-                                    <?= number_format($total_selesai, 0, ',', '.'); ?>
-                                </h4>
-                                <small class="text-muted">Status selesai</small>
-                            </div>
-
-                            <div class="summary-icon bg-success-subtle text-success">
-                                <span>✓</span>
-                            </div>
-
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <p class="text-muted mb-2">Pelanggaran Selesai</p>
+                            <h3 class="fw-bold text-success">
+                                <?= number_format($total_selesai, 0, ',', '.'); ?>
+                            </h3>
                         </div>
                     </div>
                 </div>
 
                 <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="card summary-card">
-                        <div class="card-body d-flex align-items-center justify-content-between">
-
-                            <div>
-                                <p class="summary-label">Sedang Diproses</p>
-                                <h4 class="summary-number text-warning">
-                                    <?= number_format($total_diproses, 0, ',', '.'); ?>
-                                </h4>
-                                <small class="text-muted">Perlu ditindaklanjuti</small>
-                            </div>
-
-                            <div class="summary-icon bg-warning-subtle text-warning">
-                                <span>◷</span>
-                            </div>
-
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <p class="text-muted mb-2">Sedang Diproses</p>
+                            <h3 class="fw-bold text-warning">
+                                <?= number_format($total_diproses, 0, ',', '.'); ?>
+                            </h3>
                         </div>
                     </div>
                 </div>
 
                 <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="card summary-card">
-                        <div class="card-body d-flex align-items-center justify-content-between">
-
-                            <div>
-                                <p class="summary-label">Total Poin</p>
-                                <h4 class="summary-number text-primary">
-                                    <?= number_format($total_poin, 0, ',', '.'); ?>
-                                </h4>
-                                <small class="text-muted">Akumulasi poin</small>
-                            </div>
-
-                            <div class="summary-icon bg-info-subtle text-info">
-                                <span>★</span>
-                            </div>
-
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <p class="text-muted mb-2">Total Poin</p>
+                            <h3 class="fw-bold text-info">
+                                <?= number_format($total_poin, 0, ',', '.'); ?>
+                            </h3>
                         </div>
                     </div>
                 </div>
@@ -431,32 +232,27 @@ while ($row = mysqli_fetch_assoc($result)) {
             </div>
 
             <!-- TABEL LAPORAN -->
-            <div class="card report-card">
+            <div class="card border-0 shadow-sm">
                 <div class="card-body p-3 p-md-4">
 
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-
                         <div>
-                            <h5 class="fw-bold mb-1">
-                                Data Laporan
-                            </h5>
-
+                            <h5 class="fw-bold mb-1">Data Laporan</h5>
                             <p class="text-muted small mb-0">
-                                Gunakan filter untuk mencari data tertentu.
+                                Cari dan filter data pelanggaran siswa.
                             </p>
                         </div>
 
-                        <span class="badge bg-primary-subtle text-primary px-3 py-2">
+                        <span class="badge bg-primary">
                             <?= number_format($total_data, 0, ',', '.'); ?> data
                         </span>
-
                     </div>
 
                     <!-- FILTER -->
-                    <div class="row g-3 mb-4 no-print">
+                    <div class="row g-3 mb-4">
 
-                        <div class="col-12 col-md-4 col-lg-3">
-                            <label for="filterStatus" class="filter-label">
+                        <div class="col-12 col-md-4">
+                            <label for="filterStatus" class="form-label">
                                 Status Pelanggaran
                             </label>
 
@@ -467,8 +263,8 @@ while ($row = mysqli_fetch_assoc($result)) {
                             </select>
                         </div>
 
-                        <div class="col-12 col-md-4 col-lg-3">
-                            <label for="tanggalMulai" class="filter-label">
+                        <div class="col-12 col-md-4">
+                            <label for="tanggalMulai" class="form-label">
                                 Dari Tanggal
                             </label>
 
@@ -477,8 +273,8 @@ while ($row = mysqli_fetch_assoc($result)) {
                                    class="form-control">
                         </div>
 
-                        <div class="col-12 col-md-4 col-lg-3">
-                            <label for="tanggalAkhir" class="filter-label">
+                        <div class="col-12 col-md-4">
+                            <label for="tanggalAkhir" class="form-label">
                                 Sampai Tanggal
                             </label>
 
@@ -491,7 +287,6 @@ while ($row = mysqli_fetch_assoc($result)) {
 
                     <!-- TABEL -->
                     <div class="table-responsive">
-
                         <table id="tabelLaporan"
                                class="table table-bordered table-hover align-middle">
 
@@ -512,30 +307,28 @@ while ($row = mysqli_fetch_assoc($result)) {
                             </thead>
 
                             <tbody>
-
-                            <?php foreach ($rows as $row) { ?>
-
+                            <?php foreach ($rows as $row): ?>
                                 <tr>
                                     <td></td>
 
                                     <td>
-                                        <?= htmlspecialchars($row['nama_siswa'] ?? ''); ?>
+                                        <?= htmlspecialchars($row['nama_siswa'] ?? '-'); ?>
                                     </td>
 
                                     <td>
-                                        <?= htmlspecialchars($row['nama_kelas'] ?? ''); ?>
+                                        <?= htmlspecialchars($row['nama_kelas'] ?? '-'); ?>
                                     </td>
 
                                     <td>
-                                        <?= htmlspecialchars($row['nama_guru'] ?? ''); ?>
+                                        <?= htmlspecialchars($row['nama_guru'] ?? '-'); ?>
                                     </td>
 
                                     <td>
-                                        <?= htmlspecialchars($row['nama_pelanggaran'] ?? ''); ?>
+                                        <?= htmlspecialchars($row['nama_pelanggaran'] ?? '-'); ?>
                                     </td>
 
                                     <td>
-                                        <?= htmlspecialchars($row['pelanggaran_kategori_id'] ?? ''); ?>
+                                        <?= htmlspecialchars($row['pelanggaran_kategori_id'] ?? '-'); ?>
                                     </td>
 
                                     <td>
@@ -549,24 +342,24 @@ while ($row = mysqli_fetch_assoc($result)) {
                                     </td>
 
                                     <td>
-                                        <?= htmlspecialchars($row['keterangan'] ?? ''); ?>
+                                        <?= htmlspecialchars($row['keterangan'] ?? '-'); ?>
                                     </td>
 
                                     <td>
-                                        <?= htmlspecialchars($row['poin'] ?? '0'); ?>
+                                        <?= (int)($row['poin'] ?? 0); ?>
                                     </td>
 
                                     <td>
-                                        <?= htmlspecialchars($row['tindakan'] ?? ''); ?>
+                                        <?= htmlspecialchars($row['tindakan'] ?? '-'); ?>
                                     </td>
 
                                     <td>
                                         <?php
-                                        $status = $row['status'] ?? '';
+                                        $status = trim($row['status'] ?? '');
 
-                                        if (strtolower(trim($status)) === 'selesai') {
+                                        if (strtolower($status) == 'selesai') {
                                             echo '<span class="badge bg-success">Selesai</span>';
-                                        } elseif (strtolower(trim($status)) === 'diproses') {
+                                        } elseif (strtolower($status) == 'diproses') {
                                             echo '<span class="badge bg-warning text-dark">Diproses</span>';
                                         } else {
                                             echo '<span class="badge bg-secondary">'
@@ -576,31 +369,31 @@ while ($row = mysqli_fetch_assoc($result)) {
                                         ?>
                                     </td>
                                 </tr>
-
-                            <?php } ?>
-
+                            <?php endforeach; ?>
                             </tbody>
 
                         </table>
-
                     </div>
 
                     <div class="d-flex flex-wrap justify-content-between gap-2 mt-3">
                         <small class="text-muted">
-                            Total seluruh data:
-                            <strong><?= number_format($total_data, 0, ',', '.'); ?></strong>
+                            Total data:
+                            <strong>
+                                <?= number_format($total_data, 0, ',', '.'); ?>
+                            </strong>
                         </small>
 
                         <small class="text-muted">
-                            Total poin seluruh laporan:
-                            <strong><?= number_format($total_poin, 0, ',', '.'); ?></strong>
+                            Total poin:
+                            <strong>
+                                <?= number_format($total_poin, 0, ',', '.'); ?>
+                            </strong>
                         </small>
                     </div>
 
                 </div>
             </div>
 
-            <!-- FOOTER -->
             <div class="text-center text-muted small mt-4">
                 Sistem Informasi Pelanggaran Siswa
             </div>
@@ -612,14 +405,16 @@ while ($row = mysqli_fetch_assoc($result)) {
 
 <!-- JAVASCRIPT -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
 <script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+
 <script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
 $(document).ready(function () {
 
-    // Ubah format tanggal dari dd-mm-yyyy menjadi yyyy-mm-dd
     function ubahTanggal(tanggal) {
         if (!tanggal || tanggal === '-') {
             return '';
@@ -634,7 +429,6 @@ $(document).ready(function () {
         return bagian[2] + '-' + bagian[1] + '-' + bagian[0];
     }
 
-    // Filter status dan tanggal
     $.fn.dataTable.ext.search.push(function (settings, data) {
 
         if (settings.nTable.id !== 'tabelLaporan') {
@@ -672,16 +466,14 @@ $(document).ready(function () {
     const tabel = $('#tabelLaporan').DataTable({
         pageLength: 10,
         lengthMenu: [5, 10, 25, 50],
-        searching: true,
-        ordering: true,
         order: [[6, 'desc']],
         autoWidth: false,
 
         columnDefs: [
             {
+                targets: 0,
                 orderable: false,
-                searchable: false,
-                targets: 0
+                searchable: false
             },
             {
                 targets: [0, 5, 6, 8, 10],

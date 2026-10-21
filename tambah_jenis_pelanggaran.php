@@ -213,19 +213,25 @@ if (isset($_POST['simpan'])) {
                                    required>
                         </div>
 
-                        <!-- NAMA -->
-                        <div class="mb-3">
-                            <label for="nama" class="form-label">
-                                Nama Pelanggaran
-                            </label>
+<!-- JENIS PELANGGARAN -->
+<div class="mb-3">
+    <label for="nama" class="form-label">
+        Jenis Pelanggaran
+    </label>
 
-                            <input type="text"
-                                   name="nama"
-                                   id="nama"
-                                   class="form-control"
-                                   value="<?= htmlspecialchars($nama) ?>"
-                                   required>
-                        </div>
+    <select name="nama" id="nama" class="form-select" required>
+        <option value="">-- Pilih Jenis Pelanggaran --</option>
+        <option value="Terlambat Datang">Terlambat Datang</option>
+        <option value="Tidak Memakai Seragam">Tidak Memakai Seragam</option>
+        <option value="Tidak Mengerjakan Tugas">Tidak Mengerjakan Tugas</option>
+        <option value="Membolos">Membolos</option>
+        <option value="Rambut Tidak Rapi">Rambut Tidak Rapi</option>
+        <option value="Berkelahi">Berkelahi</option>
+        <option value="Merokok">Merokok</option>
+        <option value="Merusak Fasilitas Sekolah">Merusak Fasilitas Sekolah</option>
+    </select>
+</div>
+
 
                         <!-- POIN -->
                         <div class="mb-3">

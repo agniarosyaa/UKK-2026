@@ -30,29 +30,76 @@ if (!$data) {
     <title>Tindakan Pelanggaran</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body class="bg-body-tertiary">
+<body>
 
 <div class="container-fluid">
 <div class="row">
 
+    <!-- SIDEBAR -->
     <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
-        <h5 class="text-white mb-4">Sistem Pelanggaran</h5>
-        <nav class="nav nav-pills flex-column gap-1">
-            <a href="dashboard.php" class="nav-link text-white">Dashboard</a>
-            <a href="catat_pelanggaran.php" class="nav-link text-white">Catat Pelanggaran</a>
-            <a href="tindakan.php" class="nav-link active">Tindakan</a>
-            <a href="riwayat.php" class="nav-link text-white">Riwayat</a>
-            <a href="rekap_poin.php" class="nav-link text-white">Rekap Poin</a>
+      <h5 class="text-white mb-4">
+    Sistem Pelanggaran
+</h5>
+
+        <ul class="nav nav-pills flex-column gap-2">
+
+            <li class="nav-item">
+                <a href="dashboard.php" class="nav-link text-white">
+                    Dashboard
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="catat_pelanggaran.php" class="nav-link text-white">
+                    Catat Pelanggaran
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="tindakan.php" class="nav-link active">
+                    Tindakan
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="riwayat.php" class="nav-link text-white">
+                    Riwayat
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="rekap_poin.php" class="nav-link text-white">
+                    Rekap Poin
+                </a>
+            </li>
+
+            <!-- GARIS PEMISAH -->
             <hr class="text-secondary">
-            <a href="about_me.php" class="nav-link text-white">About Me</a>
-            <a href="logout.php" class="nav-link text-danger"
-               onclick="return confirm('Yakin ingin logout?')">Logout</a>
-        </nav>
+
+            <li class="nav-item">
+                <a href="about_me.php" class="nav-link text-white">
+                    About Me
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="logout.php"
+                   class="nav-link text-danger"
+                   onclick="return confirm('Yakin ingin logout?')">
+                    Logout
+                </a>
+            </li>
+
+        </ul>
     </aside>
 
+    <!-- KONTEN -->
     <main class="col-md-9 col-lg-10 p-4">
+
         <h1 class="mb-2">Tindakan Pelanggaran</h1>
-        <p class="text-secondary mb-4">Kelola tindakan dan status pelanggaran siswa.</p>
+        <p class="text-secondary mb-4">
+            Kelola tindakan dan status pelanggaran siswa.
+        </p>
 
         <?php if (isset($_GET['berhasil'])): ?>
             <div class="alert alert-success alert-dismissible fade show">
@@ -65,6 +112,7 @@ if (!$data) {
             <div class="card-header bg-primary text-white py-3">
                 Data Tindakan Pelanggaran
             </div>
+
             <div class="card-body p-4">
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover align-middle">
@@ -81,22 +129,41 @@ if (!$data) {
                                 <th>Aksi</th>
                             </tr>
                         </thead>
+
                         <tbody>
                         <?php if (mysqli_num_rows($data) > 0): ?>
                             <?php $no = 1; ?>
+
                             <?php while ($row = mysqli_fetch_assoc($data)): ?>
                                 <tr>
                                     <td><?= $no++ ?></td>
-                                    <td><?= htmlspecialchars($row['nama_siswa'] ?? '') ?></td>
-                                    <td><?= htmlspecialchars($row['nama_kelas'] ?? '') ?></td>
-                                    <td><?= htmlspecialchars($row['nama_pelanggaran'] ?? '') ?></td>
-                                    <td><?= htmlspecialchars($row['tanggal'] ?? '') ?></td>
+
+                                    <td>
+                                        <?= htmlspecialchars($row['nama_siswa'] ?? '') ?>
+                                    </td>
+
+                                    <td>
+                                        <?= htmlspecialchars($row['nama_kelas'] ?? '') ?>
+                                    </td>
+
+                                    <td>
+                                        <?= htmlspecialchars($row['nama_pelanggaran'] ?? '') ?>
+                                    </td>
+
+                                    <td>
+                                        <?= htmlspecialchars($row['tanggal'] ?? '') ?>
+                                    </td>
+
                                     <td>
                                         <span class="badge bg-primary">
                                             <?= (int)$row['poin'] ?> poin
                                         </span>
                                     </td>
-                                    <td><?= htmlspecialchars($row['tindakan'] ?? '') ?: '-' ?></td>
+
+                                    <td>
+                                        <?= htmlspecialchars($row['tindakan'] ?? '') ?: '-' ?>
+                                    </td>
+
                                     <td>
                                         <?php if (($row['status'] ?? '') == 'Selesai'): ?>
                                             <span class="badge bg-success">Selesai</span>
@@ -106,12 +173,16 @@ if (!$data) {
                                             </span>
                                         <?php endif; ?>
                                     </td>
+
                                     <td>
                                         <a href="edit_tindakan.php?id=<?= (int)$row['id'] ?>"
-                                           class="btn btn-primary btn-sm">Edit</a>
+                                           class="btn btn-primary btn-sm">
+                                            Edit
+                                        </a>
                                     </td>
                                 </tr>
                             <?php endwhile; ?>
+
                         <?php else: ?>
                             <tr>
                                 <td colspan="9" class="text-center text-secondary py-4">
@@ -124,6 +195,7 @@ if (!$data) {
                 </div>
             </div>
         </div>
+
     </main>
 
 </div>
