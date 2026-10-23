@@ -64,7 +64,7 @@ unset($_SESSION['error']);
                 </h4>
 
                 <p class="text-secondary mb-0">
-                    Silakan login untuk melanjutkan.
+                    Silahkan login untuk melanjutkan.
                 </p>
 
             </div>

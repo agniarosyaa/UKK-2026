@@ -215,19 +215,14 @@ if (isset($_POST['simpan'])) {
                                 required>
                         </div>
 
-                        <div class="form-check mb-4">
-                            <input
-                                type="checkbox"
-                                name="status_aktif"
-                                id="status_aktif"
-                                class="form-check-input"
-                                value="1"
-                                <?= $status_aktif == 1 ? 'checked' : ''; ?>>
-
-                            <label for="status_aktif" class="form-check-label">
-                                Aktif
-                            </label>
-                        </div>
+          <div class="mb-3">
+    <label for="status_aktif" class="form-label">Status</label>
+    <select name="status_aktif" id="status_aktif" class="form-select" required>
+        <option value="">-- Pilih Status --</option>
+        <option value="1">Aktif</option>
+        <option value="0">Tidak Aktif</option>
+    </select>
+</div>
 
                         <button type="submit" name="simpan" class="btn btn-primary">
                             Simpan

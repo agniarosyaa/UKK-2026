@@ -24,7 +24,7 @@ $nama = "Agnia Rosya Noerillah";
         <!-- SIDEBAR -->
         <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
 
-            <h4 class="text-white mb-4">Sistem Pelanggaran</h4>
+            <h5 class="text-white mb-4">Sistem Pelanggaran</h5>
 
             <ul class="nav nav-pills flex-column gap-2">
 
