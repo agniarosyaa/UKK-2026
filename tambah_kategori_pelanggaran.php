@@ -66,31 +66,70 @@ if (isset($_POST['simpan'])) {
 <div class="container-fluid">
     <div class="row">
 
-        <!-- SIDEBAR -->
-        <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
-            <h4 class="text-white mb-4">Sistem Pelanggaran</h4>
+       
+<!-- SIDEBAR -->
+<aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
 
-            <nav class="nav nav-pills flex-column gap-2">
-                <a href="dashboard.php" class="nav-link text-white">Dashboard</a>
-                <a href="siswa.php" class="nav-link text-white">Kelola Siswa</a>
-                <a href="guru.php" class="nav-link text-white">Kelola Guru</a>
-                <a href="kelas.php" class="nav-link text-white">Kelola Kelas</a>
-                <a href="tahun_ajaran.php" class="nav-link text-white">Tahun Ajaran</a>
-                <a href="penempatan_siswa.php" class="nav-link text-white">Penempatan Siswa</a>
-                <a href="wali_kelas.php" class="nav-link text-white">Wali Kelas</a>
-                <a href="kategori_pelanggaran.php" class="nav-link active">Kategori Pelanggaran</a>
-                <a href="jenis_pelanggaran.php" class="nav-link text-white">Jenis Pelanggaran</a>
-                <a href="laporan.php" class="nav-link text-white">Laporan</a>
+    <h5 class="text-white mb-4">Sistem Pelanggaran</h5>
 
-                <hr class="text-secondary">
+    <ul class="nav nav-pills flex-column gap-2">
 
-                <a href="about_me.php" class="nav-link text-white">About Me</a>
-                <a href="logout.php" class="nav-link text-danger"
-                   onclick="return confirm('Yakin ingin logout?')">
-                    Logout
-                </a>
-            </nav>
-        </aside>
+        <li class="nav-item">
+            <a href="dashboard.php" class="nav-link text-white">Dashboard</a>
+        </li>
+
+        <li class="nav-item">
+            <a href="siswa.php" class="nav-link text-white">Kelola Siswa</a>
+        </li>
+
+        <li class="nav-item">
+            <a href="guru.php" class="nav-link text-white">Kelola Guru</a>
+        </li>
+
+        <li class="nav-item">
+            <a href="kelas.php" class="nav-link text-white">Kelola Kelas</a>
+        </li>
+
+        <li class="nav-item">
+            <a href="tahun_ajaran.php" class="nav-link text-white">Tahun Ajaran</a>
+        </li>
+
+        <li class="nav-item">
+            <a href="penempatan_siswa.php" class="nav-link text-white">Penempatan Siswa</a>
+        </li>
+
+        <li class="nav-item">
+            <a href="wali_kelas.php" class="nav-link text-white">Wali Kelas</a>
+        </li>
+
+        <li class="nav-item">
+            <a href="kategori_pelanggaran.php" class="nav-link active">Kategori Pelanggaran</a>
+        </li>
+
+        <li class="nav-item">
+            <a href="jenis_pelanggaran.php" class="nav-link text-white">Jenis Pelanggaran</a>
+        </li>
+
+        <li class="nav-item">
+            <a href="laporan.php" class="nav-link text-white">Laporan</a>
+        </li>
+
+        <hr class="text-secondary">
+
+        <li class="nav-item">
+            <a href="about_me.php" class="nav-link text-white">About Me</a>
+        </li>
+
+        <li class="nav-item">
+            <a href="logout.php" class="nav-link text-danger"
+               onclick="return confirm('Yakin ingin logout?')">
+                Logout
+            </a>
+        </li>
+
+    </ul>
+</aside>
+
 
         <!-- KONTEN UTAMA -->
         <main class="col-md-9 col-lg-10 p-4">

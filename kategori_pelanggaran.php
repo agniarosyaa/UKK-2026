@@ -14,7 +14,9 @@ if (strtolower($_SESSION['role'] ?? '') != 'admin') {
 
 include "config/koneksi.php";
 
-$query = "SELECT * FROM t_pelanggaran_kategori ORDER BY id ASC";
+$query = "SELECT * FROM t_pelanggaran_kategori
+          WHERE status_aktif = 1
+          ORDER BY id ASC";
 $data = mysqli_query($koneksi, $query);
 
 if (!$data) {
@@ -102,15 +104,7 @@ if (!$data) {
             <div class="card shadow-sm">
                 <div class="card-body">
 
-                    <?php if (isset($_GET['pesan'])) { ?>
-                        <?php if ($_GET['pesan'] == 'tambah') { ?>
-                            <div class="alert alert-success">Kategori berhasil ditambahkan.</div>
-                        <?php } elseif ($_GET['pesan'] == 'edit') { ?>
-                            <div class="alert alert-success">Kategori berhasil diubah.</div>
-                        <?php } elseif ($_GET['pesan'] == 'hapus') { ?>
-                            <div class="alert alert-success">Kategori berhasil dihapus.</div>
-                        <?php } ?>
-                    <?php } ?>
+
 
                     <div class="table-responsive">
                         <table id="tabelKategori" class="table table-bordered table-hover align-middle">

@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 
@@ -25,14 +26,17 @@ $error = $result ? '' : mysqli_error($koneksi);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Catatan Pelanggaran</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- CSS DataTables Bootstrap -->
+    <link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
 </head>
 
 <body>
 <div class="container-fluid">
 <div class="row">
 
-    
 <!-- SIDEBAR -->
 <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
 
@@ -108,93 +112,186 @@ $error = $result ? '' : mysqli_error($koneksi);
 
         <?php } ?>
 
+        <hr class="text-secondary">
 
-               <hr class="text-secondary">
+        <li class="nav-item">
+            <a href="about_me.php" class="nav-link text-white">
+                About Me
+            </a>
+        </li>
 
-<li class="nav-item">
-    <a href="about_me.php" class="nav-link text-white">
-        About Me
-    </a>
-</li>
+        <li class="nav-item">
+            <a href="logout.php"
+               class="nav-link text-danger"
+               onclick="return confirm('Yakin ingin logout?')">
+                Logout
+            </a>
+        </li>
 
-<li class="nav-item">
-    <a href="logout.php"
-       class="nav-link text-danger"
-       onclick="return confirm('Yakin ingin logout?')">
-        Logout
-    </a>
-</li>
-</ul>
+    </ul>
 </aside>
 
+<!-- KONTEN -->
+<main class="col-md-9 col-lg-10 p-4">
 
-    <main class="col-md-9 col-lg-10 p-4">
-        <h2 class="mb-2">Catatan Pelanggaran Siswa</h2>
-        <p class="text-secondary">Daftar catatan pelanggaran siswa.</p>
+    <h2 class="mb-2">Catatan Pelanggaran Siswa</h2>
+    <p class="text-secondary">Daftar catatan pelanggaran siswa.</p>
 
-        <div class="d-flex gap-2 mb-3">
-            <a href="dashboard.php" class="btn btn-secondary">Kembali ke Dashboard</a>
-            <a href="tambah_catat_pelanggaran.php" class="btn btn-primary">
-                + Tambah Catat Pelanggaran
-            </a>
+    <div class="d-flex gap-2 mb-3">
+        <a href="dashboard.php" class="btn btn-secondary">
+            Kembali ke Dashboard
+        </a>
+
+        <a href="tambah_catat_pelanggaran.php" class="btn btn-primary">
+            + Tambah Catat Pelanggaran
+        </a>
+    </div>
+
+    <?php if (isset($_GET['pesan']) && $_GET['pesan'] == 'tambah') { ?>
+        <div class="alert alert-success">
+            Catatan pelanggaran berhasil ditambahkan.
+        </div>
+    <?php } ?>
+
+    <?php if ($error != '') { ?>
+
+        <div class="alert alert-danger">
+            Gagal mengambil data:
+            <?= htmlspecialchars($error); ?>
         </div>
 
-        <?php if (isset($_GET['pesan']) && $_GET['pesan'] == 'tambah') { ?>
-            <div class="alert alert-success">
-                Catatan pelanggaran berhasil ditambahkan.
-            </div>
-        <?php } ?>
+    <?php } else { ?>
 
-        <?php if ($error != '') { ?>
-            <div class="alert alert-danger">
-                Gagal mengambil data: <?= htmlspecialchars($error); ?>
-            </div>
-        <?php } else { ?>
+    <div class="card shadow-sm">
+        <div class="card-body table-responsive">
 
-        <div class="card shadow-sm">
-            <div class="card-body table-responsive">
-                <table class="table table-bordered table-hover align-middle">
-                    <thead class="table-light">
+            <table id="tabelPelanggaran" class="table table-bordered table-hover align-middle">
+
+                <thead class="table-light">
+                    <tr>
+                        <th>No</th>
+                        <th>Tanggal</th>
+                        <th>Nama Siswa</th>
+                        <th>Nama Pelanggaran</th>
+                        <th>Poin</th>
+                        <th>Tindakan</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                <?php if (mysqli_num_rows($result) > 0) { ?>
+
+                    <?php $no = 1; ?>
+
+                    <?php while ($data = mysqli_fetch_assoc($result)) { ?>
+
                         <tr>
-                            <th>No</th>
-                            <th>Tanggal</th>
-                            <th>Nama Siswa</th>
-                            <th>Nama Pelanggaran</th>
-                            <th>Poin</th>
-                            <th>Tindakan</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    <?php if (mysqli_num_rows($result) > 0) { ?>
-                        <?php $no = 1; ?>
-                        <?php while ($data = mysqli_fetch_assoc($result)) { ?>
-                            <tr>
-                                <td><?= $no++; ?></td>
-                                <td><?= htmlspecialchars($data['tanggal'] ?? '-'); ?></td>
-                                <td><?= htmlspecialchars($data['nama_siswa'] ?? '-'); ?></td>
-                                <td><?= htmlspecialchars($data['nama_pelanggaran'] ?? '-'); ?></td>
-                                <td><?= htmlspecialchars((string)($data['poin'] ?? 0)); ?></td>
-                                <td><?= htmlspecialchars($data['tindakan'] ?? '-'); ?></td>
-                                <td><?= htmlspecialchars($data['status'] ?? '-'); ?></td>
-                            </tr>
-                        <?php } ?>
-                    <?php } else { ?>
-                        <tr>
-                            <td colspan="7" class="text-center">
-                                Belum ada catatan pelanggaran.
+                            <td><?= $no++; ?></td>
+
+                            <td>
+                                <?= htmlspecialchars($data['tanggal'] ?? '-'); ?>
+                            </td>
+
+                            <td>
+                                <?= htmlspecialchars($data['nama_siswa'] ?? '-'); ?>
+                            </td>
+
+                            <td>
+                                <?= htmlspecialchars($data['nama_pelanggaran'] ?? '-'); ?>
+                            </td>
+
+                            <td>
+                                <?= htmlspecialchars((string)($data['poin'] ?? 0)); ?>
+                            </td>
+
+                            <td>
+                                <?= htmlspecialchars($data['tindakan'] ?? '-'); ?>
+                            </td>
+
+                            <td>
+                                <?= htmlspecialchars($data['status'] ?? '-'); ?>
                             </td>
                         </tr>
+
                     <?php } ?>
-                    </tbody>
-                </table>
-            </div>
+
+                <?php } else { ?>
+
+                    <tr>
+                        <td colspan="7" class="text-center">
+                            Belum ada catatan pelanggaran.
+                        </td>
+                    </tr>
+
+                <?php } ?>
+
+                </tbody>
+            </table>
+
         </div>
+    </div>
 
-        <?php } ?>
-    </main>
+    <?php } ?>
+
+</main>
 
 </div>
 </div>
+
+<!-- JAVASCRIPT -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+
+<script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+$(document).ready(function () {
+
+    $('#tabelPelanggaran').DataTable({
+
+        pageLength: 10,
+
+        lengthMenu: [5, 10, 25, 50],
+
+        columnDefs: [
+            {
+                orderable: false,
+                targets: [0]
+            }
+        ],
+
+        language: {
+            search: "Cari:",
+
+            lengthMenu: "Tampilkan _MENU_ data",
+
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+
+            infoEmpty: "Tidak ada data",
+
+            infoFiltered: "(difilter dari _MAX_ data)",
+
+            zeroRecords: "Data tidak ditemukan",
+
+            emptyTable: "Belum ada catatan pelanggaran",
+
+            paginate: {
+                first: "Pertama",
+                last: "Terakhir",
+                next: "Selanjutnya",
+                previous: "Sebelumnya"
+            }
+        }
+
+    });
+
+});
+</script>
+
 </body>
 </html>

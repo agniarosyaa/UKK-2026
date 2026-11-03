@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.0
+-- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 21 Okt 2026 pada 04.01
--- Versi server: 10.4.27-MariaDB
--- Versi PHP: 8.2.0
+-- Generation Time: Nov 03, 2026 at 06:22 AM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -24,7 +24,7 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `t_guru`
+-- Table structure for table `t_guru`
 --
 
 CREATE TABLE `t_guru` (
@@ -39,36 +39,35 @@ CREATE TABLE `t_guru` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `t_guru`
+-- Dumping data for table `t_guru`
 --
 
 INSERT INTO `t_guru` (`id`, `nip`, `nama`, `email`, `status_aktif`, `user_id`, `created_at`, `update_at`) VALUES
-(1, '1980100001', 'Guru 01', 'guru01@sekolah.test', 1, 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(2, '1980200002', 'Guru 02', 'guru02@sekolah.test', 1, 2, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(3, '1980300003', 'Guru 03', 'guru03@sekolah.test', 1, 3, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(4, '1980400004', 'Guru 04', 'guru04@sekolah.test', 1, 4, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(5, '1980500005', 'Guru 05', 'guru05@sekolah.test', 1, 5, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(6, '1980600006', 'Guru 06', 'guru06@sekolah.test', 1, 6, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(7, '1980700007', 'Guru 07', 'guru07@sekolah.test', 1, 7, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(8, '1980800008', 'Guru 08', 'guru08@sekolah.test', 1, 8, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(9, '1980900009', 'Guru 09', 'guru09@sekolah.test', 1, 9, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(10, '1981000010', 'Guru 10', 'guru10@sekolah.test', 1, 10, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(11, '1981100011', 'Guru 11', 'guru11@sekolah.test', 1, 11, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(12, '1981200012', 'Guru 12', 'guru12@sekolah.test', 1, 12, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(13, '1981300013', 'Guru 13', 'guru13@sekolah.test', 1, 13, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(14, '1981400014', 'Guru 14', 'guru14@sekolah.test', 1, 14, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(15, '1981500015', 'Guru 15', 'guru15@sekolah.test', 1, 15, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(16, '1981600016', 'Guru 16', 'guru16@sekolah.test', 1, 16, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(17, '1981700017', 'Guru 17', 'guru17@sekolah.test', 1, 17, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(18, '1981800018', 'Guru 18', 'guru18@sekolah.test', 1, 18, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(19, '1981900019', 'Guru 19', 'guru19@sekolah.test', 1, 19, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(20, '1982000020', 'Guru 20', 'guru20@sekolah.test', 1, 20, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(21, '1982100021', 'Guru 21', 'guru21@sekolah.test', 1, 21, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(22, '1982200022', 'Guru 22', 'guru22@sekolah.test', 1, 22, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(23, '1982300023', 'Guru 23', 'guru23@sekolah.test', 1, 23, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(24, '1982400024', 'Guru 24', 'guru24@sekolah.test', 1, 24, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(25, '1982500025', 'Guru 25', 'guru25@sekolah.test', 1, 25, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(26, '1982600026', 'Guru 26', 'guru26@sekolah.test', 1, 26, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(2, '1980200002', 'Ahmad', 'guru02@sekolah.test', 1, 2, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(3, '1980300003', 'Budi', 'guru03@sekolah.test', 1, 3, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(4, '1980400004', 'Candra', 'guru04@sekolah.test', 1, 4, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(5, '1980500005', 'Dedi', 'guru05@sekolah.test', 1, 5, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(6, '1980600006', 'Eko', 'guru06@sekolah.test', 1, 6, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(7, '1980700007', 'Fajar', 'guru07@sekolah.test', 1, 7, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(8, '1980800008', 'Gilang', 'guru08@sekolah.test', 1, 8, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(9, '1980900009', 'Hendra', 'guru09@sekolah.test', 1, 9, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(10, '1981000010', 'Indra', 'guru10@sekolah.test', 1, 10, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(11, '1981100011', 'Joko', 'guru11@sekolah.test', 1, 11, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(12, '1981200012', 'Kurniawan', 'guru12@sekolah.test', 1, 12, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(13, '1981300013', 'Lukman', 'guru13@sekolah.test', 1, 13, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(14, '1981400014', 'Muhammad', 'guru14@sekolah.test', 1, 14, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(15, '1981500015', 'Rizky', 'guru15@sekolah.test', 1, 15, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(16, '1981600016', 'Agus', 'guru16@sekolah.test', 1, 16, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(17, '1981700017', 'Andi', 'guru17@sekolah.test', 1, 17, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(18, '1981800018', 'Dimas', 'guru18@sekolah.test', 1, 18, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(19, '1981900019', 'Farhan', 'guru19@sekolah.test', 1, 19, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(20, '1982000020', 'Hasan', 'guru20@sekolah.test', 1, 20, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(21, '1982100021', 'Irfan', 'guru21@sekolah.test', 1, 21, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(22, '1982200022', 'Mulyadi', 'guru22@sekolah.test', 1, 22, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(23, '1982300023', 'Nurul', 'guru23@sekolah.test', 1, 23, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(24, '1982400024', 'Rina', 'guru24@sekolah.test', 1, 24, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(25, '1982500025', 'Siti', 'guru25@sekolah.test', 1, 25, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(26, '1982600026', 'Yusuf', 'guru26@sekolah.test', 1, 26, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
 (27, '1982700027', 'Guru 27', 'guru27@sekolah.test', 1, 27, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
 (28, '1982800028', 'Guru 28', 'guru28@sekolah.test', 1, 28, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
 (29, '1982900029', 'Guru 29', 'guru29@sekolah.test', 1, 29, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
@@ -97,7 +96,7 @@ INSERT INTO `t_guru` (`id`, `nip`, `nama`, `email`, `status_aktif`, `user_id`, `
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `t_kelas`
+-- Table structure for table `t_kelas`
 --
 
 CREATE TABLE `t_kelas` (
@@ -111,11 +110,10 @@ CREATE TABLE `t_kelas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `t_kelas`
+-- Dumping data for table `t_kelas`
 --
 
 INSERT INTO `t_kelas` (`id`, `nama`, `tingkat`, `jurusan`, `status_aktif`, `created_at`, `update_at`) VALUES
-(1, '10 RPL 1', '10', 'RPL', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
 (2, '11 TKJ 1', '11', 'TKJ', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
 (3, '12 DKV 1', '12', 'DKV', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
 (4, '10 AKL 2', '10', 'AKL', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
@@ -164,12 +162,13 @@ INSERT INTO `t_kelas` (`id`, `nama`, `tingkat`, `jurusan`, `status_aktif`, `crea
 (47, '11 TKJ 16', '11', 'TKJ', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
 (48, '12 DKV 16', '12', 'DKV', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
 (49, '10 AKL 17', '10', 'AKL', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(50, '11 MPLB 17', '11', 'MPLB', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00');
+(50, '11 MPLB 17', '11', 'MPLB', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(54, 'X TKJ', '10', 'TKJ', 1, '2026-11-03 04:32:21', '2026-11-03 04:32:21');
 
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `t_kelas_siswa`
+-- Table structure for table `t_kelas_siswa`
 --
 
 CREATE TABLE `t_kelas_siswa` (
@@ -185,17 +184,15 @@ CREATE TABLE `t_kelas_siswa` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `t_kelas_siswa`
+-- Dumping data for table `t_kelas_siswa`
 --
 
 INSERT INTO `t_kelas_siswa` (`id`, `siswa_id`, `tahun_ajaran_id`, `kelas_id`, `tanggal_mulai`, `tanggal_selesai`, `status_aktif`, `created_at`, `update_at`) VALUES
-(1, 1, 26, 1, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
 (2, 2, 26, 2, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
 (3, 3, 26, 3, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
 (4, 4, 26, 4, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
 (5, 5, 26, 5, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
 (6, 6, 26, 6, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
-(7, 7, 26, 7, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
 (8, 8, 26, 8, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
 (9, 9, 26, 9, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
 (10, 10, 26, 10, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
@@ -232,18 +229,12 @@ INSERT INTO `t_kelas_siswa` (`id`, `siswa_id`, `tahun_ajaran_id`, `kelas_id`, `t
 (41, 41, 26, 41, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
 (42, 42, 26, 42, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
 (43, 43, 26, 43, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
-(44, 44, 26, 44, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
-(45, 45, 26, 45, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
-(46, 46, 26, 46, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
-(47, 47, 26, 47, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
-(48, 48, 26, 48, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
-(49, 49, 26, 49, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
-(50, 50, 26, 50, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00');
+(44, 44, 26, 44, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00');
 
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `t_pelanggaran`
+-- Table structure for table `t_pelanggaran`
 --
 
 CREATE TABLE `t_pelanggaran` (
@@ -259,14 +250,13 @@ CREATE TABLE `t_pelanggaran` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `t_pelanggaran`
+-- Dumping data for table `t_pelanggaran`
 --
 
 INSERT INTO `t_pelanggaran` (`id`, `pelanggaran_kategori_id`, `kode`, `nama`, `poin`, `deskripsi`, `status_aktif`, `created_at`, `update_at`) VALUES
-(1, 1, 'PLG-001', 'Terlambat masuk sekolah 1', 2, 'Deskripsi untuk terlambat masuk sekolah 1', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(2, 2, 'PLG-002', 'Tidak memakai atribut lengkap ', 3, 'Deskripsi untuk tidak memakai atribut lengkap 1', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(3, 3, 'PLG-003', 'Tidak mengerjakan tugas 1', 4, 'Deskripsi untuk tidak mengerjakan tugas 1', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(4, 4, 'PLG-004', 'Tidak hadir tanpa keterangan 1', 5, 'Deskripsi untuk tidak hadir tanpa keterangan 1', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(2, 2, 'PLG-002', 'Tidak memakai atribut lengkap', 1, 'Deskripsi untuk tidak memakai atribut lengkap 1', 0, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(3, 3, 'PLG-003', 'Tidak mengerjakan tugas 1', 4, 'Deskripsi untuk tidak mengerjakan tugas 1', 0, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
+(4, 4, 'PLG-004', 'Tidak hadir tanpa keterangan 1', 5, 'Deskripsi untuk tidak hadir tanpa keterangan 1', 0, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
 (5, 5, 'PLG-005', 'Membuang sampah sembarangan 1', 6, 'Deskripsi untuk membuang sampah sembarangan 1', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
 (6, 6, 'PLG-006', 'Ribut di kelas 1', 7, 'Deskripsi untuk ribut di kelas 1', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
 (7, 7, 'PLG-007', 'Seragam tidak sesuai 1', 8, 'Deskripsi untuk seragam tidak sesuai 1', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
@@ -317,7 +307,7 @@ INSERT INTO `t_pelanggaran` (`id`, `pelanggaran_kategori_id`, `kode`, `nama`, `p
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `t_pelanggaran_kategori`
+-- Table structure for table `t_pelanggaran_kategori`
 --
 
 CREATE TABLE `t_pelanggaran_kategori` (
@@ -330,11 +320,10 @@ CREATE TABLE `t_pelanggaran_kategori` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `t_pelanggaran_kategori`
+-- Dumping data for table `t_pelanggaran_kategori`
 --
 
 INSERT INTO `t_pelanggaran_kategori` (`id`, `nama`, `deskripsi`, `status_aktif`, `created_at`, `update_at`) VALUES
-(1, 'Kedisiplinan 1', 'Kategori pelanggaran kedisiplinan 1', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
 (2, 'Kerapian 1', 'Kategori pelanggaran kerapian 1', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
 (3, 'Kehadiran 1', 'Kategori pelanggaran kehadiran 1', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
 (4, 'Sikap 1', 'Kategori pelanggaran sikap 1', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
@@ -383,12 +372,12 @@ INSERT INTO `t_pelanggaran_kategori` (`id`, `nama`, `deskripsi`, `status_aktif`,
 (47, 'Seragam 5', 'Kategori pelanggaran seragam 5', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
 (48, 'Tugas 5', 'Kategori pelanggaran tugas 5', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
 (49, 'Perilaku 5', 'Kategori pelanggaran perilaku 5', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(50, 'Akademik 5', 'Kategori pelanggaran akademik 5', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00');
+(50, 'Akademik 5', 'Kategori pelanggaran akademik 5', 0, '2026-01-01 01:00:00', '2026-01-01 01:00:00');
 
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `t_pelanggaran_siswa`
+-- Table structure for table `t_pelanggaran_siswa`
 --
 
 CREATE TABLE `t_pelanggaran_siswa` (
@@ -413,11 +402,10 @@ CREATE TABLE `t_pelanggaran_siswa` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `t_pelanggaran_siswa`
+-- Dumping data for table `t_pelanggaran_siswa`
 --
 
 INSERT INTO `t_pelanggaran_siswa` (`id`, `tahun_ajaran_id`, `siswa_id`, `nama_siswa`, `kelas_id`, `nama_kelas`, `pelanggaran_id`, `nama_pelanggaran`, `pelanggaran_kategori_id`, `guru_id`, `nama_guru`, `tanggal`, `keterangan`, `poin`, `tindakan`, `status`, `created_at`, `update_at`) VALUES
-(1, 26, 1, 'Andi Pratama', 1, '10 RPL 1', 1, 'Terlambat masuk sekolah 1', 1, 1, 'Guru 01', '2026-08-01', 'Catatan pelanggaran siswa ke-1', 2, 'Teguran lisan', 'Selesai', '2026-08-01 01:00:00', '2026-08-01 01:00:00'),
 (2, 26, 2, 'Budi Pratama', 2, '11 TKJ 1', 2, 'Tidak memakai atribut lengkap 1', 2, 2, 'Guru 02', '2026-08-02', 'Catatan pelanggaran siswa ke-2', 3, 'Peringatan tertulis', 'Diproses', '2026-08-01 01:00:00', '2026-08-01 01:00:00'),
 (3, 26, 3, 'Citra Pratama', 3, '12 DKV 1', 3, 'Tidak mengerjakan tugas 1', 3, 3, 'Guru 03', '2026-08-03', 'Catatan pelanggaran siswa ke-3', 4, 'Pembinaan', 'Selesai', '2026-08-01 01:00:00', '2026-08-01 01:00:00'),
 (4, 26, 4, 'Dinda Pratama', 4, '10 AKL 2', 4, 'Tidak hadir tanpa keterangan 1', 4, 4, 'Guru 04', '2026-08-04', 'Catatan pelanggaran siswa ke-4', 5, 'Pemanggilan orang tua', 'Selesai', '2026-08-01 01:00:00', '2026-08-01 01:00:00'),
@@ -466,12 +454,12 @@ INSERT INTO `t_pelanggaran_siswa` (`id`, `tahun_ajaran_id`, `siswa_id`, `nama_si
 (47, 26, 47, 'Vina Saputra', 47, '11 TKJ 16', 47, 'Seragam tidak sesuai 5', 47, 47, 'Guru 47', '2026-09-16', 'Catatan pelanggaran siswa ke-47', 8, 'Peringatan tertulis', 'Diproses', '2026-08-01 01:00:00', '2026-08-01 01:00:00'),
 (48, 26, 48, 'Wahyu Saputra', 48, '12 DKV 16', 48, 'Keluar kelas tanpa izin 5', 48, 48, 'Guru 48', '2026-09-17', 'Catatan pelanggaran siswa ke-48', 9, 'Pembinaan', 'Selesai', '2026-08-01 01:00:00', '2026-08-01 01:00:00'),
 (49, 26, 49, 'Yani Saputra', 49, '10 AKL 17', 49, 'Berkata tidak sopan 5', 49, 49, 'Guru 49', '2026-09-18', 'Catatan pelanggaran siswa ke-49', 10, 'Pemanggilan orang tua', 'Selesai', '2026-08-01 01:00:00', '2026-08-01 01:00:00'),
-(50, 26, 50, 'Zaki Saputra', 50, '11 MPLB 17', 50, 'Tidak membawa perlengkapan 5', 50, 50, 'Guru 50', '2026-09-19', 'Catatan pelanggaran siswa ke-50', 1, 'Konseling', 'Diproses', '2026-08-01 01:00:00', '2026-08-01 01:00:00');
+(50, 26, 50, 'Zaki Saputra', 50, '11 MPLB 17', 50, 'Tidak membawa perlengkapan 5', 50, 50, 'Guru 50', '2026-09-19', 'Catatan pelanggaran siswa ke-50', 1, 'Konseling', 'Diproses', '2026-08-01 01:00:00', '2026-11-03 00:13:05');
 
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `t_siswa`
+-- Table structure for table `t_siswa`
 --
 
 CREATE TABLE `t_siswa` (
@@ -488,11 +476,10 @@ CREATE TABLE `t_siswa` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `t_siswa`
+-- Dumping data for table `t_siswa`
 --
 
 INSERT INTO `t_siswa` (`id`, `nis`, `nisn`, `nama`, `jenis_kelamin`, `tanggal_lahir`, `alamat`, `status_aktif`, `created_at`, `update_at`) VALUES
-(1, 'NIS20260001', '30000001', 'Andi Pratama', 'L', '2009-02-04', 'Jl. Pendidikan No. 1, Tasikmalaya', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
 (2, 'NIS20260002', '30000002', 'Budi Pratama', 'P', '2010-03-07', 'Jl. Pendidikan No. 2, Tasikmalaya', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
 (3, 'NIS20260003', '30000003', 'Citra Pratama', 'L', '2011-04-10', 'Jl. Pendidikan No. 3, Tasikmalaya', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
 (4, 'NIS20260004', '30000004', 'Dinda Pratama', 'P', '2008-05-13', 'Jl. Pendidikan No. 4, Tasikmalaya', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
@@ -546,7 +533,7 @@ INSERT INTO `t_siswa` (`id`, `nis`, `nisn`, `nama`, `jenis_kelamin`, `tanggal_la
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `t_tahun_ajaran`
+-- Table structure for table `t_tahun_ajaran`
 --
 
 CREATE TABLE `t_tahun_ajaran` (
@@ -560,13 +547,10 @@ CREATE TABLE `t_tahun_ajaran` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `t_tahun_ajaran`
+-- Dumping data for table `t_tahun_ajaran`
 --
 
 INSERT INTO `t_tahun_ajaran` (`id`, `nama`, `tanggal_mulai`, `tanggal_selesai`, `status_aktif`, `created_at`, `update_at`) VALUES
-(1, '2001/2002', '2001-07-01', '2002-06-30', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(2, '2002/2003', '2002-07-01', '2003-06-30', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
-(3, '2003/2004', '2003-07-01', '2004-06-30', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
 (4, '2004/2005', '2004-07-01', '2005-06-30', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
 (5, '2005/2006', '2005-07-01', '2006-06-30', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
 (6, '2006/2007', '2006-07-01', '2007-06-30', 1, '2026-01-01 01:00:00', '2026-01-01 01:00:00'),
@@ -618,23 +602,23 @@ INSERT INTO `t_tahun_ajaran` (`id`, `nama`, `tanggal_mulai`, `tanggal_selesai`, 
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `t_users`
+-- Table structure for table `t_users`
 --
 
 CREATE TABLE `t_users` (
   `id` int(11) NOT NULL,
-  `name` varchar(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
   `email_verified_at` timestamp NULL DEFAULT NULL,
   `password` varchar(255) NOT NULL,
-  `remember_token` varchar(100) NOT NULL,
+  `remember_token` varchar(100) DEFAULT NULL,
   `role` varchar(255) NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `update_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `t_users`
+-- Dumping data for table `t_users`
 --
 
 INSERT INTO `t_users` (`id`, `name`, `email`, `email_verified_at`, `password`, `remember_token`, `role`, `created_at`, `update_at`) VALUES
@@ -687,12 +671,14 @@ INSERT INTO `t_users` (`id`, `name`, `email`, `email_verified_at`, `password`, `
 (47, '0', 'user47@sekolah.test', '2026-01-19 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-19 01:00:00', '2026-01-19 01:00:00'),
 (48, '0', 'user48@sekolah.test', '2026-01-20 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-20 01:00:00', '2026-01-20 01:00:00'),
 (49, '0', 'user49@sekolah.test', '2026-01-21 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'admin', '2026-01-21 01:00:00', '2026-01-21 01:00:00'),
-(50, '0', 'user50@sekolah.test', '2026-01-22 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-22 01:00:00', '2026-01-22 01:00:00');
+(50, '0', 'user50@sekolah.test', '2026-01-22 01:00:00', '$2y$12$d.eyf42nZKaApRpcOw9U/.ZI4c3whSK7FHZEcZVmD98w7.Kuk5eZW', '', 'guru', '2026-01-22 01:00:00', '2026-01-22 01:00:00'),
+(51, 'jghfjhfgjgf', 'jgcjj@gmail.com', NULL, '$2y$10$nmWVlGqCwdgyA9f/sd33EuM70KpAsXMde2gEsuZpy4LLS6qFEZOsm', '', 'guru', '2026-11-03 01:50:07', '2026-11-03 01:50:07'),
+(52, 'vfxdgbd', 'fsdfas@gmail.com', NULL, '$2y$10$1L6ZiiGD.CC62HHYQAb/1eGThAjzzvrnsim2RJDLFXISiS.yB2clS', NULL, 'guru', '2026-11-03 05:00:58', '2026-11-03 05:00:58');
 
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `t_wali_kelas`
+-- Table structure for table `t_wali_kelas`
 --
 
 CREATE TABLE `t_wali_kelas` (
@@ -708,14 +694,10 @@ CREATE TABLE `t_wali_kelas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `t_wali_kelas`
+-- Dumping data for table `t_wali_kelas`
 --
 
 INSERT INTO `t_wali_kelas` (`id`, `tahun_ajaran_id`, `kelas_id`, `guru_id`, `tanggal_mulai`, `tanggal_selesai`, `status_aktif`, `created_at`, `update_at`) VALUES
-(1, 26, 1, 1, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
-(2, 26, 2, 2, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
-(3, 26, 3, 3, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
-(4, 26, 4, 4, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
 (5, 26, 5, 5, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
 (6, 26, 6, 6, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
 (7, 26, 7, 7, '2026-07-01', '2027-06-30', 1, '2026-07-01 01:00:00', '2026-07-01 01:00:00'),
@@ -768,20 +750,20 @@ INSERT INTO `t_wali_kelas` (`id`, `tahun_ajaran_id`, `kelas_id`, `guru_id`, `tan
 --
 
 --
--- Indeks untuk tabel `t_guru`
+-- Indexes for table `t_guru`
 --
 ALTER TABLE `t_guru`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
 
 --
--- Indeks untuk tabel `t_kelas`
+-- Indexes for table `t_kelas`
 --
 ALTER TABLE `t_kelas`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indeks untuk tabel `t_kelas_siswa`
+-- Indexes for table `t_kelas_siswa`
 --
 ALTER TABLE `t_kelas_siswa`
   ADD PRIMARY KEY (`id`),
@@ -790,20 +772,20 @@ ALTER TABLE `t_kelas_siswa`
   ADD KEY `kelas_id` (`kelas_id`);
 
 --
--- Indeks untuk tabel `t_pelanggaran`
+-- Indexes for table `t_pelanggaran`
 --
 ALTER TABLE `t_pelanggaran`
   ADD PRIMARY KEY (`id`),
   ADD KEY `pelanggaran_kategori_id` (`pelanggaran_kategori_id`);
 
 --
--- Indeks untuk tabel `t_pelanggaran_kategori`
+-- Indexes for table `t_pelanggaran_kategori`
 --
 ALTER TABLE `t_pelanggaran_kategori`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indeks untuk tabel `t_pelanggaran_siswa`
+-- Indexes for table `t_pelanggaran_siswa`
 --
 ALTER TABLE `t_pelanggaran_siswa`
   ADD PRIMARY KEY (`id`),
@@ -815,25 +797,25 @@ ALTER TABLE `t_pelanggaran_siswa`
   ADD KEY `guru_id` (`guru_id`);
 
 --
--- Indeks untuk tabel `t_siswa`
+-- Indexes for table `t_siswa`
 --
 ALTER TABLE `t_siswa`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indeks untuk tabel `t_tahun_ajaran`
+-- Indexes for table `t_tahun_ajaran`
 --
 ALTER TABLE `t_tahun_ajaran`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indeks untuk tabel `t_users`
+-- Indexes for table `t_users`
 --
 ALTER TABLE `t_users`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indeks untuk tabel `t_wali_kelas`
+-- Indexes for table `t_wali_kelas`
 --
 ALTER TABLE `t_wali_kelas`
   ADD PRIMARY KEY (`id`),
@@ -842,81 +824,81 @@ ALTER TABLE `t_wali_kelas`
   ADD KEY `guru_id` (`guru_id`);
 
 --
--- AUTO_INCREMENT untuk tabel yang dibuang
+-- AUTO_INCREMENT for dumped tables
 --
 
 --
--- AUTO_INCREMENT untuk tabel `t_guru`
+-- AUTO_INCREMENT for table `t_guru`
 --
 ALTER TABLE `t_guru`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
 
 --
--- AUTO_INCREMENT untuk tabel `t_kelas`
+-- AUTO_INCREMENT for table `t_kelas`
 --
 ALTER TABLE `t_kelas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
 
 --
--- AUTO_INCREMENT untuk tabel `t_kelas_siswa`
+-- AUTO_INCREMENT for table `t_kelas_siswa`
 --
 ALTER TABLE `t_kelas_siswa`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
 
 --
--- AUTO_INCREMENT untuk tabel `t_pelanggaran`
+-- AUTO_INCREMENT for table `t_pelanggaran`
 --
 ALTER TABLE `t_pelanggaran`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
 
 --
--- AUTO_INCREMENT untuk tabel `t_pelanggaran_kategori`
+-- AUTO_INCREMENT for table `t_pelanggaran_kategori`
 --
 ALTER TABLE `t_pelanggaran_kategori`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
 
 --
--- AUTO_INCREMENT untuk tabel `t_pelanggaran_siswa`
+-- AUTO_INCREMENT for table `t_pelanggaran_siswa`
 --
 ALTER TABLE `t_pelanggaran_siswa`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
--- AUTO_INCREMENT untuk tabel `t_siswa`
+-- AUTO_INCREMENT for table `t_siswa`
 --
 ALTER TABLE `t_siswa`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
 
 --
--- AUTO_INCREMENT untuk tabel `t_tahun_ajaran`
+-- AUTO_INCREMENT for table `t_tahun_ajaran`
 --
 ALTER TABLE `t_tahun_ajaran`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
 
 --
--- AUTO_INCREMENT untuk tabel `t_users`
+-- AUTO_INCREMENT for table `t_users`
 --
 ALTER TABLE `t_users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
 
 --
--- AUTO_INCREMENT untuk tabel `t_wali_kelas`
+-- AUTO_INCREMENT for table `t_wali_kelas`
 --
 ALTER TABLE `t_wali_kelas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
 
 --
--- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)
+-- Constraints for dumped tables
 --
 
 --
--- Ketidakleluasaan untuk tabel `t_guru`
+-- Constraints for table `t_guru`
 --
 ALTER TABLE `t_guru`
   ADD CONSTRAINT `t_guru_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `t_users` (`id`) ON UPDATE CASCADE;
 
 --
--- Ketidakleluasaan untuk tabel `t_kelas_siswa`
+-- Constraints for table `t_kelas_siswa`
 --
 ALTER TABLE `t_kelas_siswa`
   ADD CONSTRAINT `t_kelas_siswa_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `t_siswa` (`id`) ON UPDATE CASCADE,
@@ -924,13 +906,13 @@ ALTER TABLE `t_kelas_siswa`
   ADD CONSTRAINT `t_kelas_siswa_ibfk_3` FOREIGN KEY (`kelas_id`) REFERENCES `t_kelas` (`id`) ON UPDATE CASCADE;
 
 --
--- Ketidakleluasaan untuk tabel `t_pelanggaran`
+-- Constraints for table `t_pelanggaran`
 --
 ALTER TABLE `t_pelanggaran`
   ADD CONSTRAINT `t_pelanggaran_ibfk_1` FOREIGN KEY (`pelanggaran_kategori_id`) REFERENCES `t_pelanggaran_kategori` (`id`) ON UPDATE CASCADE;
 
 --
--- Ketidakleluasaan untuk tabel `t_pelanggaran_siswa`
+-- Constraints for table `t_pelanggaran_siswa`
 --
 ALTER TABLE `t_pelanggaran_siswa`
   ADD CONSTRAINT `t_pelanggaran_siswa_ibfk_1` FOREIGN KEY (`tahun_ajaran_id`) REFERENCES `t_tahun_ajaran` (`id`) ON UPDATE CASCADE,
@@ -941,7 +923,7 @@ ALTER TABLE `t_pelanggaran_siswa`
   ADD CONSTRAINT `t_pelanggaran_siswa_ibfk_6` FOREIGN KEY (`guru_id`) REFERENCES `t_guru` (`id`) ON UPDATE CASCADE;
 
 --
--- Ketidakleluasaan untuk tabel `t_wali_kelas`
+-- Constraints for table `t_wali_kelas`
 --
 ALTER TABLE `t_wali_kelas`
   ADD CONSTRAINT `t_wali_kelas_ibfk_1` FOREIGN KEY (`tahun_ajaran_id`) REFERENCES `t_tahun_ajaran` (`id`) ON UPDATE CASCADE,

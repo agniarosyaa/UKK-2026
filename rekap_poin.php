@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 
@@ -53,6 +54,10 @@ $data = mysqli_query($koneksi, $query);
     <title>Rekap Poin Siswa</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <!-- CSS DataTables Bootstrap -->
+    <link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css"
           rel="stylesheet">
 </head>
 
@@ -167,19 +172,19 @@ $data = mysqli_query($koneksi, $query);
             </div>
 
             <!-- TABEL REKAP -->
-            <div class="card border-0 shadow-sm">
+                 
+        <div class="card border-0 shadow-sm">
 
-                <div class="card-header bg-white py-3">
-                    <h5 class="mb-0">
-                        Data Rekap Poin
-                    </h5>
-                </div>
+            <div class="card-header bg-primary text-white py-3">
+                Data Rekap Poin
+            </div>
+
 
                 <div class="card-body">
 
                     <div class="table-responsive">
 
-                        <table class="table table-bordered table-hover align-middle">
+                        <table id="tabelRekap" class="table table-bordered table-hover align-middle">
 
                             <thead class="table-light">
                                 <tr>
@@ -259,7 +264,58 @@ $data = mysqli_query($koneksi, $query);
     </div>
 </div>
 
+<!-- JAVASCRIPT -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+
+<script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+$(document).ready(function () {
+
+    $('#tabelRekap').DataTable({
+
+        pageLength: 10,
+
+        lengthMenu: [5, 10, 25, 50],
+
+        columnDefs: [
+            {
+                orderable: false,
+                targets: [0]
+            }
+        ],
+
+        language: {
+            search: "Cari:",
+
+            lengthMenu: "Tampilkan _MENU_ data",
+
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+
+            infoEmpty: "Tidak ada data",
+
+            infoFiltered: "(difilter dari _MAX_ data)",
+
+            zeroRecords: "Data tidak ditemukan",
+
+            emptyTable: "Belum ada data poin pelanggaran siswa",
+
+            paginate: {
+                first: "Pertama",
+                last: "Terakhir",
+                next: "Selanjutnya",
+                previous: "Sebelumnya"
+            }
+        }
+
+    });
+
+});
+</script>
 
 </body>
 </html>

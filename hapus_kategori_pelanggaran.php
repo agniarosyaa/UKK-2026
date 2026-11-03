@@ -8,66 +8,44 @@ if (!isset($_SESSION['login'])) {
 }
 
 if (strtolower($_SESSION['role'] ?? '') != 'admin') {
-    echo "Anda tidak memiliki akses";
-    exit;
+    exit("Anda tidak memiliki akses");
 }
 
 include "config/koneksi.php";
 
-// Periksa ID kategori
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+if (!isset($_GET['id']) || !ctype_digit($_GET['id'])) {
     header("Location: kategori_pelanggaran.php");
     exit;
 }
 
 $id = (int) $_GET['id'];
 
-// Periksa apakah kategori tersedia
-$stmt = mysqli_prepare(
-    $koneksi,
-    "SELECT id FROM t_pelanggaran_kategori WHERE id = ?"
-);
-
-mysqli_stmt_bind_param($stmt, "i", $id);
-mysqli_stmt_execute($stmt);
-
-$result = mysqli_stmt_get_result($stmt);
-$kategori = mysqli_fetch_assoc($result);
-
-mysqli_stmt_close($stmt);
-
-if (!$kategori) {
-    header("Location: kategori_pelanggaran.php");
-    exit;
-}
-
-// Hapus kategori
 try {
-    $stmt = mysqli_prepare(
-        $koneksi,
-        "DELETE FROM t_pelanggaran_kategori WHERE id = ?"
-    );
+
+    // NONAKTIFKAN KATEGORI
+    $query = "UPDATE t_pelanggaran_kategori
+              SET status_aktif = 0
+              WHERE id = ?";
+
+    $stmt = mysqli_prepare($koneksi, $query);
 
     mysqli_stmt_bind_param($stmt, "i", $id);
-    mysqli_stmt_execute($stmt);
 
-    $jumlah = mysqli_stmt_affected_rows($stmt);
+    mysqli_stmt_execute($stmt);
 
     mysqli_stmt_close($stmt);
 
-    if ($jumlah > 0) {
-        header("Location: kategori_pelanggaran.php?pesan=hapus");
-    } else {
-        header("Location: kategori_pelanggaran.php?pesan=gagal_hapus");
-    }
+    // KEMBALI KE DAFTAR KATEGORI
+    header("Location: kategori_pelanggaran.php");
     exit;
 
 } catch (mysqli_sql_exception $e) {
-    if (isset($stmt)) {
-        mysqli_stmt_close($stmt);
-    }
 
-    header("Location: kategori_pelanggaran.php?pesan=gagal_hapus");
+    error_log("Gagal menonaktifkan kategori: " . $e->getMessage());
+
+    header("Location: kategori_pelanggaran.php");
     exit;
 }
 ?>

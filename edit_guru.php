@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 
@@ -20,12 +21,17 @@ if ($id <= 0) {
 }
 
 /* AMBIL DATA GURU */
-$stmt = mysqli_prepare($koneksi, "SELECT * FROM t_guru WHERE id = ?");
+$stmt = mysqli_prepare(
+    $koneksi,
+    "SELECT * FROM t_guru WHERE id = ?"
+);
+
 mysqli_stmt_bind_param($stmt, "i", $id);
 mysqli_stmt_execute($stmt);
 
 $result = mysqli_stmt_get_result($stmt);
 $data = mysqli_fetch_assoc($result);
+
 mysqli_stmt_close($stmt);
 
 if (!$data) {
@@ -41,52 +47,108 @@ if (isset($_POST['update'])) {
     $nama = trim($_POST['nama'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $user_id = (int) ($_POST['user_id'] ?? 0);
-    $status_aktif = (int) ($_POST['status_aktif'] ?? 0);
+    $status_aktif = (int) ($_POST['status_aktif'] ?? -1);
 
     if (
-        $nip == '' || $nama == '' || $email == '' ||
-        $user_id <= 0 || !in_array($status_aktif, [0, 1], true)
+        $nip == '' ||
+        $nama == '' ||
+        $email == '' ||
+        $user_id <= 0 ||
+        !in_array($status_aktif, [0, 1], true)
     ) {
+
         $pesan_error = "Semua data wajib diisi dengan benar.";
+
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+
         $pesan_error = "Format email tidak valid.";
+
     } else {
 
-        $update = mysqli_prepare(
+        /* CEK USER ID */
+        $cekUser = mysqli_prepare(
             $koneksi,
-            "UPDATE t_guru
-             SET nip = ?, nama = ?, email = ?,
-                 user_id = ?, status_aktif = ?
-             WHERE id = ?"
+            "SELECT id FROM t_users WHERE id = ?"
         );
 
-        mysqli_stmt_bind_param(
-            $update,
-            "sssiii",
-            $nip,
-            $nama,
-            $email,
-            $user_id,
-            $status_aktif,
-            $id
-        );
+        mysqli_stmt_bind_param($cekUser, "i", $user_id);
+        mysqli_stmt_execute($cekUser);
 
-        if (mysqli_stmt_execute($update)) {
-            mysqli_stmt_close($update);
-            header("Location: guru.php");
-            exit;
+        $hasilUser = mysqli_stmt_get_result($cekUser);
+        $userAda = mysqli_num_rows($hasilUser) > 0;
+
+        mysqli_stmt_close($cekUser);
+
+        if (!$userAda) {
+
+            $pesan_error = "ID pengguna tidak ditemukan.";
+
         } else {
-            $pesan_error = "Data gagal diubah: " . mysqli_error($koneksi);
-            mysqli_stmt_close($update);
+
+            /* UPDATE DATA GURU */
+            $update = mysqli_prepare(
+                $koneksi,
+                "UPDATE t_guru
+                 SET nip = ?,
+                     nama = ?,
+                     email = ?,
+                     user_id = ?,
+                     status_aktif = ?
+                 WHERE id = ?"
+            );
+
+            if ($update) {
+
+                mysqli_stmt_bind_param(
+                    $update,
+                    "sssiii",
+                    $nip,
+                    $nama,
+                    $email,
+                    $user_id,
+                    $status_aktif,
+                    $id
+                );
+
+                if (mysqli_stmt_execute($update)) {
+
+                    mysqli_stmt_close($update);
+
+                    header("Location: guru.php?pesan=edit");
+                    exit;
+
+                } else {
+
+                    $pesan_error = "Gagal mengubah data: " .
+                                   mysqli_stmt_error($update);
+
+                    mysqli_stmt_close($update);
+                }
+
+            } else {
+
+                $pesan_error = "Query gagal: " .
+                               mysqli_error($koneksi);
+            }
         }
     }
 
-    /* TAMPILKAN KEMBALI DATA JIKA GAGAL */
+    /* SIMPAN DATA FORM JIKA TERJADI ERROR */
     $data['nip'] = $nip;
     $data['nama'] = $nama;
     $data['email'] = $email;
     $data['user_id'] = $user_id;
     $data['status_aktif'] = $status_aktif;
+}
+
+/* AMBIL ID PENGGUNA */
+$users = mysqli_query(
+    $koneksi,
+    "SELECT id FROM t_users ORDER BY id ASC"
+);
+
+if (!$users) {
+    die("Gagal mengambil data pengguna: " . mysqli_error($koneksi));
 }
 ?>
 
@@ -104,7 +166,7 @@ if (isset($_POST['update'])) {
         rel="stylesheet">
 </head>
 
-<body>
+<body class="bg-light">
 
 <div class="container-fluid">
     <div class="row">
@@ -112,7 +174,9 @@ if (isset($_POST['update'])) {
         <!-- SIDEBAR -->
         <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
 
-            <h4 class="text-white mb-4">Sistem Pelanggaran</h4>
+            <h5 class="text-white mb-4">
+                Sistem Pelanggaran
+            </h5>
 
             <ul class="nav nav-pills flex-column gap-2">
 
@@ -176,13 +240,13 @@ if (isset($_POST['update'])) {
                     </a>
                 </li>
 
+                <hr class="text-secondary">
+
                 <li class="nav-item">
                     <a href="about_me.php" class="nav-link text-white">
                         About Me
                     </a>
                 </li>
-
-                <hr class="text-secondary">
 
                 <li class="nav-item">
                     <a href="logout.php"
@@ -195,18 +259,18 @@ if (isset($_POST['update'])) {
             </ul>
         </aside>
 
-        <!-- KONTEN -->
+        <!-- KONTEN UTAMA -->
         <main class="col-md-9 col-lg-10 p-4">
 
             <h2 class="mb-4">Edit Guru</h2>
 
             <div class="card shadow-sm">
 
-                <div class="card-header bg-primary text-white">
-                    Form Edit Guru
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0">Form Edit Guru</h5>
                 </div>
 
-                <div class="card-body">
+                <div class="card-body p-4">
 
                     <?php if ($pesan_error != '') { ?>
                         <div class="alert alert-danger">
@@ -216,62 +280,82 @@ if (isset($_POST['update'])) {
 
                     <form method="POST">
 
+                        <!-- NIP -->
                         <div class="mb-3">
-                            <label for="nip" class="form-label">NIP</label>
+                            <label class="form-label">NIP</label>
 
                             <input
                                 type="text"
                                 name="nip"
-                                id="nip"
                                 class="form-control"
                                 value="<?= htmlspecialchars($data['nip'] ?? ''); ?>"
                                 required>
                         </div>
 
+                        <!-- NAMA -->
                         <div class="mb-3">
-                            <label for="nama" class="form-label">Nama Guru</label>
+                            <label class="form-label">Nama Guru</label>
 
                             <input
                                 type="text"
                                 name="nama"
-                                id="nama"
                                 class="form-control"
                                 value="<?= htmlspecialchars($data['nama'] ?? ''); ?>"
                                 required>
                         </div>
 
+                        <!-- EMAIL -->
                         <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
+                            <label class="form-label">Email</label>
 
                             <input
                                 type="email"
                                 name="email"
-                                id="email"
                                 class="form-control"
                                 value="<?= htmlspecialchars($data['email'] ?? ''); ?>"
                                 required>
                         </div>
 
+                        <!-- AKUN PENGGUNA -->
                         <div class="mb-3">
-                            <label for="user_id" class="form-label">User ID</label>
-
-                            <input
-                                type="number"
-                                name="user_id"
-                                id="user_id"
-                                class="form-control"
-                                value="<?= htmlspecialchars($data['user_id'] ?? ''); ?>"
-                                required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="status_aktif" class="form-label">
-                                Status
+                            <label class="form-label">
+                                ID Akun Pengguna
                             </label>
 
                             <select
+                                name="user_id"
+                                class="form-select"
+                                required>
+
+                                <option value="">
+                                    -- Pilih ID Pengguna --
+                                </option>
+
+                                <?php while ($u = mysqli_fetch_assoc($users)) { ?>
+
+                                    <option
+                                        value="<?= (int) $u['id']; ?>"
+                                        <?= (int)($data['user_id'] ?? 0) == (int)$u['id'] ? 'selected' : ''; ?>>
+
+                                        ID Pengguna <?= (int)$u['id']; ?>
+
+                                    </option>
+
+                                <?php } ?>
+
+                            </select>
+
+                            <small class="text-muted">
+                                Pilih ID yang tersedia di tabel t_users.
+                            </small>
+                        </div>
+
+                        <!-- STATUS -->
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+
+                            <select
                                 name="status_aktif"
-                                id="status_aktif"
                                 class="form-select"
                                 required>
 
@@ -288,6 +372,7 @@ if (isset($_POST['update'])) {
                             </select>
                         </div>
 
+                        <!-- TOMBOL -->
                         <button
                             type="submit"
                             name="update"

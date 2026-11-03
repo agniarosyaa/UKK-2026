@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 
@@ -39,17 +40,21 @@ if (isset($_POST['simpan'])) {
         $error = "Semua data wajib diisi.";
     } elseif (!in_array($jenis_kelamin, ['L', 'P'], true)) {
         $error = "Jenis kelamin tidak valid.";
+    } elseif (!in_array($status_aktif, ['0', '1'], true)) {
+        $error = "Status aktif tidak valid.";
     } else {
+
         $query = "INSERT INTO t_siswa
                   (nis, nisn, nama, jenis_kelamin, tanggal_lahir, alamat, status_aktif)
-                  VALUES (?, ?, ?, ?, ?, ?, 1)";
+                  VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = mysqli_prepare($koneksi, $query);
 
         if ($stmt) {
+
             mysqli_stmt_bind_param(
                 $stmt,
-                "ssssss",
+                "ssssssi",
                 $nis,
                 $nisn,
                 $nama,
@@ -64,12 +69,14 @@ if (isset($_POST['simpan'])) {
                 header("Location: siswa.php");
                 exit;
             } else {
-                $error = "Gagal menambahkan data siswa.";
+                $error = "Gagal menambahkan data siswa: " .
+                         mysqli_stmt_error($stmt);
             }
 
             mysqli_stmt_close($stmt);
+
         } else {
-            $error = "Query gagal diproses.";
+            $error = "Query gagal diproses: " . mysqli_error($koneksi);
         }
     }
 }
@@ -97,7 +104,9 @@ if (isset($_POST['simpan'])) {
         <!-- SIDEBAR -->
         <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
 
-            <h4 class="text-white mb-4">Sistem Pelanggaran</h4>
+            <h5 class="text-white mb-4">
+                Sistem Pelanggaran
+            </h5>
 
             <ul class="nav nav-pills flex-column gap-2">
 
@@ -161,13 +170,13 @@ if (isset($_POST['simpan'])) {
                     </a>
                 </li>
 
+                <hr class="text-secondary">
+
                 <li class="nav-item">
                     <a href="about_me.php" class="nav-link text-white">
                         About Me
                     </a>
                 </li>
-
-                <hr class="text-secondary">
 
                 <li class="nav-item">
                     <a href="logout.php"
@@ -180,7 +189,7 @@ if (isset($_POST['simpan'])) {
             </ul>
         </aside>
 
-        <!-- KONTEN -->
+        <!-- KONTEN UTAMA -->
         <main class="col-md-9 col-lg-10 p-4">
 
             <h2 class="mb-4">Tambah Siswa</h2>
@@ -201,8 +210,12 @@ if (isset($_POST['simpan'])) {
 
                     <form method="POST">
 
+                        <!-- NIS -->
                         <div class="mb-3">
-                            <label for="nis" class="form-label">NIS</label>
+                            <label for="nis" class="form-label">
+                                NIS
+                            </label>
+
                             <input
                                 type="text"
                                 name="nis"
@@ -212,8 +225,12 @@ if (isset($_POST['simpan'])) {
                                 required>
                         </div>
 
+                        <!-- NISN -->
                         <div class="mb-3">
-                            <label for="nisn" class="form-label">NISN</label>
+                            <label for="nisn" class="form-label">
+                                NISN
+                            </label>
+
                             <input
                                 type="text"
                                 name="nisn"
@@ -223,8 +240,12 @@ if (isset($_POST['simpan'])) {
                                 required>
                         </div>
 
+                        <!-- NAMA SISWA -->
                         <div class="mb-3">
-                            <label for="nama" class="form-label">Nama Siswa</label>
+                            <label for="nama" class="form-label">
+                                Nama Siswa
+                            </label>
+
                             <input
                                 type="text"
                                 name="nama"
@@ -234,6 +255,7 @@ if (isset($_POST['simpan'])) {
                                 required>
                         </div>
 
+                        <!-- JENIS KELAMIN -->
                         <div class="mb-3">
                             <label for="jenis_kelamin" class="form-label">
                                 Jenis Kelamin
@@ -245,7 +267,9 @@ if (isset($_POST['simpan'])) {
                                 class="form-select"
                                 required>
 
-                                <option value="">-- Pilih Jenis Kelamin --</option>
+                                <option value="">
+                                    -- Pilih Jenis Kelamin --
+                                </option>
 
                                 <option value="L"
                                     <?= $jenis_kelamin == 'L' ? 'selected' : ''; ?>>
@@ -260,6 +284,7 @@ if (isset($_POST['simpan'])) {
                             </select>
                         </div>
 
+                        <!-- TANGGAL LAHIR -->
                         <div class="mb-3">
                             <label for="tanggal_lahir" class="form-label">
                                 Tanggal Lahir
@@ -274,8 +299,11 @@ if (isset($_POST['simpan'])) {
                                 required>
                         </div>
 
+                        <!-- ALAMAT -->
                         <div class="mb-3">
-                            <label for="alamat" class="form-label">Alamat</label>
+                            <label for="alamat" class="form-label">
+                                Alamat
+                            </label>
 
                             <textarea
                                 name="alamat"
@@ -284,21 +312,32 @@ if (isset($_POST['simpan'])) {
                                 rows="3"
                                 required><?= htmlspecialchars($alamat); ?></textarea>
                         </div>
-                           <div class="mb-4">
-                            <label class="form-label">Status Aktif</label>
-                            <select name="status_aktif"
-                                    class="form-select" required>
+
+                        <!-- STATUS AKTIF -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                Status Aktif
+                            </label>
+
+                            <select
+                                name="status_aktif"
+                                class="form-select"
+                                required>
+
                                 <option value="1"
-                                    <?= $status_aktif === '1' ? 'selected' : '' ?>>
+                                    <?= $status_aktif === '1' ? 'selected' : ''; ?>>
                                     Aktif
                                 </option>
+
                                 <option value="0"
-                                    <?= $status_aktif === '0' ? 'selected' : '' ?>>
+                                    <?= $status_aktif === '0' ? 'selected' : ''; ?>>
                                     Tidak Aktif
                                 </option>
+
                             </select>
                         </div>
 
+                        <!-- TOMBOL -->
                         <button
                             type="submit"
                             name="simpan"

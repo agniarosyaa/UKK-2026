@@ -18,8 +18,8 @@ $query = "SELECT p.*, k.nama AS nama_kategori
           FROM t_pelanggaran p
           LEFT JOIN t_pelanggaran_kategori k
           ON p.pelanggaran_kategori_id = k.id
+          WHERE p.status_aktif = 1
           ORDER BY p.id ASC";
-
 $result = mysqli_query($koneksi, $query);
 
 if (!$result) {
@@ -83,18 +83,6 @@ if (!$result) {
 
             <div class="card shadow-sm">
                 <div class="card-body">
-
-                    <?php if (($_GET['pesan'] ?? '') == 'tambah') { ?>
-                        <div class="alert alert-success">Data jenis pelanggaran berhasil ditambahkan.</div>
-                    <?php } elseif (($_GET['pesan'] ?? '') == 'edit') { ?>
-                        <div class="alert alert-success">Data jenis pelanggaran berhasil diubah.</div>
-                    <?php } elseif (($_GET['pesan'] ?? '') == 'hapus') { ?>
-                        <div class="alert alert-success">Data jenis pelanggaran berhasil dihapus.</div>
-                    <?php } ?>
-
-                    <?php if (($_GET['pesan'] ?? '') == 'gagal_hapus') { ?>
-                        <div class="alert alert-danger">Data tidak dapat dihapus karena mungkin masih digunakan.</div>
-                    <?php } ?>
 
                     <div class="table-responsive">
                         <table id="tabelPelanggaran" class="table table-bordered table-hover align-middle">

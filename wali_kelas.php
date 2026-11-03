@@ -159,26 +159,7 @@ if (!$data) {
             <div class="card shadow-sm">
                 <div class="card-body">
 
-                    <!-- PESAN BERHASIL -->
-                    <?php if (isset($_GET['pesan'])) { ?>
-
-                        <?php if ($_GET['pesan'] == 'tambah') { ?>
-                            <div class="alert alert-success">
-                                Data wali kelas berhasil ditambahkan.
-                            </div>
-
-                        <?php } elseif ($_GET['pesan'] == 'edit') { ?>
-                            <div class="alert alert-success">
-                                Data wali kelas berhasil diubah.
-                            </div>
-
-                        <?php } elseif ($_GET['pesan'] == 'hapus') { ?>
-                            <div class="alert alert-success">
-                                Data wali kelas berhasil dihapus.
-                            </div>
-                        <?php } ?>
-
-                    <?php } ?>
+                  
 
                     <div class="table-responsive">
 

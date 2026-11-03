@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 
@@ -12,33 +13,6 @@ if (strtolower($_SESSION['role'] ?? '') != 'admin') {
 }
 
 include "config/koneksi.php";
-
-/* HAPUS PENEMPATAN SISWA */
-if (isset($_GET['hapus'])) {
-    $id = (int) $_GET['hapus'];
-
-    if ($id <= 0) {
-        header("Location: penempatan_siswa.php?pesan=gagal");
-        exit;
-    }
-
-    $stmt = mysqli_prepare(
-        $koneksi,
-        "DELETE FROM t_kelas_siswa WHERE id = ?"
-    );
-
-    mysqli_stmt_bind_param($stmt, "i", $id);
-
-    if (mysqli_stmt_execute($stmt)) {
-        mysqli_stmt_close($stmt);
-        header("Location: penempatan_siswa.php?pesan=hapus");
-        exit;
-    }
-
-    mysqli_stmt_close($stmt);
-    header("Location: penempatan_siswa.php?pesan=gagal");
-    exit;
-}
 
 /* AMBIL DATA PENEMPATAN SISWA */
 $query = "
@@ -154,22 +128,7 @@ if (!$result) {
 
             <h2 class="mb-3">Data Penempatan Siswa</h2>
 
-            <!-- NOTIFIKASI -->
-            <?php if (isset($_GET['pesan'])) { ?>
-
-                <?php if ($_GET['pesan'] == 'hapus') { ?>
-                    <div class="alert alert-success">
-                        Data penempatan siswa berhasil dihapus.
-                    </div>
-                <?php } ?>
-
-                <?php if ($_GET['pesan'] == 'gagal') { ?>
-                    <div class="alert alert-danger">
-                        Data penempatan siswa gagal dihapus.
-                    </div>
-                <?php } ?>
-
-            <?php } ?>
+          
 
             <!-- TOMBOL -->
             <div class="d-flex flex-wrap gap-2 mb-3">
@@ -229,14 +188,16 @@ if (!$result) {
 
                                         <td class="text-nowrap">
 
+                                            <!-- EDIT TERPISAH -->
                                             <a
                                                 href="edit_penempatan_siswa.php?id=<?= (int) $row['id']; ?>"
                                                 class="btn btn-primary btn-sm">
                                                 Edit
                                             </a>
 
+                                            <!-- HAPUS TERPISAH -->
                                             <a
-                                                href="penempatan_siswa.php?hapus=<?= (int) $row['id']; ?>"
+                                                href="hapus_penempatan_siswa.php?id=<?= (int) $row['id']; ?>"
                                                 class="btn btn-danger btn-sm"
                                                 onclick="return confirm('Yakin ingin menghapus penempatan siswa ini?')">
                                                 Hapus
@@ -302,6 +263,16 @@ $(document).ready(function () {
             }
         }
     });
+
+    // Notifikasi hilang otomatis setelah 2 detik
+    setTimeout(function () {
+        let pesan = document.getElementById('pesan');
+
+        if (pesan) {
+            let alert = bootstrap.Alert.getOrCreateInstance(pesan);
+            alert.close();
+        }
+    }, 2000);
 });
 </script>
 

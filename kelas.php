@@ -116,36 +116,7 @@ if (!$data) {
 
             <h2 class="mb-3">Data Kelas</h2>
 
-            <!-- NOTIFIKASI -->
-            <?php if (isset($_GET['pesan'])) { ?>
-
-                <?php if ($_GET['pesan'] == 'tambah') { ?>
-                    <div class="alert alert-success">
-                        Kelas berhasil ditambahkan.
-                    </div>
-                <?php } ?>
-
-                <?php if ($_GET['pesan'] == 'edit') { ?>
-                    <div class="alert alert-success">
-                        Data kelas berhasil diperbarui.
-                    </div>
-                <?php } ?>
-
-                <?php if ($_GET['pesan'] == 'hapus') { ?>
-                    <div class="alert alert-success">
-                        Data kelas berhasil dihapus.
-                    </div>
-                <?php } ?>
-
-                <?php if ($_GET['pesan'] == 'gagal_hapus') { ?>
-                    <div class="alert alert-danger">
-                        Kelas tidak bisa dihapus karena masih digunakan
-                        pada penempatan siswa atau tabel lain.
-                    </div>
-                <?php } ?>
-
-            <?php } ?>
-
+        
             <!-- TOMBOL -->
             <div class="d-flex flex-wrap gap-2 mb-3">
 
