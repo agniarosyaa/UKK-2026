@@ -26,7 +26,7 @@ mysqli_begin_transaction($koneksi);
 
 try {
 
-    // Periksa apakah kelas masih digunakan di penempatan siswa
+    // Periksa penempatan siswa
     $stmt = mysqli_prepare(
         $koneksi,
         "SELECT COUNT(*) AS total
@@ -36,15 +36,12 @@ try {
 
     mysqli_stmt_bind_param($stmt, "i", $id);
     mysqli_stmt_execute($stmt);
-
     $data = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
     mysqli_stmt_close($stmt);
 
-    if ($data['total'] > 0) {
-        throw new Exception("Kelas masih digunakan oleh penempatan siswa.");
-    }
+    $penempatan = $data['total'];
 
-    // Periksa apakah kelas masih digunakan di riwayat pelanggaran
+    // Periksa riwayat pelanggaran
     $stmt = mysqli_prepare(
         $koneksi,
         "SELECT COUNT(*) AS total
@@ -54,15 +51,12 @@ try {
 
     mysqli_stmt_bind_param($stmt, "i", $id);
     mysqli_stmt_execute($stmt);
-
     $data = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
     mysqli_stmt_close($stmt);
 
-    if ($data['total'] > 0) {
-        throw new Exception("Kelas masih memiliki riwayat pelanggaran.");
-    }
+    $pelanggaran = $data['total'];
 
-    // Periksa apakah kelas masih digunakan oleh wali kelas
+    // Periksa wali kelas
     $stmt = mysqli_prepare(
         $koneksi,
         "SELECT COUNT(*) AS total
@@ -72,29 +66,60 @@ try {
 
     mysqli_stmt_bind_param($stmt, "i", $id);
     mysqli_stmt_execute($stmt);
-
     $data = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
     mysqli_stmt_close($stmt);
 
-    if ($data['total'] > 0) {
-        throw new Exception("Kelas masih memiliki data wali kelas.");
+    $wali = $data['total'];
+
+    // Jika masih memiliki relasi, nonaktifkan kelas
+    if ($penempatan > 0 || $pelanggaran > 0 || $wali > 0) {
+
+        $stmt = mysqli_prepare(
+            $koneksi,
+            "UPDATE t_kelas SET status_aktif = 0 WHERE id = ?"
+        );
+
+        mysqli_stmt_bind_param($stmt, "i", $id);
+
+        if (!mysqli_stmt_execute($stmt)) {
+            throw new Exception("Gagal menonaktifkan kelas.");
+        }
+
+        mysqli_stmt_close($stmt);
+        mysqli_commit($koneksi);
+
+        $_SESSION['notifikasi'] = [
+            'tipe' => 'danger',
+            'pesan' => 'Kelas berhasil dihapus!'
+        ];
+
+        header("Location: kelas.php");
+        exit;
     }
 
-    // Hapus kelas jika tidak memiliki relasi
+    // Jika tidak memiliki relasi, hapus permanen
     $stmt = mysqli_prepare(
         $koneksi,
         "DELETE FROM t_kelas WHERE id = ?"
     );
 
     mysqli_stmt_bind_param($stmt, "i", $id);
-    mysqli_stmt_execute($stmt);
+
+    if (!mysqli_stmt_execute($stmt)) {
+        throw new Exception("Gagal menghapus data kelas.");
+    }
 
     if (mysqli_stmt_affected_rows($stmt) > 0) {
 
         mysqli_stmt_close($stmt);
         mysqli_commit($koneksi);
 
-        header("Location: kelas.php?pesan=hapus");
+        $_SESSION['notifikasi'] = [
+            'tipe' => 'danger',
+            'pesan' => 'Data kelas berhasil dihapus!'
+        ];
+
+        header("Location: kelas.php");
         exit;
 
     } else {
@@ -106,9 +131,12 @@ try {
 
     mysqli_rollback($koneksi);
 
-    $_SESSION['pesan_error'] = $e->getMessage();
+    $_SESSION['notifikasi'] = [
+        'tipe' => 'warning',
+        'pesan' => $e->getMessage()
+    ];
 
-    header("Location: kelas.php?pesan=gagal_hapus");
+    header("Location: kelas.php");
     exit;
 }
 ?>

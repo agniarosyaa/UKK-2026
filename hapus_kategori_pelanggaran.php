@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 
@@ -37,6 +36,12 @@ try {
 
     mysqli_stmt_close($stmt);
 
+    // NOTIFIKASI BERHASIL
+    $_SESSION['notifikasi'] = [
+        'tipe' => 'danger',
+        'pesan' => 'Kategori pelanggaran berhasil dihapus!'
+    ];
+
     // KEMBALI KE DAFTAR KATEGORI
     header("Location: kategori_pelanggaran.php");
     exit;
@@ -44,6 +49,11 @@ try {
 } catch (mysqli_sql_exception $e) {
 
     error_log("Gagal menonaktifkan kategori: " . $e->getMessage());
+
+    $_SESSION['notifikasi'] = [
+        'tipe' => 'danger',
+        'pesan' => 'Gagal menonaktifkan kategori pelanggaran!'
+    ];
 
     header("Location: kategori_pelanggaran.php");
     exit;

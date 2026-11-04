@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 
@@ -52,6 +53,7 @@ if (isset($_POST['simpan'])) {
     ) {
         $error = "Lengkapi semua data wajib dengan benar.";
     } else {
+
         /* PASTIKAN KATEGORI ADA */
         $cekKategori = mysqli_prepare(
             $koneksi,
@@ -60,21 +62,24 @@ if (isset($_POST['simpan'])) {
 
         mysqli_stmt_bind_param($cekKategori, "i", $kategori_id);
         mysqli_stmt_execute($cekKategori);
+
         $hasilKategori = mysqli_stmt_get_result($cekKategori);
         $kategoriAda = mysqli_num_rows($hasilKategori) > 0;
+
         mysqli_stmt_close($cekKategori);
 
         if (!$kategoriAda) {
             $error = "Kategori pelanggaran tidak ditemukan.";
         } else {
+
             $poin = $poinValid;
 
             /* SIMPAN JENIS PELANGGARAN */
             $stmt = mysqli_prepare(
                 $koneksi,
                 "INSERT INTO t_pelanggaran
-                (pelanggaran_kategori_id, kode, nama, poin, deskripsi)
-                VALUES (?, ?, ?, ?, ?)"
+                (pelanggaran_kategori_id, kode, nama, poin, deskripsi, status_aktif)
+                VALUES (?, ?, ?, ?, ?, 1)"
             );
 
             if ($stmt) {
@@ -89,10 +94,20 @@ if (isset($_POST['simpan'])) {
                 );
 
                 if (mysqli_stmt_execute($stmt)) {
+
                     mysqli_stmt_close($stmt);
-                    header("Location: jenis_pelanggaran.php?pesan=tambah");
+
+                    /* NOTIFIKASI BERHASIL */
+                    $_SESSION['notifikasi'] = [
+                        'tipe' => 'success',
+                        'pesan' => 'Data jenis pelanggaran berhasil ditambahkan!'
+                    ];
+
+                    header("Location: jenis_pelanggaran.php");
                     exit;
+
                 } else {
+
                     if (mysqli_stmt_errno($stmt) == 1062) {
                         $error = "Kode pelanggaran sudah digunakan.";
                     } else {
@@ -102,6 +117,7 @@ if (isset($_POST['simpan'])) {
                 }
 
                 mysqli_stmt_close($stmt);
+
             } else {
                 $error = "Gagal menyiapkan query: " .
                          mysqli_error($koneksi);
@@ -115,9 +131,11 @@ if (isset($_POST['simpan'])) {
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Tambah Jenis Pelanggaran</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
@@ -129,70 +147,69 @@ if (isset($_POST['simpan'])) {
 <div class="container-fluid">
     <div class="row">
 
-       
-<!-- SIDEBAR -->
-<aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
+        <!-- SIDEBAR -->
+        <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
 
-    <h5 class="text-white mb-4">Sistem Pelanggaran</h5>
+            <h5 class="text-white mb-4">Sistem Pelanggaran</h5>
 
-    <ul class="nav nav-pills flex-column gap-2">
+            <ul class="nav nav-pills flex-column gap-2">
 
-        <li class="nav-item">
-            <a href="dashboard.php" class="nav-link text-white">Dashboard</a>
-        </li>
+                <li class="nav-item">
+                    <a href="dashboard.php" class="nav-link text-white">Dashboard</a>
+                </li>
 
-        <li class="nav-item">
-            <a href="siswa.php" class="nav-link text-white">Kelola Siswa</a>
-        </li>
+                <li class="nav-item">
+                    <a href="siswa.php" class="nav-link text-white">Kelola Siswa</a>
+                </li>
 
-        <li class="nav-item">
-            <a href="guru.php" class="nav-link text-white">Kelola Guru</a>
-        </li>
+                <li class="nav-item">
+                    <a href="guru.php" class="nav-link text-white">Kelola Guru</a>
+                </li>
 
-        <li class="nav-item">
-            <a href="kelas.php" class="nav-link text-white">Kelola Kelas</a>
-        </li>
+                <li class="nav-item">
+                    <a href="kelas.php" class="nav-link text-white">Kelola Kelas</a>
+                </li>
 
-        <li class="nav-item">
-            <a href="tahun_ajaran.php" class="nav-link text-white">Tahun Ajaran</a>
-        </li>
+                <li class="nav-item">
+                    <a href="tahun_ajaran.php" class="nav-link text-white">Tahun Ajaran</a>
+                </li>
 
-        <li class="nav-item">
-            <a href="penempatan_siswa.php" class="nav-link text-white">Penempatan Siswa</a>
-        </li>
+                <li class="nav-item">
+                    <a href="penempatan_siswa.php" class="nav-link text-white">Penempatan Siswa</a>
+                </li>
 
-        <li class="nav-item">
-            <a href="wali_kelas.php" class="nav-link text-white">Wali Kelas</a>
-        </li>
+                <li class="nav-item">
+                    <a href="wali_kelas.php" class="nav-link text-white">Wali Kelas</a>
+                </li>
 
-        <li class="nav-item">
-            <a href="kategori_pelanggaran.php" class="nav-link text-white">Kategori Pelanggaran</a>
-        </li>
+                <li class="nav-item">
+                    <a href="kategori_pelanggaran.php" class="nav-link text-white">Kategori Pelanggaran</a>
+                </li>
 
-        <li class="nav-item">
-            <a href="jenis_pelanggaran.php" class="nav-link active">Jenis Pelanggaran</a>
-        </li>
+                <li class="nav-item">
+                    <a href="jenis_pelanggaran.php" class="nav-link active">Jenis Pelanggaran</a>
+                </li>
 
-        <li class="nav-item">
-            <a href="laporan.php" class="nav-link text-white">Laporan</a>
-        </li>
+                <li class="nav-item">
+                    <a href="laporan.php" class="nav-link text-white">Laporan</a>
+                </li>
 
-        <hr class="text-secondary">
+                <hr class="text-secondary">
 
-        <li class="nav-item">
-            <a href="about_me.php" class="nav-link text-white">About Me</a>
-        </li>
+                <li class="nav-item">
+                    <a href="about_me.php" class="nav-link text-white">About Me</a>
+                </li>
 
-        <li class="nav-item">
-            <a href="logout.php" class="nav-link text-danger"
-               onclick="return confirm('Yakin ingin logout?')">
-                Logout
-            </a>
-        </li>
+                <li class="nav-item">
+                    <a href="logout.php"
+                       class="nav-link text-danger"
+                       onclick="return confirm('Yakin ingin logout?')">
+                        Logout
+                    </a>
+                </li>
 
-    </ul>
-</aside>
-
+            </ul>
+        </aside>
 
         <!-- KONTEN UTAMA -->
         <main class="col-md-9 col-lg-10 p-4">
@@ -200,6 +217,7 @@ if (isset($_POST['simpan'])) {
             <h2 class="mb-3">Tambah Jenis Pelanggaran</h2>
 
             <div class="card shadow-sm">
+
                 <div class="card-header bg-primary text-white py-3">
                     <h5 class="mb-0">Form Tambah Jenis Pelanggaran</h5>
                 </div>
@@ -216,14 +234,15 @@ if (isset($_POST['simpan'])) {
 
                         <!-- KATEGORI -->
                         <div class="mb-3">
-                            <label for="pelanggaran_kategori_id"
-                                   class="form-label">
+                            <label for="pelanggaran_kategori_id" class="form-label">
                                 Kategori Pelanggaran
                             </label>
 
                             <select name="pelanggaran_kategori_id"
                                     id="pelanggaran_kategori_id"
-                                    class="form-select" required>
+                                    class="form-select"
+                                    required>
+
                                 <option value="">-- Pilih Kategori --</option>
 
                                 <?php while ($k = mysqli_fetch_assoc($kategori)): ?>
@@ -233,6 +252,7 @@ if (isset($_POST['simpan'])) {
                                         <?= htmlspecialchars($k['nama']) ?>
                                     </option>
                                 <?php endwhile; ?>
+
                             </select>
                         </div>
 
@@ -250,25 +270,53 @@ if (isset($_POST['simpan'])) {
                                    required>
                         </div>
 
-<!-- JENIS PELANGGARAN -->
-<div class="mb-3">
-    <label for="nama" class="form-label">
-        Jenis Pelanggaran
-    </label>
+                        <!-- JENIS PELANGGARAN -->
+                        <div class="mb-3">
+                            <label for="nama" class="form-label">
+                                Jenis Pelanggaran
+                            </label>
 
-    <select name="nama" id="nama" class="form-select" required>
-        <option value="">-- Pilih Jenis Pelanggaran --</option>
-        <option value="Terlambat Datang">Terlambat Datang</option>
-        <option value="Tidak Memakai Seragam">Tidak Memakai Seragam</option>
-        <option value="Tidak Mengerjakan Tugas">Tidak Mengerjakan Tugas</option>
-        <option value="Membolos">Membolos</option>
-        <option value="Rambut Tidak Rapi">Rambut Tidak Rapi</option>
-        <option value="Berkelahi">Berkelahi</option>
-        <option value="Merokok">Merokok</option>
-        <option value="Merusak Fasilitas Sekolah">Merusak Fasilitas Sekolah</option>
-    </select>
-</div>
+                            <select name="nama"
+                                    id="nama"
+                                    class="form-select"
+                                    required>
 
+                                <option value="">-- Pilih Jenis Pelanggaran --</option>
+
+                                <option value="Terlambat Datang" <?= $nama === 'Terlambat Datang' ? 'selected' : ''; ?>>
+                                    Terlambat Datang
+                                </option>
+
+                                <option value="Tidak Memakai Seragam" <?= $nama === 'Tidak Memakai Seragam' ? 'selected' : ''; ?>>
+                                    Tidak Memakai Seragam
+                                </option>
+
+                                <option value="Tidak Mengerjakan Tugas" <?= $nama === 'Tidak Mengerjakan Tugas' ? 'selected' : ''; ?>>
+                                    Tidak Mengerjakan Tugas
+                                </option>
+
+                                <option value="Membolos" <?= $nama === 'Membolos' ? 'selected' : ''; ?>>
+                                    Membolos
+                                </option>
+
+                                <option value="Rambut Tidak Rapi" <?= $nama === 'Rambut Tidak Rapi' ? 'selected' : ''; ?>>
+                                    Rambut Tidak Rapi
+                                </option>
+
+                                <option value="Berkelahi" <?= $nama === 'Berkelahi' ? 'selected' : ''; ?>>
+                                    Berkelahi
+                                </option>
+
+                                <option value="Merokok" <?= $nama === 'Merokok' ? 'selected' : ''; ?>>
+                                    Merokok
+                                </option>
+
+                                <option value="Merusak Fasilitas Sekolah" <?= $nama === 'Merusak Fasilitas Sekolah' ? 'selected' : ''; ?>>
+                                    Merusak Fasilitas Sekolah
+                                </option>
+
+                            </select>
+                        </div>
 
                         <!-- POIN -->
                         <div class="mb-3">
@@ -299,6 +347,7 @@ if (isset($_POST['simpan'])) {
 
                         <!-- TOMBOL -->
                         <div class="d-flex flex-wrap gap-2">
+
                             <button type="submit"
                                     name="simpan"
                                     class="btn btn-primary">
@@ -309,9 +358,11 @@ if (isset($_POST['simpan'])) {
                                class="btn btn-secondary">
                                 Kembali
                             </a>
+
                         </div>
 
                     </form>
+
                 </div>
             </div>
 

@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 
@@ -12,6 +13,10 @@ if (strtolower($_SESSION['role'] ?? '') != 'admin') {
 }
 
 include "config/koneksi.php";
+
+/* NOTIFIKASI */
+$notifikasi = $_SESSION['notifikasi'] ?? null;
+unset($_SESSION['notifikasi']);
 
 $query = "SELECT * FROM t_siswa ORDER BY id ASC";
 $result = mysqli_query($koneksi, $query);
@@ -46,10 +51,12 @@ if (!$result) {
 <div class="container-fluid">
     <div class="row">
 
-        <!-- SIDEBAR -->
-        <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
+        <!-- SIDEBAR TETAP -->
+        <aside class="col-md-3 col-lg-2 bg-dark vh-100 p-3 position-fixed top-0 start-0 overflow-auto">
 
-            <h5 class="text-white mb-4">Sistem Pelanggaran</h5>
+            <h5 class="text-white mb-4">
+                Sistem Pelanggaran
+            </h5>
 
             <ul class="nav nav-pills flex-column gap-2">
 
@@ -113,7 +120,6 @@ if (!$result) {
                     </a>
                 </li>
 
-                <!-- GARIS PEMISAH DI BAWAH LAPORAN -->
                 <hr class="text-secondary">
 
                 <li class="nav-item">
@@ -131,15 +137,35 @@ if (!$result) {
                 </li>
 
             </ul>
+
         </aside>
 
         <!-- KONTEN UTAMA -->
-        <main class="col-md-9 col-lg-10 p-4">
+        <main class="col-md-9 col-lg-10 offset-md-3 offset-lg-2 p-4">
 
             <h1 class="mb-3">Data Siswa</h1>
 
+            <!-- NOTIFIKASI -->
+            <?php if ($notifikasi) { ?>
+
+                <div class="alert alert-<?= htmlspecialchars($notifikasi['tipe']); ?> alert-dismissible fade show"
+                     role="alert">
+
+                    <?= htmlspecialchars($notifikasi['pesan']); ?>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert"
+                            aria-label="Close">
+                    </button>
+
+                </div>
+
+            <?php } ?>
+
             <!-- TOMBOL -->
             <div class="mb-3">
+
                 <a href="dashboard.php" class="btn btn-secondary">
                     Kembali ke Dashboard
                 </a>
@@ -147,6 +173,7 @@ if (!$result) {
                 <a href="tambah_siswa.php" class="btn btn-primary">
                     + Tambah Siswa
                 </a>
+
             </div>
 
             <!-- TABEL SISWA -->
@@ -156,6 +183,7 @@ if (!$result) {
                        class="table table-bordered table-hover align-middle">
 
                     <thead class="table-light">
+
                         <tr>
                             <th>No</th>
                             <th>NIS</th>
@@ -167,16 +195,22 @@ if (!$result) {
                             <th>Status</th>
                             <th style="min-width: 150px;">Aksi</th>
                         </tr>
+
                     </thead>
 
                     <tbody>
+
                     <?php
                     $no = 1;
 
                     while ($data = mysqli_fetch_assoc($result)) {
                     ?>
+
                         <tr>
-                            <td><?= $no++; ?></td>
+
+                            <td>
+                                <?= $no++; ?>
+                            </td>
 
                             <td>
                                 <?= htmlspecialchars($data['nis'] ?? ''); ?>
@@ -203,14 +237,25 @@ if (!$result) {
                             </td>
 
                             <td>
+
                                 <?php if ($data['status_aktif'] == 1) { ?>
-                                    <span class="badge bg-success">Aktif</span>
+
+                                    <span class="badge bg-success">
+                                        Aktif
+                                    </span>
+
                                 <?php } else { ?>
-                                    <span class="badge bg-danger">Tidak Aktif</span>
+
+                                    <span class="badge bg-danger">
+                                        Tidak Aktif
+                                    </span>
+
                                 <?php } ?>
+
                             </td>
 
                             <td>
+
                                 <a
                                     href="edit_siswa.php?id=<?= (int)$data['id']; ?>"
                                     class="btn btn-primary btn-sm">
@@ -223,11 +268,15 @@ if (!$result) {
                                     onclick="return confirm('Yakin ingin menghapus data siswa ini?')">
                                     Hapus
                                 </a>
+
                             </td>
+
                         </tr>
+
                     <?php
                     }
                     ?>
+
                     </tbody>
 
                 </table>
@@ -235,6 +284,7 @@ if (!$result) {
             </div>
 
         </main>
+
     </div>
 </div>
 
@@ -254,9 +304,13 @@ if (!$result) {
 $(document).ready(function () {
 
     $('#tabelSiswa').DataTable({
+
         pageLength: 10,
+
         lengthMenu: [5, 10, 25, 50],
+
         searching: true,
+
         ordering: true,
 
         columnDefs: [
@@ -267,12 +321,19 @@ $(document).ready(function () {
         ],
 
         language: {
+
             search: "Cari:",
+
             lengthMenu: "Tampilkan _MENU_ data",
+
             info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+
             infoEmpty: "Tidak ada data",
+
             infoFiltered: "(difilter dari _MAX_ seluruh data)",
+
             zeroRecords: "Data tidak ditemukan",
+
             emptyTable: "Belum ada data siswa",
 
             paginate: {
@@ -281,7 +342,9 @@ $(document).ready(function () {
                 next: "Selanjutnya",
                 previous: "Sebelumnya"
             }
+
         }
+
     });
 
 });

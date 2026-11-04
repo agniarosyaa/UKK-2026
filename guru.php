@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 
@@ -13,7 +14,11 @@ if (strtolower($_SESSION['role'] ?? '') != 'admin') {
 
 include "config/koneksi.php";
 
-// Ambil data guru
+/* NOTIFIKASI */
+$notifikasi = $_SESSION['notifikasi'] ?? null;
+unset($_SESSION['notifikasi']);
+
+/* AMBIL DATA GURU */
 $query = "SELECT * FROM t_guru ORDER BY id ASC";
 $result = mysqli_query($koneksi, $query);
 
@@ -31,11 +36,11 @@ if (!$result) {
 
     <title>Kelola Guru</title>
 
-    <!-- Bootstrap CSS -->
+    <!-- BOOTSTRAP CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
           rel="stylesheet">
 
-    <!-- DataTables Bootstrap CSS -->
+    <!-- DATATABLES CSS -->
     <link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css"
           rel="stylesheet">
 </head>
@@ -45,8 +50,8 @@ if (!$result) {
 <div class="container-fluid">
     <div class="row">
 
-        <!-- SIDEBAR ADMIN -->
-        <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
+        <!-- SIDEBAR TETAP -->
+        <aside class="col-md-3 col-lg-2 bg-dark vh-100 p-3 position-fixed top-0 start-0 overflow-auto">
 
             <h5 class="text-white mb-4">
                 Sistem Pelanggaran
@@ -94,10 +99,9 @@ if (!$result) {
                     Laporan
                 </a>
 
-                <!-- GARIS PEMISAH DI BAWAH LAPORAN -->
+                <!-- GARIS PEMISAH -->
                 <hr class="text-secondary">
 
-                <!-- ABOUT ME DI BAWAH GARIS -->
                 <a href="about_me.php" class="nav-link text-white">
                     About Me
                 </a>
@@ -109,12 +113,33 @@ if (!$result) {
                 </a>
 
             </nav>
+
         </aside>
 
         <!-- KONTEN UTAMA -->
-        <main class="col-md-9 col-lg-10 p-4">
+        <main class="col-md-9 col-lg-10 offset-md-3 offset-lg-2 p-4">
 
-            <h2 class="mb-3">Data Guru</h2>
+            <h2 class="mb-3">
+                Data Guru
+            </h2>
+
+            <!-- NOTIFIKASI -->
+            <?php if ($notifikasi) { ?>
+
+                <div class="alert alert-<?= htmlspecialchars($notifikasi['tipe']); ?> alert-dismissible fade show"
+                     role="alert">
+
+                    <?= htmlspecialchars($notifikasi['pesan']); ?>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert"
+                            aria-label="Close">
+                    </button>
+
+                </div>
+
+            <?php } ?>
 
             <!-- TOMBOL AKSI -->
             <div class="d-flex flex-wrap gap-2 mb-3">
@@ -131,6 +156,7 @@ if (!$result) {
 
             <!-- TABEL GURU -->
             <div class="card shadow-sm">
+
                 <div class="card-body">
 
                     <div class="table-responsive">
@@ -139,6 +165,7 @@ if (!$result) {
                                class="table table-bordered table-hover align-middle">
 
                             <thead class="table-light">
+
                                 <tr>
                                     <th>No</th>
                                     <th>NIP</th>
@@ -148,69 +175,72 @@ if (!$result) {
                                     <th>Status</th>
                                     <th>Aksi</th>
                                 </tr>
+
                             </thead>
 
                             <tbody>
 
-                            <?php if (mysqli_num_rows($result) > 0) { ?>
+                            <?php
+                            $no = 1;
 
-                                <?php $no = 1; ?>
-
-                                <?php while ($data = mysqli_fetch_assoc($result)) { ?>
-
-                                    <tr>
-                                        <td><?= $no++; ?></td>
-
-                                        <td>
-                                            <?= htmlspecialchars($data['nip'] ?? '-'); ?>
-                                        </td>
-
-                                        <td>
-                                            <?= htmlspecialchars($data['nama'] ?? '-'); ?>
-                                        </td>
-
-                                        <td>
-                                            <?= htmlspecialchars($data['email'] ?? '-'); ?>
-                                        </td>
-
-                                        <td>
-                                            <?= htmlspecialchars($data['user_id'] ?? '-'); ?>
-                                        </td>
-
-                                        <td>
-                                            <?php if (($data['status_aktif'] ?? 0) == 1) { ?>
-                                                <span class="badge bg-success">
-                                                    Aktif
-                                                </span>
-                                            <?php } else { ?>
-                                                <span class="badge bg-danger">
-                                                    Tidak Aktif
-                                                </span>
-                                            <?php } ?>
-                                        </td>
-
-                                        <td class="text-nowrap">
-                                            <a href="edit_guru.php?id=<?= (int) $data['id']; ?>"
-                                               class="btn btn-primary btn-sm">
-                                                Edit
-                                            </a>
-
-                                            <a href="hapus_guru.php?id=<?= (int) $data['id']; ?>"
-                                               class="btn btn-danger btn-sm"
-                                               onclick="return confirm('Yakin ingin menghapus data guru ini?')">
-                                                Hapus
-                                            </a>
-                                        </td>
-                                    </tr>
-
-                                <?php } ?>
-
-                            <?php } else { ?>
+                            while ($data = mysqli_fetch_assoc($result)) {
+                            ?>
 
                                 <tr>
-                                    <td colspan="7" class="text-center text-secondary py-4">
-                                        Belum ada data guru.
+
+                                    <td>
+                                        <?= $no++; ?>
                                     </td>
+
+                                    <td>
+                                        <?= htmlspecialchars($data['nip'] ?? '-'); ?>
+                                    </td>
+
+                                    <td>
+                                        <?= htmlspecialchars($data['nama'] ?? '-'); ?>
+                                    </td>
+
+                                    <td>
+                                        <?= htmlspecialchars($data['email'] ?? '-'); ?>
+                                    </td>
+
+                                    <td>
+                                        <?= htmlspecialchars($data['user_id'] ?? '-'); ?>
+                                    </td>
+
+                                    <td>
+
+                                        <?php if (($data['status_aktif'] ?? 0) == 1) { ?>
+
+                                            <span class="badge bg-success">
+                                                Aktif
+                                            </span>
+
+                                        <?php } else { ?>
+
+                                            <span class="badge bg-danger">
+                                                Tidak Aktif
+                                            </span>
+
+                                        <?php } ?>
+
+                                    </td>
+
+                                    <td class="text-nowrap">
+
+                                        <a href="edit_guru.php?id=<?= (int)$data['id']; ?>"
+                                           class="btn btn-primary btn-sm">
+                                            Edit
+                                        </a>
+
+                                        <a href="hapus_guru.php?id=<?= (int)$data['id']; ?>"
+                                           class="btn btn-danger btn-sm"
+                                           onclick="return confirm('Yakin ingin menghapus data guru ini?')">
+                                            Hapus
+                                        </a>
+
+                                    </td>
+
                                 </tr>
 
                             <?php } ?>
@@ -222,6 +252,7 @@ if (!$result) {
                     </div>
 
                 </div>
+
             </div>
 
         </main>
@@ -229,24 +260,29 @@ if (!$result) {
     </div>
 </div>
 
-<!-- jQuery -->
+<!-- JQUERY -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-<!-- Bootstrap JS -->
+<!-- BOOTSTRAP JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- DataTables JS -->
+<!-- DATATABLES JS -->
 <script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+
 <script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
 
-<!-- Pengaturan DataTables -->
+<!-- PENGATURAN DATATABLES -->
 <script>
 $(document).ready(function () {
 
     $('#tabelGuru').DataTable({
+
         pageLength: 10,
+
         lengthMenu: [5, 10, 25, 50],
+
         searching: true,
+
         ordering: true,
 
         columnDefs: [
@@ -257,12 +293,19 @@ $(document).ready(function () {
         ],
 
         language: {
+
             search: "Cari:",
+
             lengthMenu: "Tampilkan _MENU_ data",
+
             info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+
             infoEmpty: "Tidak ada data",
+
             infoFiltered: "(difilter dari _MAX_ data)",
+
             zeroRecords: "Data tidak ditemukan",
+
             emptyTable: "Belum ada data guru",
 
             paginate: {
@@ -271,7 +314,9 @@ $(document).ready(function () {
                 next: "Selanjutnya",
                 previous: "Sebelumnya"
             }
+
         }
+
     });
 
 });

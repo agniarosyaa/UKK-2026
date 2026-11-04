@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 
@@ -13,10 +14,16 @@ if (strtolower($_SESSION['role'] ?? '') != 'admin') {
 
 include "config/koneksi.php";
 
-// AMBIL DATA KELAS
+/* NOTIFIKASI */
+$notifikasi = $_SESSION['notifikasi'] ?? null;
+unset($_SESSION['notifikasi']);
+
+/* AMBIL DATA KELAS YANG AKTIF */
 $data = mysqli_query(
     $koneksi,
-    "SELECT * FROM t_kelas ORDER BY id ASC"
+    "SELECT * FROM t_kelas
+     WHERE status_aktif = 1
+     ORDER BY id ASC"
 );
 
 if (!$data) {
@@ -26,17 +33,18 @@ if (!$data) {
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Kelola Kelas</title>
 
-    <!-- Bootstrap CSS -->
+    <!-- BOOTSTRAP CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
           rel="stylesheet">
 
-    <!-- DataTables CSS -->
+    <!-- DATATABLES CSS -->
     <link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css"
           rel="stylesheet">
 </head>
@@ -46,10 +54,12 @@ if (!$data) {
 <div class="container-fluid">
     <div class="row">
 
-        <!-- SIDEBAR -->
-        <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
+        <!-- SIDEBAR TETAP -->
+        <aside class="col-md-3 col-lg-2 bg-dark vh-100 p-3 position-fixed top-0 start-0 overflow-auto">
 
-            <h5 class="text-white mb-4">Sistem Pelanggaran</h5>
+            <h5 class="text-white mb-4">
+                Sistem Pelanggaran
+            </h5>
 
             <nav class="nav nav-pills flex-column gap-2">
 
@@ -93,10 +103,8 @@ if (!$data) {
                     Laporan
                 </a>
 
-                <!-- GARIS PEMISAH DI BAWAH LAPORAN -->
                 <hr class="text-secondary">
 
-                <!-- ABOUT ME DI BAWAH GARIS -->
                 <a href="about_me.php" class="nav-link text-white">
                     About Me
                 </a>
@@ -112,11 +120,30 @@ if (!$data) {
         </aside>
 
         <!-- KONTEN UTAMA -->
-        <main class="col-md-9 col-lg-10 p-4">
+        <main class="col-md-9 col-lg-10 offset-md-3 offset-lg-2 p-4">
 
-            <h2 class="mb-3">Data Kelas</h2>
+            <h2 class="mb-3">
+                Data Kelas
+            </h2>
 
-        
+            <!-- NOTIFIKASI -->
+            <?php if ($notifikasi) { ?>
+
+                <div class="alert alert-<?= htmlspecialchars($notifikasi['tipe']); ?> alert-dismissible fade show"
+                     role="alert">
+
+                    <?= htmlspecialchars($notifikasi['pesan']); ?>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert"
+                            aria-label="Close">
+                    </button>
+
+                </div>
+
+            <?php } ?>
+
             <!-- TOMBOL -->
             <div class="d-flex flex-wrap gap-2 mb-3">
 
@@ -130,8 +157,9 @@ if (!$data) {
 
             </div>
 
-            <!-- TABEL -->
+            <!-- TABEL KELAS -->
             <div class="card shadow-sm">
+
                 <div class="card-body">
 
                     <div class="table-responsive">
@@ -140,6 +168,7 @@ if (!$data) {
                                class="table table-bordered table-hover align-middle">
 
                             <thead class="table-light">
+
                                 <tr>
                                     <th>No</th>
                                     <th>Nama</th>
@@ -148,14 +177,22 @@ if (!$data) {
                                     <th>Status</th>
                                     <th>Aksi</th>
                                 </tr>
+
                             </thead>
 
                             <tbody>
-                            <?php $no = 1; ?>
 
-                            <?php while ($row = mysqli_fetch_assoc($data)) { ?>
+                            <?php
+                            $no = 1;
+
+                            while ($row = mysqli_fetch_assoc($data)) {
+                            ?>
+
                                 <tr>
-                                    <td><?= $no++; ?></td>
+
+                                    <td>
+                                        <?= $no++; ?>
+                                    </td>
 
                                     <td>
                                         <?= htmlspecialchars($row['nama'] ?? '-'); ?>
@@ -170,59 +207,80 @@ if (!$data) {
                                     </td>
 
                                     <td>
+
                                         <?php if (($row['status_aktif'] ?? 0) == 1) { ?>
+
                                             <span class="badge bg-success">
                                                 Aktif
                                             </span>
+
                                         <?php } else { ?>
+
                                             <span class="badge bg-secondary">
                                                 Tidak Aktif
                                             </span>
+
                                         <?php } ?>
+
                                     </td>
 
                                     <td class="text-nowrap">
-                                        <a href="edit_kelas.php?id=<?= (int) $row['id']; ?>"
+
+                                        <a href="edit_kelas.php?id=<?= (int)$row['id']; ?>"
                                            class="btn btn-primary btn-sm">
                                             Edit
                                         </a>
 
-                                        <a href="hapus_kelas.php?id=<?= (int) $row['id']; ?>"
+                                        <a href="hapus_kelas.php?id=<?= (int)$row['id']; ?>"
                                            class="btn btn-danger btn-sm"
                                            onclick="return confirm('Yakin ingin menghapus kelas ini?')">
                                             Hapus
                                         </a>
+
                                     </td>
+
                                 </tr>
+
                             <?php } ?>
 
                             </tbody>
+
                         </table>
 
                     </div>
+
                 </div>
+
             </div>
 
         </main>
+
     </div>
 </div>
 
-<!-- jQuery -->
+<!-- JQUERY -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-<!-- Bootstrap JS -->
+<!-- BOOTSTRAP JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- DataTables JS -->
+<!-- DATATABLES JS -->
 <script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+
 <script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
 
+<!-- DATATABLES -->
 <script>
 $(document).ready(function () {
+
     $('#tabelKelas').DataTable({
+
         pageLength: 10,
+
         lengthMenu: [5, 10, 25, 50],
+
         searching: true,
+
         ordering: true,
 
         columnDefs: [
@@ -233,12 +291,19 @@ $(document).ready(function () {
         ],
 
         language: {
+
             search: "Cari:",
+
             lengthMenu: "Tampilkan _MENU_ data",
+
             info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+
             infoEmpty: "Tidak ada data",
+
             infoFiltered: "(difilter dari _MAX_ data)",
+
             zeroRecords: "Data tidak ditemukan",
+
             emptyTable: "Belum ada data kelas",
 
             paginate: {
@@ -247,8 +312,11 @@ $(document).ready(function () {
                 next: "Selanjutnya",
                 previous: "Sebelumnya"
             }
+
         }
+
     });
+
 });
 </script>
 

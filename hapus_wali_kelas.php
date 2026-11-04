@@ -16,58 +16,64 @@ include "config/koneksi.php";
 
 // Periksa ID wali kelas
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+
+    $_SESSION['notifikasi'] = [
+        'tipe' => 'danger',
+        'pesan' => 'Data wali kelas gagal dihapus!'
+    ];
+
     header("Location: wali_kelas.php");
     exit;
 }
 
 $id = (int) $_GET['id'];
 
-// Periksa apakah data wali kelas tersedia
+// Hapus data wali kelas
 $stmt = mysqli_prepare(
     $koneksi,
-    "SELECT id FROM t_wali_kelas WHERE id = ?"
+    "DELETE FROM t_wali_kelas WHERE id = ?"
 );
 
-mysqli_stmt_bind_param($stmt, "i", $id);
-mysqli_stmt_execute($stmt);
+if (!$stmt) {
 
-$result = mysqli_stmt_get_result($stmt);
-$data = mysqli_fetch_assoc($result);
+    $_SESSION['notifikasi'] = [
+        'tipe' => 'danger',
+        'pesan' => 'Data wali kelas gagal dihapus!'
+    ];
 
-mysqli_stmt_close($stmt);
-
-if (!$data) {
     header("Location: wali_kelas.php");
     exit;
 }
 
-// Hapus data wali kelas
-try {
-    $stmt = mysqli_prepare(
-        $koneksi,
-        "DELETE FROM t_wali_kelas WHERE id = ?"
-    );
+mysqli_stmt_bind_param($stmt, "i", $id);
 
-    mysqli_stmt_bind_param($stmt, "i", $id);
-    mysqli_stmt_execute($stmt);
+if (mysqli_stmt_execute($stmt)) {
 
     $jumlah = mysqli_stmt_affected_rows($stmt);
 
-    mysqli_stmt_close($stmt);
-
     if ($jumlah > 0) {
-        header("Location: wali_kelas.php?pesan=hapus");
+        $_SESSION['notifikasi'] = [
+            'tipe' => 'danger',
+            'pesan' => 'Data wali kelas berhasil dihapus!'
+        ];
     } else {
-        header("Location: wali_kelas.php?pesan=gagal_hapus");
-    }
-    exit;
-
-} catch (mysqli_sql_exception $e) {
-    if (isset($stmt)) {
-        mysqli_stmt_close($stmt);
+        $_SESSION['notifikasi'] = [
+            'tipe' => 'warning',
+            'pesan' => 'Data wali kelas tidak ditemukan!'
+        ];
     }
 
-    header("Location: wali_kelas.php?pesan=gagal_hapus");
-    exit;
+} else {
+
+    $_SESSION['notifikasi'] = [
+        'tipe' => 'danger',
+        'pesan' => 'Data wali kelas gagal dihapus!'
+    ];
+
 }
+
+mysqli_stmt_close($stmt);
+
+header("Location: wali_kelas.php");
+exit;
 ?>

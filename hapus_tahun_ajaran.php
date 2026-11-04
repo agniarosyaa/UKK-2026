@@ -29,22 +29,54 @@ $stmt = mysqli_prepare(
 );
 
 if (!$stmt) {
-    die("Gagal menyiapkan query hapus tahun ajaran.");
+    $_SESSION['notifikasi'] = [
+        'tipe' => 'danger',
+        'pesan' => 'Gagal menyiapkan query hapus tahun ajaran.'
+    ];
+
+    header("Location: tahun_ajaran.php");
+    exit;
 }
 
 mysqli_stmt_bind_param($stmt, "i", $id);
 
 try {
-    mysqli_stmt_execute($stmt);
+    if (mysqli_stmt_execute($stmt)) {
+
+        if (mysqli_stmt_affected_rows($stmt) > 0) {
+
+            $_SESSION['notifikasi'] = [
+                'tipe' => 'danger',
+                'pesan' => 'Data tahun ajaran berhasil dihapus!'
+            ];
+
+        } else {
+
+            $_SESSION['notifikasi'] = [
+                'tipe' => 'warning',
+                'pesan' => 'Data tahun ajaran tidak ditemukan.'
+            ];
+        }
+
+        mysqli_stmt_close($stmt);
+
+        header("Location: tahun_ajaran.php");
+        exit;
+
+    } else {
+        throw new Exception("Gagal menghapus data tahun ajaran.");
+    }
+
+} catch (Throwable $e) {
+
     mysqli_stmt_close($stmt);
 
-    header("Location: tahun_ajaran.php?pesan=hapus");
-    exit;
+    $_SESSION['notifikasi'] = [
+        'tipe' => 'danger',
+        'pesan' => 'Data tahun ajaran gagal dihapus. Pastikan data tidak sedang digunakan.'
+    ];
 
-} catch (mysqli_sql_exception $e) {
-    mysqli_stmt_close($stmt);
-
-    header("Location: tahun_ajaran.php?pesan=gagal_hapus");
+    header("Location: tahun_ajaran.php");
     exit;
 }
 ?>

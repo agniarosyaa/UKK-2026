@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 
@@ -46,7 +45,6 @@ if (!$data) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
           rel="stylesheet">
 
-    <!-- CSS DataTables Bootstrap -->
     <link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css"
           rel="stylesheet">
 </head>
@@ -56,8 +54,8 @@ if (!$data) {
 <div class="container-fluid">
     <div class="row">
 
-        <!-- SIDEBAR GURU -->
-        <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
+        <!-- SIDEBAR GURU TETAP -->
+        <aside class="col-md-3 col-lg-2 bg-dark text-white p-3 position-fixed top-0 bottom-0 start-0 overflow-auto">
 
             <h5 class="text-white mb-4">
                 Sistem Pelanggaran
@@ -98,7 +96,8 @@ if (!$data) {
                 </a>
 
                 <a href="logout.php"
-                   class="nav-link text-danger">
+                   class="nav-link text-danger"
+                   onclick="return confirm('Yakin ingin logout?')">
                     Logout
                 </a>
 
@@ -106,7 +105,7 @@ if (!$data) {
         </aside>
 
         <!-- KONTEN UTAMA -->
-        <main class="col-md-9 col-lg-10 p-4">
+        <main class="col-md-9 col-lg-10 p-4 offset-md-3 offset-lg-2">
 
             <h2 class="mb-1">Riwayat Pelanggaran</h2>
 
@@ -120,6 +119,7 @@ if (!$data) {
                 <div class="col-md-4">
                     <div class="card border-0 shadow-sm">
                         <div class="card-body">
+
                             <p class="text-secondary mb-1">
                                 Total Catatan
                             </p>
@@ -127,6 +127,7 @@ if (!$data) {
                             <h3 class="mb-0">
                                 <?= mysqli_num_rows($data); ?>
                             </h3>
+
                         </div>
                     </div>
                 </div>
@@ -134,19 +135,18 @@ if (!$data) {
             </div>
 
             <!-- TABEL RIWAYAT -->
-            
-        <div class="card border-0 shadow-sm">
+            <div class="card border-0 shadow-sm">
 
-            <div class="card-header bg-primary text-white py-3">
-                Data Riwayat Pelanggaran
-            </div>
-
+                <div class="card-header bg-primary text-white py-3">
+                    Data Riwayat Pelanggaran
+                </div>
 
                 <div class="card-body">
 
                     <div class="table-responsive">
 
-                        <table id="tabelRiwayat" class="table table-bordered table-hover align-middle">
+                        <table id="tabelRiwayat"
+                               class="table table-bordered table-hover align-middle">
 
                             <thead class="table-light">
                                 <tr>

@@ -65,15 +65,19 @@ if (isset($_POST['update'])) {
             $status_aktif,
             $id
         );
+   if (mysqli_stmt_execute($update)) {
 
-        if (mysqli_stmt_execute($update)) {
-            mysqli_stmt_close($update);
-            header("Location: kelas.php?pesan=edit");
-            exit;
-        } else {
-            $pesan_error = "Gagal mengubah data kelas.";
-            mysqli_stmt_close($update);
-        }
+    $_SESSION['notifikasi'] = [
+        'tipe' => 'success',
+        'pesan' => 'Data kelas berhasil diperbarui!'
+    ];
+
+    mysqli_stmt_close($update);
+
+    header("Location: kelas.php");
+    exit;
+
+}
     }
 
     $data['nama'] = $nama;

@@ -16,7 +16,13 @@ include "config/koneksi.php";
 
 // Periksa ID
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    header("Location: penempatan_siswa.php?pesan=gagal");
+
+    $_SESSION['notifikasi'] = [
+        'tipe' => 'danger',
+        'pesan' => 'Data penempatan siswa gagal dihapus!'
+    ];
+
+    header("Location: penempatan_siswa.php");
     exit;
 }
 
@@ -28,27 +34,45 @@ $stmt = mysqli_prepare(
     "DELETE FROM t_kelas_siswa WHERE id = ?"
 );
 
+if (!$stmt) {
+    $_SESSION['notifikasi'] = [
+        'tipe' => 'danger',
+        'pesan' => 'Data penempatan siswa gagal dihapus!'
+    ];
+
+    header("Location: penempatan_siswa.php");
+    exit;
+}
+
 mysqli_stmt_bind_param($stmt, "i", $id);
 
 if (mysqli_stmt_execute($stmt)) {
 
     $terhapus = mysqli_stmt_affected_rows($stmt);
 
-    mysqli_stmt_close($stmt);
-
     if ($terhapus > 0) {
-        header("Location: penempatan_siswa.php?pesan=hapus");
+        $_SESSION['notifikasi'] = [
+            'tipe' => 'danger',
+            'pesan' => 'Data penempatan siswa berhasil dihapus!'
+        ];
     } else {
-        header("Location: penempatan_siswa.php?pesan=gagal");
+        $_SESSION['notifikasi'] = [
+            'tipe' => 'warning',
+            'pesan' => 'Data penempatan siswa tidak ditemukan!'
+        ];
     }
-
-    exit;
 
 } else {
 
-    mysqli_stmt_close($stmt);
+    $_SESSION['notifikasi'] = [
+        'tipe' => 'danger',
+        'pesan' => 'Data penempatan siswa gagal dihapus!'
+    ];
 
-    header("Location: penempatan_siswa.php?pesan=gagal");
-    exit;
 }
+
+mysqli_stmt_close($stmt);
+
+header("Location: penempatan_siswa.php");
+exit;
 ?>

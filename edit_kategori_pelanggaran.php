@@ -70,7 +70,14 @@ if (isset($_POST['simpan'])) {
 
             if (mysqli_stmt_execute($stmtUpdate)) {
                 mysqli_stmt_close($stmtUpdate);
-                header("Location: kategori_pelanggaran.php?pesan=edit");
+
+                // NOTIFIKASI BERHASIL
+                $_SESSION['notifikasi'] = [
+                    'tipe' => 'success',
+                    'pesan' => 'Data kategori pelanggaran berhasil diperbarui!'
+                ];
+
+                header("Location: kategori_pelanggaran.php");
                 exit;
             } else {
                 $error = "Gagal mengubah data kategori pelanggaran.";
@@ -104,77 +111,73 @@ if (isset($_POST['simpan'])) {
 <div class="container-fluid">
     <div class="row">
 
-      
-<!-- SIDEBAR -->
-<aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
+        <!-- SIDEBAR -->
+        <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
 
-    <h5 class="text-white mb-4">Sistem Pelanggaran</h5>
+            <h5 class="text-white mb-4">Sistem Pelanggaran</h5>
 
-    <ul class="nav nav-pills flex-column gap-2">
+            <ul class="nav nav-pills flex-column gap-2">
 
-        <li class="nav-item">
-            <a href="dashboard.php" class="nav-link text-white">Dashboard</a>
-        </li>
+                <li class="nav-item">
+                    <a href="dashboard.php" class="nav-link text-white">Dashboard</a>
+                </li>
 
-        <li class="nav-item">
-            <a href="siswa.php" class="nav-link text-white">Kelola Siswa</a>
-        </li>
+                <li class="nav-item">
+                    <a href="siswa.php" class="nav-link text-white">Kelola Siswa</a>
+                </li>
 
-        <li class="nav-item">
-            <a href="guru.php" class="nav-link text-white">Kelola Guru</a>
-        </li>
+                <li class="nav-item">
+                    <a href="guru.php" class="nav-link text-white">Kelola Guru</a>
+                </li>
 
-        <li class="nav-item">
-            <a href="kelas.php" class="nav-link text-white">Kelola Kelas</a>
-        </li>
+                <li class="nav-item">
+                    <a href="kelas.php" class="nav-link text-white">Kelola Kelas</a>
+                </li>
 
-        <li class="nav-item">
-            <a href="tahun_ajaran.php" class="nav-link text-white">Tahun Ajaran</a>
-        </li>
+                <li class="nav-item">
+                    <a href="tahun_ajaran.php" class="nav-link text-white">Tahun Ajaran</a>
+                </li>
 
-        <li class="nav-item">
-            <a href="penempatan_siswa.php" class="nav-link text-white">Penempatan Siswa</a>
-        </li>
+                <li class="nav-item">
+                    <a href="penempatan_siswa.php" class="nav-link text-white">Penempatan Siswa</a>
+                </li>
 
-        <li class="nav-item">
-            <a href="wali_kelas.php" class="nav-link text-white">Wali Kelas</a>
-        </li>
+                <li class="nav-item">
+                    <a href="wali_kelas.php" class="nav-link text-white">Wali Kelas</a>
+                </li>
 
-        <li class="nav-item">
-            <a href="kategori_pelanggaran.php" class="nav-link active">Kategori Pelanggaran</a>
-        </li>
+                <li class="nav-item">
+                    <a href="kategori_pelanggaran.php" class="nav-link active">Kategori Pelanggaran</a>
+                </li>
 
-        <li class="nav-item">
-            <a href="jenis_pelanggaran.php" class="nav-link text-white">Jenis Pelanggaran</a>
-        </li>
+                <li class="nav-item">
+                    <a href="jenis_pelanggaran.php" class="nav-link text-white">Jenis Pelanggaran</a>
+                </li>
 
-        <li class="nav-item">
-            <a href="laporan.php" class="nav-link text-white">Laporan</a>
-        </li>
+                <li class="nav-item">
+                    <a href="laporan.php" class="nav-link text-white">Laporan</a>
+                </li>
 
-        <hr class="text-secondary">
+                <hr class="text-secondary">
 
-        <li class="nav-item">
-            <a href="about_me.php" class="nav-link text-white">About Me</a>
-        </li>
+                <li class="nav-item">
+                    <a href="about_me.php" class="nav-link text-white">About Me</a>
+                </li>
 
-        <li class="nav-item">
-            <a href="logout.php" class="nav-link text-danger"
-               onclick="return confirm('Yakin ingin logout?')">
-                Logout
-            </a>
-        </li>
+                <li class="nav-item">
+                    <a href="logout.php" class="nav-link text-danger"
+                       onclick="return confirm('Yakin ingin logout?')">
+                        Logout
+                    </a>
+                </li>
 
-    </ul>
-</aside>
-
+            </ul>
+        </aside>
 
         <!-- KONTEN UTAMA -->
         <main class="col-md-9 col-lg-10 p-4">
 
             <h2 class="mb-3">Edit Kategori Pelanggaran</h2>
-
-        
 
             <div class="card shadow-sm">
 
@@ -256,7 +259,7 @@ if (isset($_POST['simpan'])) {
                             </button>
 
                             <a href="kategori_pelanggaran.php" class="btn btn-secondary">
-                               Kembali
+                                Kembali
                             </a>
                         </div>
 

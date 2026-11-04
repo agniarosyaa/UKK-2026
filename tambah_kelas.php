@@ -70,12 +70,17 @@ if (isset($_POST['tambah'])) {
 
             if (mysqli_stmt_execute($stmt)) {
 
-                mysqli_stmt_close($stmt);
+    $_SESSION['notifikasi'] = [
+        'tipe' => 'success',
+        'pesan' => 'Data kelas berhasil ditambahkan!'
+    ];
 
-                header("Location: kelas.php?pesan=tambah");
-                exit;
+    mysqli_stmt_close($stmt);
 
-            } else {
+    header("Location: kelas.php");
+    exit;
+
+}  else {
 
                 $error = "Gagal menambahkan kelas: " .
                          mysqli_stmt_error($stmt);
@@ -232,7 +237,6 @@ if (isset($_POST['tambah'])) {
                                 id="nama"
                                 class="form-control"
                                 value="<?= htmlspecialchars($nama); ?>"
-                                placeholder="Contoh: XI RPL 2"
                                 required>
                         </div>
 

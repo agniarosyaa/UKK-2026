@@ -49,6 +49,10 @@ if (isset($_POST['simpan'])) {
 
             if (mysqli_stmt_execute($stmt)) {
                 mysqli_stmt_close($stmt);
+                $_SESSION['notifikasi'] = [
+    'tipe' => 'success',
+    'pesan' => 'Data tahun ajaran berhasil ditambahkan!'
+];
                 header("Location: tahun_ajaran.php");
                 exit;
             } else {
@@ -197,7 +201,6 @@ if (isset($_POST['simpan'])) {
                                 name="nama"
                                 id="nama"
                                 class="form-control"
-                                placeholder="Contoh: 2026/2027"
                                 value="<?= htmlspecialchars($nama); ?>"
                                 required>
                         </div>

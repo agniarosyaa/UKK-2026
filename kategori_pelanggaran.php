@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 
@@ -13,6 +12,10 @@ if (strtolower($_SESSION['role'] ?? '') != 'admin') {
 }
 
 include "config/koneksi.php";
+
+// AMBIL NOTIFIKASI
+$notifikasi = $_SESSION['notifikasi'] ?? null;
+unset($_SESSION['notifikasi']);
 
 $query = "SELECT * FROM t_pelanggaran_kategori
           WHERE status_aktif = 1
@@ -40,38 +43,48 @@ if (!$data) {
 <div class="container-fluid">
     <div class="row">
 
-        <!-- SIDEBAR -->
-        <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
+        <!-- SIDEBAR TETAP SAAT SCROLL -->
+        <aside class="col-md-3 col-lg-2 bg-dark text-white p-3 position-fixed top-0 bottom-0 start-0 overflow-auto">
+
             <h5 class="text-white mb-4">Sistem Pelanggaran</h5>
 
             <ul class="nav nav-pills flex-column gap-2">
                 <li class="nav-item">
                     <a href="dashboard.php" class="nav-link text-white">Dashboard</a>
                 </li>
+
                 <li class="nav-item">
                     <a href="siswa.php" class="nav-link text-white">Kelola Siswa</a>
                 </li>
+
                 <li class="nav-item">
                     <a href="guru.php" class="nav-link text-white">Kelola Guru</a>
                 </li>
+
                 <li class="nav-item">
                     <a href="kelas.php" class="nav-link text-white">Kelola Kelas</a>
                 </li>
+
                 <li class="nav-item">
                     <a href="tahun_ajaran.php" class="nav-link text-white">Tahun Ajaran</a>
                 </li>
+
                 <li class="nav-item">
                     <a href="penempatan_siswa.php" class="nav-link text-white">Penempatan Siswa</a>
                 </li>
+
                 <li class="nav-item">
                     <a href="wali_kelas.php" class="nav-link text-white">Wali Kelas</a>
                 </li>
+
                 <li class="nav-item">
                     <a href="kategori_pelanggaran.php" class="nav-link active">Kategori Pelanggaran</a>
                 </li>
+
                 <li class="nav-item">
                     <a href="jenis_pelanggaran.php" class="nav-link text-white">Jenis Pelanggaran</a>
                 </li>
+
                 <li class="nav-item">
                     <a href="laporan.php" class="nav-link text-white">Laporan</a>
                 </li>
@@ -81,17 +94,32 @@ if (!$data) {
                 <li class="nav-item">
                     <a href="about_me.php" class="nav-link text-white">About Me</a>
                 </li>
+
                 <li class="nav-item">
                     <a href="logout.php" class="nav-link text-danger"
-                       onclick="return confirm('Yakin ingin logout?')">Logout</a>
+                       onclick="return confirm('Yakin ingin logout?')">
+                        Logout
+                    </a>
                 </li>
             </ul>
         </aside>
 
-        <!-- KONTEN -->
-        <main class="col-md-9 col-lg-10 p-4">
+        <!-- KONTEN UTAMA -->
+        <main class="col-md-9 col-lg-10 p-4 offset-md-3 offset-lg-2">
 
             <h2 class="mb-4">Data Kategori Pelanggaran</h2>
+
+            <!-- NOTIFIKASI -->
+            <?php if ($notifikasi) { ?>
+                <div class="alert alert-<?= htmlspecialchars($notifikasi['tipe']); ?> alert-dismissible fade show"
+                     role="alert" id="pesan">
+
+                    <?= htmlspecialchars($notifikasi['pesan']); ?>
+
+                    <button type="button" class="btn-close"
+                            data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php } ?>
 
             <a href="dashboard.php" class="btn btn-secondary mb-3">
                 Kembali ke Dashboard
@@ -104,10 +132,9 @@ if (!$data) {
             <div class="card shadow-sm">
                 <div class="card-body">
 
-
-
                     <div class="table-responsive">
                         <table id="tabelKategori" class="table table-bordered table-hover align-middle">
+
                             <thead class="table-light">
                                 <tr>
                                     <th>No</th>
@@ -125,8 +152,15 @@ if (!$data) {
                             ?>
                                 <tr>
                                     <td><?= $no++; ?></td>
-                                    <td><?= htmlspecialchars($row['nama'] ?? ''); ?></td>
-                                    <td><?= htmlspecialchars($row['deskripsi'] ?? ''); ?></td>
+
+                                    <td>
+                                        <?= htmlspecialchars($row['nama'] ?? ''); ?>
+                                    </td>
+
+                                    <td>
+                                        <?= htmlspecialchars($row['deskripsi'] ?? ''); ?>
+                                    </td>
+
                                     <td>
                                         <?php if ((int)$row['status_aktif'] === 1) { ?>
                                             <span class="badge bg-success">Aktif</span>
@@ -134,6 +168,7 @@ if (!$data) {
                                             <span class="badge bg-secondary">Tidak Aktif</span>
                                         <?php } ?>
                                     </td>
+
                                     <td class="text-nowrap">
                                         <a href="edit_kategori_pelanggaran.php?id=<?= (int)$row['id']; ?>"
                                            class="btn btn-primary btn-sm">
@@ -149,6 +184,7 @@ if (!$data) {
                                 </tr>
                             <?php } ?>
                             </tbody>
+
                         </table>
                     </div>
 
@@ -159,6 +195,7 @@ if (!$data) {
 
                 </div>
             </div>
+
         </main>
     </div>
 </div>
@@ -170,10 +207,15 @@ if (!$data) {
 
 <script>
 $(document).ready(function () {
+
     $('#tabelKategori').DataTable({
         pageLength: 10,
         lengthMenu: [5, 10, 25, 50],
-        columnDefs: [{ orderable: false, targets: [0, 4] }],
+
+        columnDefs: [
+            { orderable: false, targets: [0, 4] }
+        ],
+
         language: {
             search: "Cari:",
             lengthMenu: "Tampilkan _MENU_ data",
@@ -182,6 +224,7 @@ $(document).ready(function () {
             infoFiltered: "(difilter dari _MAX_ data)",
             zeroRecords: "Data tidak ditemukan",
             emptyTable: "Belum ada data kategori pelanggaran",
+
             paginate: {
                 first: "Pertama",
                 last: "Terakhir",
@@ -190,6 +233,17 @@ $(document).ready(function () {
             }
         }
     });
+
+    // NOTIFIKASI HILANG OTOMATIS SETELAH 2 DETIK
+    setTimeout(function () {
+        let pesan = document.getElementById('pesan');
+
+        if (pesan) {
+            let alert = bootstrap.Alert.getOrCreateInstance(pesan);
+            alert.close();
+        }
+    }, 2000);
+
 });
 </script>
 

@@ -64,11 +64,19 @@ if (isset($_POST['simpan'])) {
                 $status_aktif
             );
 
-            if (mysqli_stmt_execute($stmt)) {
-                mysqli_stmt_close($stmt);
-                header("Location: siswa.php");
-                exit;
-            } else {
+        if (mysqli_stmt_execute($stmt)) {
+
+    $_SESSION['notifikasi'] = [
+        'tipe' => 'success',
+        'pesan' => 'Data siswa berhasil ditambahkan!'
+    ];
+
+    mysqli_stmt_close($stmt);
+
+    header("Location: siswa.php");
+    exit;
+
+} else {
                 $error = "Gagal menambahkan data siswa: " .
                          mysqli_stmt_error($stmt);
             }

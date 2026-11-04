@@ -110,14 +110,20 @@ if (isset($_POST['update'])) {
                     $id
                 );
 
-                if (mysqli_stmt_execute($update)) {
+         
+      if (mysqli_stmt_execute($update)) {
 
-                    mysqli_stmt_close($update);
+    $_SESSION['notifikasi'] = [
+        'tipe' => 'success',
+        'pesan' => 'Data guru berhasil diperbarui!'
+    ];
 
-                    header("Location: guru.php?pesan=edit");
-                    exit;
+    mysqli_stmt_close($update);
 
-                } else {
+    header("Location: guru.php");
+    exit;
+
+}  else {
 
                     $pesan_error = "Gagal mengubah data: " .
                                    mysqli_stmt_error($update);

@@ -81,11 +81,19 @@ if (isset($_POST['update'])) {
             $id
         );
 
-        if (mysqli_stmt_execute($update)) {
-            mysqli_stmt_close($update);
-            header("Location: siswa.php");
-            exit;
-        } else {
+      if (mysqli_stmt_execute($update)) {
+
+    $_SESSION['notifikasi'] = [
+        'tipe' => 'success',
+        'pesan' => 'Data siswa berhasil diperbarui!'
+    ];
+
+    mysqli_stmt_close($update);
+
+    header("Location: siswa.php");
+    exit;
+
+} else {
             $pesan_error = "Gagal mengubah data siswa.";
         }
 

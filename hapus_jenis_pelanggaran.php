@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 
@@ -36,6 +35,12 @@ try {
 
     mysqli_stmt_close($stmt);
 
+    // NOTIFIKASI BERHASIL
+    $_SESSION['notifikasi'] = [
+        'tipe' => 'danger',
+        'pesan' => 'Jenis pelanggaran berhasil dihapus!'
+    ];
+
     header("Location: jenis_pelanggaran.php");
     exit;
 
@@ -43,7 +48,12 @@ try {
 
     error_log("Gagal menonaktifkan jenis pelanggaran: " . $e->getMessage());
 
-    header("Location: jenis_pelanggaran.php?pesan=gagal");
+    $_SESSION['notifikasi'] = [
+        'tipe' => 'danger',
+        'pesan' => 'Gagal menonaktifkan jenis pelanggaran!'
+    ];
+
+    header("Location: jenis_pelanggaran.php");
     exit;
 }
 ?>

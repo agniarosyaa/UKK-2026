@@ -55,11 +55,15 @@ try {
     mysqli_stmt_execute($stmt3);
     mysqli_stmt_close($stmt3);
 
-    mysqli_commit($koneksi);
+ mysqli_commit($koneksi);
 
-    header("Location: siswa.php");
-    exit;
+$_SESSION['notifikasi'] = [
+    'tipe' => 'danger',
+    'pesan' => 'Data siswa berhasil dihapus!'
+];
 
+header("Location: siswa.php");
+exit;
 } catch (Throwable $e) {
 
     mysqli_rollback($koneksi);

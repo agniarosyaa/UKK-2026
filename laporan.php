@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 
@@ -43,6 +44,7 @@ while ($row = mysqli_fetch_assoc($result)) {
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -63,10 +65,12 @@ while ($row = mysqli_fetch_assoc($result)) {
 <div class="container-fluid">
     <div class="row">
 
-        <!-- SIDEBAR: DISAMAKAN DENGAN SISWA.PHP -->
-        <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
+        <!-- SIDEBAR TETAP -->
+        <aside class="col-md-3 col-lg-2 bg-dark vh-100 p-3 position-fixed top-0 start-0 overflow-auto">
 
-            <h5 class="text-white mb-4">Sistem Pelanggaran</h5>
+            <h5 class="text-white mb-4">
+                Sistem Pelanggaran
+            </h5>
 
             <ul class="nav nav-pills flex-column gap-2">
 
@@ -130,7 +134,6 @@ while ($row = mysqli_fetch_assoc($result)) {
                     </a>
                 </li>
 
-                <!-- GARIS PEMISAH DI BAWAH LAPORAN -->
                 <hr class="text-secondary">
 
                 <li class="nav-item">
@@ -148,10 +151,11 @@ while ($row = mysqli_fetch_assoc($result)) {
                 </li>
 
             </ul>
+
         </aside>
 
         <!-- KONTEN UTAMA -->
-        <main class="col-md-9 col-lg-10 p-4">
+        <main class="col-md-9 col-lg-10 offset-md-3 offset-lg-2 p-4">
 
             <!-- HEADER -->
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
@@ -167,6 +171,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                 </div>
 
                 <div class="d-flex gap-2">
+
                     <button type="button"
                             class="btn btn-outline-secondary"
                             onclick="resetFilter()">
@@ -178,6 +183,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                             onclick="window.print()">
                         Cetak Laporan
                     </button>
+
                 </div>
 
             </div>
@@ -188,7 +194,10 @@ while ($row = mysqli_fetch_assoc($result)) {
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body">
-                            <p class="text-muted mb-2">Total Pelanggaran</p>
+                            <p class="text-muted mb-2">
+                                Total Pelanggaran
+                            </p>
+
                             <h3 class="fw-bold text-primary">
                                 <?= number_format($total_data, 0, ',', '.'); ?>
                             </h3>
@@ -199,7 +208,10 @@ while ($row = mysqli_fetch_assoc($result)) {
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body">
-                            <p class="text-muted mb-2">Pelanggaran Selesai</p>
+                            <p class="text-muted mb-2">
+                                Pelanggaran Selesai
+                            </p>
+
                             <h3 class="fw-bold text-success">
                                 <?= number_format($total_selesai, 0, ',', '.'); ?>
                             </h3>
@@ -210,7 +222,10 @@ while ($row = mysqli_fetch_assoc($result)) {
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body">
-                            <p class="text-muted mb-2">Sedang Diproses</p>
+                            <p class="text-muted mb-2">
+                                Sedang Diproses
+                            </p>
+
                             <h3 class="fw-bold text-warning">
                                 <?= number_format($total_diproses, 0, ',', '.'); ?>
                             </h3>
@@ -221,7 +236,10 @@ while ($row = mysqli_fetch_assoc($result)) {
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body">
-                            <p class="text-muted mb-2">Total Poin</p>
+                            <p class="text-muted mb-2">
+                                Total Poin
+                            </p>
+
                             <h3 class="fw-bold text-info">
                                 <?= number_format($total_poin, 0, ',', '.'); ?>
                             </h3>
@@ -236,8 +254,12 @@ while ($row = mysqli_fetch_assoc($result)) {
                 <div class="card-body p-3 p-md-4">
 
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+
                         <div>
-                            <h5 class="fw-bold mb-1">Data Laporan</h5>
+                            <h5 class="fw-bold mb-1">
+                                Data Laporan
+                            </h5>
+
                             <p class="text-muted small mb-0">
                                 Cari dan filter data pelanggaran siswa.
                             </p>
@@ -246,6 +268,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                         <span class="badge bg-primary">
                             <?= number_format($total_data, 0, ',', '.'); ?> data
                         </span>
+
                     </div>
 
                     <!-- FILTER -->
@@ -287,6 +310,7 @@ while ($row = mysqli_fetch_assoc($result)) {
 
                     <!-- TABEL -->
                     <div class="table-responsive">
+
                         <table id="tabelLaporan"
                                class="table table-bordered table-hover align-middle">
 
@@ -307,7 +331,9 @@ while ($row = mysqli_fetch_assoc($result)) {
                             </thead>
 
                             <tbody>
+
                             <?php foreach ($rows as $row): ?>
+
                                 <tr>
                                     <td></td>
 
@@ -368,14 +394,20 @@ while ($row = mysqli_fetch_assoc($result)) {
                                         }
                                         ?>
                                     </td>
+
                                 </tr>
+
                             <?php endforeach; ?>
+
                             </tbody>
 
                         </table>
+
                     </div>
 
+                    <!-- TOTAL DATA DAN POIN -->
                     <div class="d-flex flex-wrap justify-content-between gap-2 mt-3">
+
                         <small class="text-muted">
                             Total data:
                             <strong>
@@ -389,11 +421,13 @@ while ($row = mysqli_fetch_assoc($result)) {
                                 <?= number_format($total_poin, 0, ',', '.'); ?>
                             </strong>
                         </small>
+
                     </div>
 
                 </div>
             </div>
 
+            <!-- FOOTER -->
             <div class="text-center text-muted small mt-4">
                 Sistem Informasi Pelanggaran Siswa
             </div>
@@ -416,6 +450,7 @@ while ($row = mysqli_fetch_assoc($result)) {
 $(document).ready(function () {
 
     function ubahTanggal(tanggal) {
+
         if (!tanggal || tanggal === '-') {
             return '';
         }
@@ -429,6 +464,7 @@ $(document).ready(function () {
         return bagian[2] + '-' + bagian[1] + '-' + bagian[0];
     }
 
+    // FILTER STATUS DAN TANGGAL
     $.fn.dataTable.ext.search.push(function (settings, data) {
 
         if (settings.nTable.id !== 'tabelLaporan') {
@@ -447,6 +483,7 @@ $(document).ready(function () {
         }
 
         if (tanggalMulai || tanggalAkhir) {
+
             if (!tanggalBaris) {
                 return false;
             }
@@ -463,10 +500,15 @@ $(document).ready(function () {
         return true;
     });
 
+    // DATATABLES
     const tabel = $('#tabelLaporan').DataTable({
+
         pageLength: 10,
+
         lengthMenu: [5, 10, 25, 50],
+
         order: [[6, 'desc']],
+
         autoWidth: false,
 
         columnDefs: [
@@ -482,13 +524,21 @@ $(document).ready(function () {
         ],
 
         language: {
+
             search: "Cari:",
+
             searchPlaceholder: "Cari laporan...",
+
             lengthMenu: "Tampilkan _MENU_ data",
+
             info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+
             infoEmpty: "Tidak ada data",
+
             infoFiltered: "(difilter dari _MAX_ data)",
+
             zeroRecords: "Data tidak ditemukan",
+
             emptyTable: "Belum ada data pelanggaran.",
 
             paginate: {
@@ -499,24 +549,32 @@ $(document).ready(function () {
             }
         },
 
+        // NOMOR URUT OTOMATIS
         drawCallback: function () {
+
             const api = this.api();
             const info = api.page.info();
 
             api.column(0, { page: 'current' }).nodes().each(function (cell, i) {
                 cell.innerHTML = info.start + i + 1;
             });
+
         }
+
     });
 
+    // FILTER
     $('#filterStatus, #tanggalMulai, #tanggalAkhir').on('change', function () {
         tabel.draw();
     });
 
+    // RESET FILTER
     window.resetFilter = function () {
+
         $('#filterStatus').val('');
         $('#tanggalMulai').val('');
         $('#tanggalAkhir').val('');
+
         tabel.search('').draw();
     };
 

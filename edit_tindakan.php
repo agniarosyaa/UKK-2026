@@ -20,6 +20,7 @@ if ($id <= 0) {
     exit;
 }
 
+/* AMBIL DATA TINDAKAN */
 $stmt = mysqli_prepare(
     $koneksi,
     "SELECT id, nama_siswa, nama_kelas, nama_pelanggaran,
@@ -39,6 +40,7 @@ if (!$row) {
 
 $error = "";
 
+/* PROSES SIMPAN PERUBAHAN */
 if (isset($_POST['simpan'])) {
     $tindakan = trim($_POST['tindakan'] ?? '');
     $status = trim($_POST['status'] ?? '');
@@ -62,7 +64,14 @@ if (isset($_POST['simpan'])) {
 
             if (mysqli_stmt_execute($stmt)) {
                 mysqli_stmt_close($stmt);
-                header("Location: tindakan.php?berhasil=1");
+
+                /* NOTIFIKASI BERHASIL */
+                $_SESSION['notifikasi'] = [
+                    'tipe' => 'success',
+                    'pesan' => 'Tindakan pelanggaran berhasil diperbarui!'
+                ];
+
+                header("Location: tindakan.php");
                 exit;
             } else {
                 $error = "Gagal memperbarui tindakan: " . mysqli_stmt_error($stmt);

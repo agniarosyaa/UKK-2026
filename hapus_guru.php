@@ -46,13 +46,22 @@ if ($data['total'] > 0) {
     );
 
     mysqli_stmt_bind_param($stmt, "i", $id);
-    mysqli_stmt_execute($stmt);
+
+    if (mysqli_stmt_execute($stmt)) {
+        $_SESSION['notifikasi'] = [
+            'tipe' => 'warning',
+            'pesan' => 'Guru memiliki riwayat pelanggaran. Status guru berhasil dinonaktifkan!'
+        ];
+    } else {
+        $_SESSION['notifikasi'] = [
+            'tipe' => 'danger',
+            'pesan' => 'Gagal menonaktifkan status guru.'
+        ];
+    }
+
     mysqli_stmt_close($stmt);
 
-    echo "<script>
-        alert('Guru memiliki riwayat pelanggaran. Status guru berhasil dinonaktifkan.');
-        window.location.href = 'guru.php';
-    </script>";
+    header("Location: guru.php");
     exit;
 }
 
@@ -65,6 +74,12 @@ $stmt = mysqli_prepare(
 mysqli_stmt_bind_param($stmt, "i", $id);
 
 if (mysqli_stmt_execute($stmt)) {
+
+    $_SESSION['notifikasi'] = [
+        'tipe' => 'success',
+        'pesan' => 'Data guru berhasil dihapus!'
+    ];
+
     mysqli_stmt_close($stmt);
 
     header("Location: guru.php");
@@ -73,9 +88,11 @@ if (mysqli_stmt_execute($stmt)) {
 
 mysqli_stmt_close($stmt);
 
-echo "<script>
-    alert('Data guru gagal dihapus.');
-    window.location.href = 'guru.php';
-</script>";
+$_SESSION['notifikasi'] = [
+    'tipe' => 'danger',
+    'pesan' => 'Data guru gagal dihapus.'
+];
+
+header("Location: guru.php");
 exit;
 ?>

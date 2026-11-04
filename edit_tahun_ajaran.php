@@ -75,14 +75,20 @@ if (isset($_POST['update'])) {
             $id
         );
 
-        if (mysqli_stmt_execute($update)) {
-            mysqli_stmt_close($update);
-            header("Location: tahun_ajaran.php?pesan=edit");
-            exit;
-        } else {
-            $pesan_error = "Gagal mengubah data tahun ajaran.";
-            mysqli_stmt_close($update);
-        }
+      
+      if (mysqli_stmt_execute($update)) {
+
+    $_SESSION['notifikasi'] = [
+        'tipe' => 'success',
+        'pesan' => 'Data tahun ajaran berhasil diperbarui!'
+    ];
+
+    mysqli_stmt_close($update);
+
+    header("Location: tahun_ajaran.php");
+    exit;
+
+} 
     }
 
     // Pertahankan data jika terjadi kesalahan

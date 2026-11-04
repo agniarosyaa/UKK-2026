@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 
@@ -12,6 +13,10 @@ if (strtolower($_SESSION['role'] ?? '') != 'admin') {
 }
 
 include "config/koneksi.php";
+
+/* AMBIL NOTIFIKASI */
+$notifikasi = $_SESSION['notifikasi'] ?? null;
+unset($_SESSION['notifikasi']);
 
 /* AMBIL DATA WALI KELAS */
 $query = "SELECT
@@ -41,11 +46,11 @@ if (!$data) {
 
     <title>Kelola Wali Kelas</title>
 
-    <!-- Bootstrap CSS -->
+    <!-- BOOTSTRAP CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
           rel="stylesheet">
 
-    <!-- DataTables Bootstrap CSS -->
+    <!-- DATATABLES CSS -->
     <link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css"
           rel="stylesheet">
 </head>
@@ -55,111 +60,112 @@ if (!$data) {
 <div class="container-fluid">
     <div class="row">
 
-        <!-- SIDEBAR -->
-        <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
+        <!-- SIDEBAR TETAP -->
+        <aside class="col-md-3 col-lg-2 bg-dark text-white p-3 position-fixed top-0 bottom-0 start-0 overflow-auto">
 
-            <h5 class="text-white mb-4">Sistem Pelanggaran</h5>
+            <h5 class="text-white mb-4">
+                Sistem Pelanggaran
+            </h5>
 
-            <ul class="nav nav-pills flex-column gap-2">
+            <nav class="nav nav-pills flex-column gap-2">
 
-                <li class="nav-item">
-                    <a href="dashboard.php" class="nav-link text-white">
-                        Dashboard
-                    </a>
-                </li>
+                <a href="dashboard.php" class="nav-link text-white">
+                    Dashboard
+                </a>
 
-                <li class="nav-item">
-                    <a href="siswa.php" class="nav-link text-white">
-                        Kelola Siswa
-                    </a>
-                </li>
+                <a href="siswa.php" class="nav-link text-white">
+                    Kelola Siswa
+                </a>
 
-                <li class="nav-item">
-                    <a href="guru.php" class="nav-link text-white">
-                        Kelola Guru
-                    </a>
-                </li>
+                <a href="guru.php" class="nav-link text-white">
+                    Kelola Guru
+                </a>
 
-                <li class="nav-item">
-                    <a href="kelas.php" class="nav-link text-white">
-                        Kelola Kelas
-                    </a>
-                </li>
+                <a href="kelas.php" class="nav-link text-white">
+                    Kelola Kelas
+                </a>
 
-                <li class="nav-item">
-                    <a href="tahun_ajaran.php" class="nav-link text-white">
-                        Tahun Ajaran
-                    </a>
-                </li>
+                <a href="tahun_ajaran.php" class="nav-link text-white">
+                    Tahun Ajaran
+                </a>
 
-                <li class="nav-item">
-                    <a href="penempatan_siswa.php" class="nav-link text-white">
-                        Penempatan Siswa
-                    </a>
-                </li>
+                <a href="penempatan_siswa.php" class="nav-link text-white">
+                    Penempatan Siswa
+                </a>
 
-                <li class="nav-item">
-                    <a href="wali_kelas.php" class="nav-link active">
-                        Wali Kelas
-                    </a>
-                </li>
+                <a href="wali_kelas.php" class="nav-link active">
+                    Wali Kelas
+                </a>
 
-                <li class="nav-item">
-                    <a href="kategori_pelanggaran.php" class="nav-link text-white">
-                        Kategori Pelanggaran
-                    </a>
-                </li>
+                <a href="kategori_pelanggaran.php" class="nav-link text-white">
+                    Kategori Pelanggaran
+                </a>
 
-                <li class="nav-item">
-                    <a href="jenis_pelanggaran.php" class="nav-link text-white">
-                        Jenis Pelanggaran
-                    </a>
-                </li>
+                <a href="jenis_pelanggaran.php" class="nav-link text-white">
+                    Jenis Pelanggaran
+                </a>
 
-                <li class="nav-item">
-                    <a href="laporan.php" class="nav-link text-white">
-                        Laporan
-                    </a>
-                </li>
+                <a href="laporan.php" class="nav-link text-white">
+                    Laporan
+                </a>
 
                 <hr class="text-secondary">
 
-                <li class="nav-item">
-                    <a href="about_me.php" class="nav-link text-white">
-                        About Me
-                    </a>
-                </li>
+                <a href="about_me.php" class="nav-link text-white">
+                    About Me
+                </a>
 
-                <li class="nav-item">
-                    <a href="logout.php"
-                       class="nav-link text-danger"
-                       onclick="return confirm('Yakin ingin logout?')">
-                        Logout
-                    </a>
-                </li>
+                <a href="logout.php"
+                   class="nav-link text-danger"
+                   onclick="return confirm('Yakin ingin logout?')">
+                    Logout
+                </a>
 
-            </ul>
+            </nav>
+
         </aside>
 
         <!-- KONTEN UTAMA -->
-        <main class="col-md-9 col-lg-10 p-4">
+        <main class="col-md-9 col-lg-10 p-4 offset-md-3 offset-lg-2">
 
             <h2 class="mb-4">Data Wali Kelas</h2>
 
-            <!-- TOMBOL -->
-            <a href="dashboard.php" class="btn btn-secondary mb-3">
-                Kembali ke Dashboard
-            </a>
+            <!-- NOTIFIKASI -->
+            <?php if ($notifikasi) { ?>
 
-            <a href="tambah_wali_kelas.php" class="btn btn-primary mb-3">
-                + Tambah Wali Kelas
-            </a>
+                <div id="pesan"
+                     class="alert alert-<?= htmlspecialchars($notifikasi['tipe']); ?> alert-dismissible fade show"
+                     role="alert">
+
+                    <?= htmlspecialchars($notifikasi['pesan']); ?>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert"
+                            aria-label="Close">
+                    </button>
+
+                </div>
+
+            <?php } ?>
+
+            <!-- TOMBOL -->
+            <div class="d-flex flex-wrap gap-2 mb-3">
+
+                <a href="dashboard.php" class="btn btn-secondary">
+                    Kembali ke Dashboard
+                </a>
+
+                <a href="tambah_wali_kelas.php" class="btn btn-primary">
+                    + Tambah Wali Kelas
+                </a>
+
+            </div>
 
             <!-- TABEL WALI KELAS -->
             <div class="card shadow-sm">
-                <div class="card-body">
 
-                  
+                <div class="card-body">
 
                     <div class="table-responsive">
 
@@ -167,6 +173,7 @@ if (!$data) {
                                class="table table-bordered table-hover align-middle">
 
                             <thead class="table-light">
+
                                 <tr>
                                     <th>No</th>
                                     <th>Tahun Ajaran</th>
@@ -177,17 +184,21 @@ if (!$data) {
                                     <th>Status</th>
                                     <th>Aksi</th>
                                 </tr>
+
                             </thead>
 
                             <tbody>
+
                             <?php
                             $no = 1;
 
                             if (mysqli_num_rows($data) > 0) {
+
                                 while ($row = mysqli_fetch_assoc($data)) {
                             ?>
 
                                 <tr>
+
                                     <td><?= $no++; ?></td>
 
                                     <td>
@@ -215,18 +226,25 @@ if (!$data) {
                                     </td>
 
                                     <td>
+
                                         <?php if ((int)($row['status_aktif'] ?? 0) === 1) { ?>
+
                                             <span class="badge bg-success">
                                                 Aktif
                                             </span>
+
                                         <?php } else { ?>
+
                                             <span class="badge bg-secondary">
                                                 Tidak Aktif
                                             </span>
+
                                         <?php } ?>
+
                                     </td>
 
                                     <td class="text-nowrap">
+
                                         <a href="edit_wali_kelas.php?id=<?= (int)$row['id']; ?>"
                                            class="btn btn-primary btn-sm">
                                             Edit
@@ -237,21 +255,26 @@ if (!$data) {
                                            onclick="return confirm('Yakin ingin menghapus data wali kelas ini?')">
                                             Hapus
                                         </a>
+
                                     </td>
+
                                 </tr>
 
                             <?php
                                 }
+
                             } else {
                             ?>
 
                                 <tr>
-                                    <td colspan="8" class="text-center text-secondary py-4">
+                                    <td colspan="8"
+                                        class="text-center text-secondary py-4">
                                         Belum ada data wali kelas.
                                     </td>
                                 </tr>
 
                             <?php } ?>
+
                             </tbody>
 
                         </table>
@@ -264,6 +287,7 @@ if (!$data) {
                     </p>
 
                 </div>
+
             </div>
 
         </main>
@@ -271,23 +295,29 @@ if (!$data) {
     </div>
 </div>
 
-<!-- jQuery -->
+<!-- JQUERY -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-<!-- Bootstrap JS -->
+<!-- BOOTSTRAP JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- DataTables JS -->
+<!-- DATATABLES JS -->
 <script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+
 <script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
 
-<!-- AKTIFKAN DATATABLES -->
+<!-- DATATABLES -->
 <script>
 $(document).ready(function () {
+
     $('#tabelWaliKelas').DataTable({
+
         pageLength: 10,
+
         lengthMenu: [5, 10, 25, 50],
+
         searching: true,
+
         ordering: true,
 
         columnDefs: [
@@ -298,12 +328,19 @@ $(document).ready(function () {
         ],
 
         language: {
+
             search: "Cari:",
+
             lengthMenu: "Tampilkan _MENU_ data",
+
             info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+
             infoEmpty: "Tidak ada data",
+
             infoFiltered: "(difilter dari _MAX_ data)",
+
             zeroRecords: "Data tidak ditemukan",
+
             emptyTable: "Belum ada data wali kelas",
 
             paginate: {
@@ -312,8 +349,23 @@ $(document).ready(function () {
                 next: "Selanjutnya",
                 previous: "Sebelumnya"
             }
+
         }
+
     });
+
+    // NOTIFIKASI HILANG OTOMATIS SETELAH 2 DETIK
+    setTimeout(function () {
+
+        let pesan = document.getElementById('pesan');
+
+        if (pesan) {
+            let alert = bootstrap.Alert.getOrCreateInstance(pesan);
+            alert.close();
+        }
+
+    }, 2000);
+
 });
 </script>
 
