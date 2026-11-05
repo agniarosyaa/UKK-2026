@@ -76,7 +76,7 @@ mysqli_stmt_bind_param($stmt, "i", $id);
 if (mysqli_stmt_execute($stmt)) {
 
     $_SESSION['notifikasi'] = [
-        'tipe' => 'success',
+        'tipe' => 'danger',
         'pesan' => 'Data guru berhasil dihapus!'
     ];
 

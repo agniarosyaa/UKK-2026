@@ -13,7 +13,17 @@ if (strtolower($_SESSION['role'] ?? '') != 'admin') {
 
 include "config/koneksi.php";
 
-$query = "SELECT * FROM t_pelanggaran_siswa ORDER BY tanggal DESC";
+$query = "SELECT
+            ps.*,
+            s.nama AS nama_siswa_asli,
+            g.nama AS nama_guru_asli
+          FROM t_pelanggaran_siswa ps
+          LEFT JOIN t_siswa s
+            ON ps.siswa_id = s.id
+          LEFT JOIN t_guru g
+            ON ps.guru_id = g.id
+          ORDER BY ps.tanggal DESC";
+
 $result = mysqli_query($koneksi, $query);
 
 if (!$result) {
@@ -338,7 +348,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                                     <td></td>
 
                                     <td>
-                                        <?= htmlspecialchars($row['nama_siswa'] ?? '-'); ?>
+                                        <?= htmlspecialchars($row['nama_siswa_asli'] ?? '-'); ?>
                                     </td>
 
                                     <td>
@@ -346,7 +356,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                                     </td>
 
                                     <td>
-                                        <?= htmlspecialchars($row['nama_guru'] ?? '-'); ?>
+                                        <?= htmlspecialchars($row['nama_guru_asli'] ?? '-'); ?>
                                     </td>
 
                                     <td>
