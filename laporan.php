@@ -8,7 +8,8 @@ if (!isset($_SESSION['login'])) {
 }
 
 if (strtolower($_SESSION['role'] ?? '') != 'admin') {
-    exit("Anda tidak memiliki akses");
+    echo "Anda tidak memiliki akses";
+    exit;
 }
 
 include "config/koneksi.php";
@@ -61,111 +62,81 @@ while ($row = mysqli_fetch_assoc($result)) {
 
     <title>Laporan Pelanggaran Siswa</title>
 
-    <!-- BOOTSTRAP CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- DATATABLES CSS -->
-    <link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css"
-          rel="stylesheet">
+    <link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
 </head>
 
-<body>
+<body class="bg-light">
 
 <div class="container-fluid">
     <div class="row">
 
-        <!-- SIDEBAR TETAP -->
-        <aside class="col-md-3 col-lg-2 bg-dark vh-100 p-3 position-fixed top-0 start-0 overflow-auto">
+        <!-- SIDEBAR SAMA DENGAN JENIS PELANGGARAN -->
+        <aside class="col-md-3 col-lg-2 bg-dark text-white p-3 position-fixed top-0 bottom-0 start-0 overflow-auto">
 
-            <h5 class="text-white mb-4">
-                Sistem Pelanggaran
-            </h5>
+            <h5 class="text-white mb-4">Sistem Pelanggaran</h5>
 
             <ul class="nav nav-pills flex-column gap-2">
 
                 <li class="nav-item">
-                    <a href="dashboard.php" class="nav-link text-white">
-                        Dashboard
-                    </a>
+                    <a href="dashboard.php" class="nav-link text-white">Dashboard</a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="siswa.php" class="nav-link text-white">
-                        Kelola Siswa
-                    </a>
+                    <a href="siswa.php" class="nav-link text-white">Kelola Siswa</a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="guru.php" class="nav-link text-white">
-                        Kelola Guru
-                    </a>
+                    <a href="guru.php" class="nav-link text-white">Kelola Guru</a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="kelas.php" class="nav-link text-white">
-                        Kelola Kelas
-                    </a>
+                    <a href="kelas.php" class="nav-link text-white">Kelola Kelas</a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="tahun_ajaran.php" class="nav-link text-white">
-                        Tahun Ajaran
-                    </a>
+                    <a href="tahun_ajaran.php" class="nav-link text-white">Tahun Ajaran</a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="penempatan_siswa.php" class="nav-link text-white">
-                        Penempatan Siswa
-                    </a>
+                    <a href="penempatan_siswa.php" class="nav-link text-white">Penempatan Siswa</a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="wali_kelas.php" class="nav-link text-white">
-                        Wali Kelas
-                    </a>
+                    <a href="wali_kelas.php" class="nav-link text-white">Wali Kelas</a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="kategori_pelanggaran.php" class="nav-link text-white">
-                        Kategori Pelanggaran
-                    </a>
+                    <a href="kategori_pelanggaran.php" class="nav-link text-white">Kategori Pelanggaran</a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="jenis_pelanggaran.php" class="nav-link text-white">
-                        Jenis Pelanggaran
-                    </a>
+                    <a href="jenis_pelanggaran.php" class="nav-link text-white">Jenis Pelanggaran</a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="laporan.php" class="nav-link active">
-                        Laporan
-                    </a>
+                    <a href="laporan.php" class="nav-link active">Laporan</a>
                 </li>
 
                 <hr class="text-secondary">
 
                 <li class="nav-item">
-                    <a href="about_me.php" class="nav-link text-white">
-                        About Me
-                    </a>
+                    <a href="about_me.php" class="nav-link text-white">About Me</a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="logout.php"
-                       class="nav-link text-danger"
+                    <a href="logout.php" class="nav-link text-danger"
                        onclick="return confirm('Yakin ingin logout?')">
                         Logout
                     </a>
                 </li>
 
             </ul>
-
         </aside>
 
-        <!-- KONTEN UTAMA -->
-        <main class="col-md-9 col-lg-10 offset-md-3 offset-lg-2 p-4">
+        <!-- KONTEN UTAMA SAMA DENGAN JENIS PELANGGARAN -->
+        <main class="col-md-9 col-lg-10 p-4 offset-md-3 offset-lg-2">
 
             <!-- HEADER -->
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
@@ -204,9 +175,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body">
-                            <p class="text-muted mb-2">
-                                Total Pelanggaran
-                            </p>
+                            <p class="text-muted mb-2">Total Pelanggaran</p>
 
                             <h3 class="fw-bold text-primary">
                                 <?= number_format($total_data, 0, ',', '.'); ?>
@@ -218,9 +187,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body">
-                            <p class="text-muted mb-2">
-                                Pelanggaran Selesai
-                            </p>
+                            <p class="text-muted mb-2">Pelanggaran Selesai</p>
 
                             <h3 class="fw-bold text-success">
                                 <?= number_format($total_selesai, 0, ',', '.'); ?>
@@ -232,9 +199,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body">
-                            <p class="text-muted mb-2">
-                                Sedang Diproses
-                            </p>
+                            <p class="text-muted mb-2">Sedang Diproses</p>
 
                             <h3 class="fw-bold text-warning">
                                 <?= number_format($total_diproses, 0, ',', '.'); ?>
@@ -246,9 +211,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body">
-                            <p class="text-muted mb-2">
-                                Total Poin
-                            </p>
+                            <p class="text-muted mb-2">Total Poin</p>
 
                             <h3 class="fw-bold text-info">
                                 <?= number_format($total_poin, 0, ',', '.'); ?>
@@ -266,9 +229,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
 
                         <div>
-                            <h5 class="fw-bold mb-1">
-                                Data Laporan
-                            </h5>
+                            <h5 class="fw-bold mb-1">Data Laporan</h5>
 
                             <p class="text-muted small mb-0">
                                 Cari dan filter data pelanggaran siswa.
@@ -301,9 +262,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                                 Dari Tanggal
                             </label>
 
-                            <input type="date"
-                                   id="tanggalMulai"
-                                   class="form-control">
+                            <input type="date" id="tanggalMulai" class="form-control">
                         </div>
 
                         <div class="col-12 col-md-4">
@@ -311,9 +270,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                                 Sampai Tanggal
                             </label>
 
-                            <input type="date"
-                                   id="tanggalAkhir"
-                                   class="form-control">
+                            <input type="date" id="tanggalAkhir" class="form-control">
                         </div>
 
                     </div>

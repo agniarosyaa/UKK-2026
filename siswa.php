@@ -50,8 +50,7 @@ if (!$result) {
 
 <div class="container-fluid">
     <div class="row">
-
-        <!-- SIDEBAR TETAP -->
+  <!-- SIDEBAR TETAP -->
         <aside class="col-md-3 col-lg-2 bg-dark vh-100 p-3 position-fixed top-0 start-0 overflow-auto">
 
             <h5 class="text-white mb-4">
@@ -140,7 +139,7 @@ if (!$result) {
 
         </aside>
 
-        <!-- KONTEN UTAMA -->
+              <!-- KONTEN UTAMA -->
         <main class="col-md-9 col-lg-10 offset-md-3 offset-lg-2 p-4">
 
             <h1 class="mb-3">Data Siswa</h1>

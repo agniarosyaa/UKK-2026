@@ -109,8 +109,7 @@ if (isset($_POST['simpan'])) {
 <div class="container-fluid">
     <div class="row">
 
-        <!-- SIDEBAR -->
-        <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3">
+<aside class="col-md-3 col-lg-2 bg-dark vh-100 p-3 position-fixed top-0 start-0 overflow-auto">
 
             <h5 class="text-white mb-4">
                 Sistem Pelanggaran
@@ -197,8 +196,7 @@ if (isset($_POST['simpan'])) {
             </ul>
         </aside>
 
-        <!-- KONTEN UTAMA -->
-        <main class="col-md-9 col-lg-10 p-4">
+        <main class="col-md-9 col-lg-10 offset-md-3 offset-lg-2 p-4">
 
             <h2 class="mb-4">Tambah Siswa</h2>
 
