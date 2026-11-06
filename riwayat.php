@@ -6,26 +6,44 @@ if (!isset($_SESSION['login'])) {
     exit;
 }
 
-if (strtolower($_SESSION['role'] ?? '') != 'guru') {
+$role = strtolower($_SESSION['role'] ?? '');
+
+if (!in_array($role, ['admin', 'guru', 'wali_kelas'])) {
     echo "Anda tidak memiliki akses";
     exit;
 }
 
 include "config/koneksi.php";
 
-/* AMBIL DATA RIWAYAT PELANGGARAN */
+/* AMBIL ID USER */
+$user_id = (int) ($_SESSION['user_id'] ?? 0);
+
+/* QUERY RIWAYAT PELANGGARAN */
 $query = "SELECT
-            id,
-            nama_siswa,
-            nama_kelas,
-            nama_pelanggaran,
-            tanggal,
-            keterangan,
-            poin,
-            tindakan,
-            status
-          FROM t_pelanggaran_siswa
-          ORDER BY tanggal DESC, id DESC";
+            p.id,
+            p.nama_siswa,
+            p.nama_kelas,
+            p.nama_pelanggaran,
+            p.tanggal,
+            p.keterangan,
+            p.poin,
+            p.tindakan,
+            p.status
+          FROM t_pelanggaran_siswa p";
+
+/* WALI KELAS HANYA MELIHAT KELAS YANG DIAMPUNYA */
+if ($role == 'wali_kelas') {
+    $query .= " WHERE EXISTS (
+                    SELECT 1
+                    FROM t_guru g
+                    JOIN t_wali_kelas wk ON wk.guru_id = g.id
+                    WHERE g.user_id = $user_id
+                    AND wk.kelas_id = p.kelas_id
+                    AND wk.status_aktif = 1
+                )";
+}
+
+$query .= " ORDER BY p.tanggal DESC, p.id DESC";
 
 $data = mysqli_query($koneksi, $query);
 
@@ -54,7 +72,7 @@ if (!$data) {
 <div class="container-fluid">
     <div class="row">
 
-        <!-- SIDEBAR GURU TETAP -->
+        <!-- SIDEBAR -->
         <aside class="col-md-3 col-lg-2 bg-dark text-white p-3 position-fixed top-0 bottom-0 start-0 overflow-auto">
 
             <h5 class="text-white mb-4">
@@ -68,15 +86,17 @@ if (!$data) {
                     Dashboard
                 </a>
 
-                <a href="catat_pelanggaran.php"
-                   class="nav-link text-white">
-                    Catat Pelanggaran
-                </a>
+                <?php if ($role == 'guru'): ?>
+                    <a href="catat_pelanggaran.php"
+                       class="nav-link text-white">
+                        Catat Pelanggaran
+                    </a>
 
-                <a href="tindakan.php"
-                   class="nav-link text-white">
-                    Tindakan
-                </a>
+                    <a href="tindakan.php"
+                       class="nav-link text-white">
+                        Tindakan
+                    </a>
+                <?php endif; ?>
 
                 <a href="riwayat.php"
                    class="nav-link active">

@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 
@@ -40,11 +41,7 @@ if (!$user) {
     exit;
 }
 
-/*
- * Mendukung password yang disimpan menggunakan password_hash().
- * Bagian pembanding teks biasa hanya untuk database latihan lama.
- * Untuk penggunaan nyata, simpan password dalam bentuk hash.
- */
+// VALIDASI PASSWORD
 $password_db = $user['password'] ?? '';
 
 $password_cocok = password_verify($password, $password_db);
@@ -59,21 +56,26 @@ if (!$password_cocok) {
     exit;
 }
 
+// AMBIL ROLE
 $role = strtolower(trim($user['role'] ?? ''));
 
-if (!in_array($role, ['admin', 'guru'], true)) {
+// IZINKAN ADMIN, GURU, DAN WALI KELAS
+if (!in_array($role, ['admin', 'guru', 'wali_kelas'], true)) {
     $_SESSION['error'] = "Role pengguna tidak valid.";
     header("Location: login.php");
     exit;
 }
 
+// BUAT SESSION
 session_regenerate_id(true);
 
 $_SESSION['login'] = true;
 $_SESSION['role'] = $role;
 $_SESSION['user_id'] = $user['id'] ?? 0;
 $_SESSION['nama'] = $user['nama'] ?? $user['name'] ?? $email;
+$_SESSION['name'] = $_SESSION['nama'];
 $_SESSION['email'] = $email;
 
+// ARAHKAN KE DASHBOARD
 header("Location: dashboard.php");
 exit;
