@@ -121,20 +121,6 @@ $nama = "Agnia Rosya Noerillah";
                         </a>
                     </li>
 
-                <?php elseif ($role == 'wali_kelas'): ?>
-
-                    <li class="nav-item">
-                        <a href="riwayat.php" class="nav-link text-white">
-                            Riwayat
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a href="rekap_poin.php" class="nav-link text-white">
-                            Rekap Poin
-                        </a>
-                    </li>
-
                 <?php endif; ?>
 
                 <hr class="text-secondary">

@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 
@@ -8,15 +9,12 @@ if (!isset($_SESSION['login'])) {
 
 $role = strtolower($_SESSION['role'] ?? '');
 
-if (!in_array($role, ['admin', 'guru', 'wali_kelas'])) {
+if (!in_array($role, ['admin', 'guru'])) {
     echo "Anda tidak memiliki akses";
     exit;
 }
 
 include "config/koneksi.php";
-
-/* AMBIL ID USER */
-$user_id = (int) ($_SESSION['user_id'] ?? 0);
 
 /* REKAP TOTAL POIN SETIAP SISWA */
 $query = "SELECT
@@ -25,22 +23,9 @@ $query = "SELECT
             p.nama_kelas,
             COUNT(p.id) AS jumlah_pelanggaran,
             SUM(p.poin) AS total_poin
-          FROM t_pelanggaran_siswa p";
-
-/* WALI KELAS HANYA MELIHAT SISWA DI KELAS YANG DIAMPUNYA */
-if ($role == 'wali_kelas') {
-    $query .= " WHERE EXISTS (
-                    SELECT 1
-                    FROM t_guru g
-                    JOIN t_wali_kelas wk ON wk.guru_id = g.id
-                    WHERE g.user_id = $user_id
-                    AND wk.kelas_id = p.kelas_id
-                    AND wk.status_aktif = 1
-                )";
-}
-
-$query .= " GROUP BY p.siswa_id, p.nama_siswa, p.nama_kelas
-            ORDER BY total_poin DESC, p.nama_siswa ASC";
+          FROM t_pelanggaran_siswa p
+          GROUP BY p.siswa_id, p.nama_siswa, p.nama_kelas
+          ORDER BY total_poin DESC, p.nama_siswa ASC";
 
 $data = mysqli_query($koneksi, $query);
 
@@ -100,7 +85,55 @@ if (!$data) {
                     Dashboard
                 </a>
 
-                <?php if ($role == 'guru'): ?>
+                <?php if ($role == 'admin'): ?>
+
+                    <a href="siswa.php"
+                       class="nav-link text-white">
+                        Kelola Siswa
+                    </a>
+
+                    <a href="guru.php"
+                       class="nav-link text-white">
+                        Kelola Guru
+                    </a>
+
+                    <a href="kelas.php"
+                       class="nav-link text-white">
+                        Kelola Kelas
+                    </a>
+
+                    <a href="tahun_ajaran.php"
+                       class="nav-link text-white">
+                        Tahun Ajaran
+                    </a>
+
+                    <a href="penempatan_siswa.php"
+                       class="nav-link text-white">
+                        Penempatan Siswa
+                    </a>
+
+                    <a href="wali_kelas.php"
+                       class="nav-link text-white">
+                        Wali Kelas
+                    </a>
+
+                    <a href="kategori_pelanggaran.php"
+                       class="nav-link text-white">
+                        Kategori Pelanggaran
+                    </a>
+
+                    <a href="jenis_pelanggaran.php"
+                       class="nav-link text-white">
+                        Jenis Pelanggaran
+                    </a>
+
+                    <a href="laporan.php"
+                       class="nav-link text-white">
+                        Laporan
+                    </a>
+
+                <?php elseif ($role == 'guru'): ?>
+
                     <a href="catat_pelanggaran.php"
                        class="nav-link text-white">
                         Catat Pelanggaran
@@ -110,12 +143,13 @@ if (!$data) {
                        class="nav-link text-white">
                         Tindakan
                     </a>
-                <?php endif; ?>
 
-                <a href="riwayat.php"
-                   class="nav-link text-white">
-                    Riwayat
-                </a>
+                    <a href="riwayat.php"
+                       class="nav-link text-white">
+                        Riwayat
+                    </a>
+
+                <?php endif; ?>
 
                 <a href="rekap_poin.php"
                    class="nav-link active">

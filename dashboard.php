@@ -11,7 +11,7 @@ include "config/koneksi.php";
 
 $role = strtolower(trim($_SESSION['role'] ?? ''));
 
-if (!in_array($role, ['admin', 'guru', 'wali_kelas'])) {
+if (!in_array($role, ['admin', 'guru'])) {
     exit("Anda tidak memiliki akses");
 }
 
@@ -135,20 +135,6 @@ $error = $result ? '' : mysqli_error($koneksi);
                         </a>
                     </li>
 
-                <?php } elseif ($role == 'wali_kelas') { ?>
-
-                    <li class="nav-item">
-                        <a href="riwayat.php" class="nav-link text-white">
-                            Riwayat 
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a href="rekap_poin.php" class="nav-link text-white">
-                            Rekap Poin Siswa
-                        </a>
-                    </li>
-
                 <?php } ?>
 
                 <hr class="text-secondary">
@@ -179,8 +165,7 @@ $error = $result ? '' : mysqli_error($koneksi);
                 <h2>Dashboard Admin</h2>
 
                 <p>
-                    Selamat datang,
-                    <b><?= htmlspecialchars($_SESSION['name'] ?? $role); ?></b>
+                    Selamat datang, Admin
                 </p>
 
                 <div class="row">
@@ -312,7 +297,7 @@ $error = $result ? '' : mysqli_error($koneksi);
                         <div class="card shadow-sm">
                             <div class="card-body">
                                 <h5 class="card-title">Riwayat</h5>
-                                <p class="card-text">Melihat riwayat .</p>
+                                <p class="card-text">Melihat riwayat.</p>
                                 <a href="riwayat.php" class="btn btn-primary">Buka</a>
                             </div>
                         </div>
@@ -322,45 +307,8 @@ $error = $result ? '' : mysqli_error($koneksi);
                         <div class="card shadow-sm">
                             <div class="card-body">
                                 <h5 class="card-title">Rekap Poin</h5>
-                                <p class="card-text">Melihat rekap poin .</p>
+                                <p class="card-text">Melihat rekap poin.</p>
                                 <a href="rekap_poin.php" class="btn btn-primary">Buka</a>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-            <?php } elseif ($role == 'wali_kelas') { ?>
-
-                <h2>Dashboard Wali Kelas</h2>
-
-                <p>
-                    Selamat datang,
-                    <b><?= htmlspecialchars($_SESSION['name'] ?? $role); ?></b>
-                </p>
-
-                <div class="row">
-
-                    <div class="col-md-4 mb-3">
-                        <div class="card shadow-sm">
-                            <div class="card-body">
-                                <h5 class="card-title">Riwayat </h5>
-                                <p class="card-text">
-                                    Melihat riwayat pelanggaran siswa di kelas yang diampu.
-                                </p>
-                                <a href="riwayat.php" class="btn btn-primary">Lihat Data</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-                        <div class="card shadow-sm">
-                            <div class="card-body">
-                                <h5 class="card-title">Rekap Poin </h5>
-                                <p class="card-text">
-                                    Memantau jumlah poin pelanggaran siswa di kelas.
-                                </p>
-                                <a href="rekap_poin.php" class="btn btn-primary">Lihat Data</a>
                             </div>
                         </div>
                     </div>

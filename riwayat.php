@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 
@@ -6,17 +7,14 @@ if (!isset($_SESSION['login'])) {
     exit;
 }
 
-$role = strtolower($_SESSION['role'] ?? '');
+$role = strtolower(trim($_SESSION['role'] ?? ''));
 
-if (!in_array($role, ['admin', 'guru', 'wali_kelas'])) {
+if (!in_array($role, ['admin', 'guru'], true)) {
     echo "Anda tidak memiliki akses";
     exit;
 }
 
 include "config/koneksi.php";
-
-/* AMBIL ID USER */
-$user_id = (int) ($_SESSION['user_id'] ?? 0);
 
 /* QUERY RIWAYAT PELANGGARAN */
 $query = "SELECT
@@ -29,21 +27,8 @@ $query = "SELECT
             p.poin,
             p.tindakan,
             p.status
-          FROM t_pelanggaran_siswa p";
-
-/* WALI KELAS HANYA MELIHAT KELAS YANG DIAMPUNYA */
-if ($role == 'wali_kelas') {
-    $query .= " WHERE EXISTS (
-                    SELECT 1
-                    FROM t_guru g
-                    JOIN t_wali_kelas wk ON wk.guru_id = g.id
-                    WHERE g.user_id = $user_id
-                    AND wk.kelas_id = p.kelas_id
-                    AND wk.status_aktif = 1
-                )";
-}
-
-$query .= " ORDER BY p.tanggal DESC, p.id DESC";
+          FROM t_pelanggaran_siswa p
+          ORDER BY p.tanggal DESC, p.id DESC";
 
 $data = mysqli_query($koneksi, $query);
 
