@@ -7,33 +7,91 @@ if (!isset($_SESSION['login'])) {
     exit;
 }
 
-$role = strtolower($_SESSION['role'] ?? '');
+$role = strtolower(trim($_SESSION['role'] ?? ''));
 
-if (!in_array($role, ['admin', 'guru'])) {
+if (!in_array($role, ['admin', 'guru'], true)) {
     echo "Anda tidak memiliki akses";
     exit;
 }
 
 include "config/koneksi.php";
 
-/* REKAP TOTAL POIN SETIAP SISWA */
-$query = "SELECT
-            p.siswa_id,
-            p.nama_siswa,
-            p.nama_kelas,
-            COUNT(p.id) AS jumlah_pelanggaran,
-            SUM(p.poin) AS total_poin
-          FROM t_pelanggaran_siswa p
-          GROUP BY p.siswa_id, p.nama_siswa, p.nama_kelas
-          ORDER BY total_poin DESC, p.nama_siswa ASC";
+/* ==========================================
+   AMBIL TAHUN AJARAN AKTIF
+========================================== */
 
-$data = mysqli_query($koneksi, $query);
+$query_tahun = "
+    SELECT id
+    FROM t_tahun_ajaran
+    WHERE status_aktif = 1
+    ORDER BY id DESC
+    LIMIT 1
+";
 
-if (!$data) {
-    die("Gagal mengambil data rekap poin: " . mysqli_error($koneksi));
+$result_tahun = mysqli_query($koneksi, $query_tahun);
+
+if (!$result_tahun) {
+    die("Gagal mengambil tahun ajaran: " . mysqli_error($koneksi));
 }
 
-/* RINGKASAN */
+$tahun_aktif = mysqli_fetch_assoc($result_tahun);
+$tahun_ajaran_id = $tahun_aktif['id'] ?? 0;
+
+/* ==========================================
+   REKAP TOTAL POIN SETIAP SISWA
+   KELAS DIAMBIL DARI PENEMPATAN AKTIF
+========================================== */
+
+$query = "
+    SELECT
+        ps.siswa_id,
+        COALESCE(s.nama, ps.nama_siswa) AS nama_siswa,
+        COALESCE(k.nama, '-') AS nama_kelas,
+        COUNT(ps.id) AS jumlah_pelanggaran,
+        COALESCE(SUM(ps.poin), 0) AS total_poin
+
+    FROM t_pelanggaran_siswa ps
+
+    LEFT JOIN t_siswa s
+        ON s.id = ps.siswa_id
+
+    LEFT JOIN t_kelas_siswa ks
+        ON ks.siswa_id = ps.siswa_id
+        AND ks.tahun_ajaran_id = ?
+        AND ks.status_aktif = 1
+
+    LEFT JOIN t_kelas k
+        ON k.id = ks.kelas_id
+
+    GROUP BY
+        ps.siswa_id,
+        s.nama,
+        ps.nama_siswa,
+        k.id,
+        k.nama
+
+    ORDER BY total_poin DESC, nama_siswa ASC
+";
+
+$stmt = mysqli_prepare($koneksi, $query);
+
+if (!$stmt) {
+    die("Gagal menyiapkan query: " . mysqli_error($koneksi));
+}
+
+mysqli_stmt_bind_param($stmt, "i", $tahun_ajaran_id);
+mysqli_stmt_execute($stmt);
+
+$data = mysqli_stmt_get_result($stmt);
+
+if (!$data) {
+    die("Gagal mengambil data rekap poin.");
+}
+
+/* ==========================================
+   RINGKASAN
+========================================== */
+
 $total_siswa = mysqli_num_rows($data);
 $total_catatan = 0;
 $total_poin_semua = 0;
@@ -43,16 +101,21 @@ while ($ringkasan = mysqli_fetch_assoc($data)) {
     $total_poin_semua += (int) $ringkasan['total_poin'];
 }
 
-/* JALANKAN KEMBALI QUERY UNTUK TABEL */
-$data = mysqli_query($koneksi, $query);
+/* ==========================================
+   JALANKAN KEMBALI QUERY UNTUK TABEL
+========================================== */
+
+mysqli_stmt_execute($stmt);
+$data = mysqli_stmt_get_result($stmt);
 
 if (!$data) {
-    die("Gagal mengambil data tabel: " . mysqli_error($koneksi));
+    die("Gagal mengambil data tabel.");
 }
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -225,7 +288,12 @@ if (!$data) {
                             </p>
 
                             <h3 class="fw-bold mb-0">
-                                <?= number_format($total_poin_semua, 0, ',', '.'); ?>
+                                <?= number_format(
+                                    $total_poin_semua,
+                                    0,
+                                    ',',
+                                    '.'
+                                ); ?>
                             </h3>
 
                         </div>
@@ -267,6 +335,7 @@ if (!$data) {
                                 <?php while ($row = mysqli_fetch_assoc($data)): ?>
 
                                     <tr>
+
                                         <td>
                                             <?= $no++; ?>
                                         </td>
@@ -293,6 +362,7 @@ if (!$data) {
                                                 ); ?> poin
                                             </span>
                                         </td>
+
                                     </tr>
 
                                 <?php endwhile; ?>

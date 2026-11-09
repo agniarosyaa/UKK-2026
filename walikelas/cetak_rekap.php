@@ -42,6 +42,10 @@ $stmtGuru = $koneksi->prepare("
     LIMIT 1
 ");
 
+if (!$stmtGuru) {
+    die("Query data guru gagal: " . htmlspecialchars($koneksi->error));
+}
+
 $stmtGuru->bind_param("i", $user_id);
 $stmtGuru->execute();
 
@@ -65,6 +69,10 @@ $stmtTahun = $koneksi->prepare("
     ORDER BY id DESC
     LIMIT 1
 ");
+
+if (!$stmtTahun) {
+    die("Query tahun ajaran gagal: " . htmlspecialchars($koneksi->error));
+}
 
 $stmtTahun->execute();
 
@@ -94,6 +102,10 @@ $stmtKelas = $koneksi->prepare("
     LIMIT 1
 ");
 
+if (!$stmtKelas) {
+    die("Query kelas wali gagal: " . htmlspecialchars($koneksi->error));
+}
+
 $stmtKelas->bind_param("ii", $guru_id, $tahun_id);
 $stmtKelas->execute();
 
@@ -108,25 +120,54 @@ $kelas_id = (int) $dataKelas['kelas_id'];
 $nama_kelas = $dataKelas['nama_kelas'];
 
 /* ==========================================
-   AMBIL DATA PELANGGARAN KELAS
+   AMBIL DATA PELANGGARAN
+   NAMA PELANGGARAN DIAMBIL DARI
+   TABEL t_pelanggaran
 ========================================== */
 $stmtRekap = $koneksi->prepare("
     SELECT
-        id,
-        tanggal,
-        nama_siswa,
-        nama_kelas,
-        nama_pelanggaran,
-        poin,
-        keterangan,
-        tindakan,
-        status
-    FROM t_pelanggaran_siswa
-    WHERE kelas_id = ?
-    ORDER BY tanggal DESC, id DESC
+        ps.id,
+        ps.tanggal,
+        s.nama AS nama_siswa,
+        k.nama AS nama_kelas,
+        p.nama AS nama_pelanggaran,
+        ps.poin,
+        ps.keterangan,
+        ps.tindakan,
+        ps.status
+
+    FROM t_pelanggaran_siswa ps
+
+    INNER JOIN t_siswa s
+        ON s.id = ps.siswa_id
+        AND s.status_aktif = 1
+
+    INNER JOIN t_kelas_siswa ks
+        ON ks.siswa_id = ps.siswa_id
+        AND ks.tahun_ajaran_id = ps.tahun_ajaran_id
+        AND ks.kelas_id = ?
+        AND ks.status_aktif = 1
+
+    INNER JOIN t_kelas k
+        ON k.id = ks.kelas_id
+
+    INNER JOIN t_tahun_ajaran ta
+        ON ta.id = ks.tahun_ajaran_id
+        AND ta.status_aktif = 1
+
+    LEFT JOIN t_pelanggaran p
+        ON p.id = ps.pelanggaran_id
+
+    WHERE ps.tahun_ajaran_id = ?
+
+    ORDER BY ps.tanggal DESC, ps.id DESC
 ");
 
-$stmtRekap->bind_param("i", $kelas_id);
+if (!$stmtRekap) {
+    die("Query rekap gagal: " . htmlspecialchars($koneksi->error));
+}
+
+$stmtRekap->bind_param("ii", $kelas_id, $tahun_id);
 $stmtRekap->execute();
 
 $resultRekap = $stmtRekap->get_result();
@@ -480,11 +521,11 @@ function e($value)
                                         </td>
 
                                         <td>
-                                            <?= e($row['nama_kelas'] ?: $nama_kelas); ?>
+                                            <?= e($row['nama_kelas']); ?>
                                         </td>
 
                                         <td>
-                                            <?= e($row['nama_pelanggaran']); ?>
+                                            <?= e($row['nama_pelanggaran'] ?: '-'); ?>
                                         </td>
 
                                         <td class="text-center">

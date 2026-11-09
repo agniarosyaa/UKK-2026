@@ -280,12 +280,6 @@ if (!$data) {
                         </table>
 
                     </div>
-
-                    <p class="text-muted mb-0">
-                        Total data wali kelas:
-                        <strong><?= mysqli_num_rows($data); ?></strong>
-                    </p>
-
                 </div>
 
             </div>

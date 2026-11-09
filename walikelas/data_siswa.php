@@ -11,21 +11,27 @@ include "../config/koneksi.php";
 
 $role = strtolower(trim($_SESSION['role'] ?? ''));
 
-if ($role != 'wali_kelas') {
+if ($role !== 'wali_kelas') {
     exit("Anda tidak memiliki akses ke halaman ini.");
 }
 
-/* AMBIL ID USER LOGIN */
+/* ==============================
+   ID USER LOGIN
+============================== */
 $user_id = $_SESSION['user_id']
     ?? $_SESSION['id_user']
     ?? $_SESSION['id']
     ?? null;
 
 if (!$user_id) {
-    exit("ID akun tidak ditemukan. Periksa session pada login.php.");
+    exit("ID akun tidak ditemukan. Periksa session login.php.");
 }
 
-/* CARI DATA GURU */
+$user_id = (int) $user_id;
+
+/* ==============================
+   DATA GURU
+============================== */
 $stmtGuru = mysqli_prepare(
     $koneksi,
     "SELECT id, nama
@@ -34,11 +40,16 @@ $stmtGuru = mysqli_prepare(
      LIMIT 1"
 );
 
+if (!$stmtGuru) {
+    exit("Query guru gagal: " . htmlspecialchars(mysqli_error($koneksi)));
+}
+
 mysqli_stmt_bind_param($stmtGuru, "i", $user_id);
 mysqli_stmt_execute($stmtGuru);
 
 $resultGuru = mysqli_stmt_get_result($stmtGuru);
 $dataGuru = mysqli_fetch_assoc($resultGuru);
+mysqli_stmt_close($stmtGuru);
 
 if (!$dataGuru) {
     exit("Data guru tidak ditemukan.");
@@ -47,20 +58,30 @@ if (!$dataGuru) {
 $guru_id = (int) $dataGuru['id'];
 $nama_guru = $dataGuru['nama'];
 
-/* AMBIL KELAS YANG DITUGASKAN */
-$stmtKelas = mysqli_prepare(
-    $koneksi,
-    "SELECT
+/* ==============================
+   KELAS TANGGUNG JAWAB WALI KELAS
+============================== */
+$sqlKelas = "
+    SELECT DISTINCT
         wk.kelas_id,
-        k.nama AS nama_kelas
-     FROM t_wali_kelas wk
-     JOIN t_kelas k ON k.id = wk.kelas_id
-     JOIN t_tahun_ajaran ta ON ta.id = wk.tahun_ajaran_id
-     WHERE wk.guru_id = ?
-       AND wk.status_aktif = 1
-       AND ta.status_aktif = 1
-     ORDER BY k.nama ASC"
-);
+        k.nama AS nama_kelas,
+        wk.tahun_ajaran_id
+    FROM t_wali_kelas wk
+    INNER JOIN t_kelas k
+        ON k.id = wk.kelas_id
+    INNER JOIN t_tahun_ajaran ta
+        ON ta.id = wk.tahun_ajaran_id
+    WHERE wk.guru_id = ?
+      AND wk.status_aktif = 1
+      AND ta.status_aktif = 1
+    ORDER BY k.nama ASC
+";
+
+$stmtKelas = mysqli_prepare($koneksi, $sqlKelas);
+
+if (!$stmtKelas) {
+    exit("Query kelas gagal: " . htmlspecialchars(mysqli_error($koneksi)));
+}
 
 mysqli_stmt_bind_param($stmtKelas, "i", $guru_id);
 mysqli_stmt_execute($stmtKelas);
@@ -68,26 +89,49 @@ mysqli_stmt_execute($stmtKelas);
 $resultKelas = mysqli_stmt_get_result($stmtKelas);
 
 $kelas_wali = [];
-$kelas_id = [];
 
 while ($row = mysqli_fetch_assoc($resultKelas)) {
     $kelas_wali[] = $row;
-    $kelas_id[] = (int) $row['kelas_id'];
 }
 
-if (count($kelas_id) == 0) {
-    $error = "Anda belum memiliki penugasan wali kelas yang aktif.";
-    $resultSiswa = false;
+mysqli_stmt_close($stmtKelas);
+
+$error = '';
+$resultSiswa = false;
+$total_siswa = 0;
+
+/* ==============================
+   AMBIL SISWA SESUAI PENUGASAN
+   KELAS DAN TAHUN AJARAN
+============================== */
+if (empty($kelas_wali)) {
+
+    $error = "Anda belum memiliki penugasan wali kelas aktif.";
+
 } else {
 
-    /*
-       DATA SISWA HANYA DARI KELAS WALI KELAS LOGIN
-    */
-    $placeholders = implode(',', array_fill(0, count($kelas_id), '?'));
-    $types = str_repeat('i', count($kelas_id));
+    $conditions = [];
+    $params = [];
+    $types = '';
 
-    $sql = "
-        SELECT DISTINCT
+    foreach ($kelas_wali as $kelas) {
+        $conditions[] = "
+            (
+                ks.kelas_id = ?
+                AND ks.tahun_ajaran_id = ?
+            )
+        ";
+
+        $params[] = (int) $kelas['kelas_id'];
+        $params[] = (int) $kelas['tahun_ajaran_id'];
+
+        $types .= "ii";
+    }
+
+    $whereKelas = implode(" OR ", $conditions);
+
+    $sqlSiswa = "
+        SELECT
             s.id,
             s.nis,
             s.nisn,
@@ -96,28 +140,48 @@ if (count($kelas_id) == 0) {
             s.tanggal_lahir,
             s.alamat,
             s.status_aktif,
-            k.nama AS nama_kelas
-        FROM t_siswa s
-        JOIN t_kelas_siswa ks
-            ON ks.siswa_id = s.id
-        JOIN t_kelas k
+            k.nama AS nama_kelas,
+            ks.kelas_id,
+            ks.tahun_ajaran_id
+
+        FROM t_kelas_siswa ks
+
+        INNER JOIN t_siswa s
+            ON s.id = ks.siswa_id
+
+        INNER JOIN t_kelas k
             ON k.id = ks.kelas_id
-        WHERE ks.kelas_id IN ($placeholders)
-        ORDER BY s.nama ASC
+
+        INNER JOIN t_tahun_ajaran ta
+            ON ta.id = ks.tahun_ajaran_id
+
+        WHERE ks.status_aktif = 1
+          AND s.status_aktif = 1
+          AND ta.status_aktif = 1
+          AND ($whereKelas)
+
+        ORDER BY
+            ks.kelas_id ASC,
+            s.id ASC
     ";
 
-    $stmtSiswa = mysqli_prepare($koneksi, $sql);
+    $stmtSiswa = mysqli_prepare($koneksi, $sqlSiswa);
 
-    mysqli_stmt_bind_param($stmtSiswa, $types, ...$kelas_id);
+    if (!$stmtSiswa) {
+        exit("Query siswa gagal: " . htmlspecialchars(mysqli_error($koneksi)));
+    }
+
+    mysqli_stmt_bind_param($stmtSiswa, $types, ...$params);
     mysqli_stmt_execute($stmtSiswa);
 
     $resultSiswa = mysqli_stmt_get_result($stmtSiswa);
-    $error = '';
+
+    if (!$resultSiswa) {
+        exit("Gagal mengambil data siswa: " . htmlspecialchars(mysqli_error($koneksi)));
+    }
+
+    $total_siswa = mysqli_num_rows($resultSiswa);
 }
-
-/* HITUNG JUMLAH SISWA */
-$total_siswa = $resultSiswa ? mysqli_num_rows($resultSiswa) : 0;
-
 ?>
 
 <!DOCTYPE html>
@@ -157,7 +221,7 @@ $total_siswa = $resultSiswa ? mysqli_num_rows($resultSiswa) : 0;
                 </li>
 
                 <li class="nav-item">
-                    <a href="siswa.php" class="nav-link active">
+                    <a href="data_siswa.php" class="nav-link active">
                         Data Siswa
                     </a>
                 </li>
@@ -204,7 +268,7 @@ $total_siswa = $resultSiswa ? mysqli_num_rows($resultSiswa) : 0;
                 <b><?= htmlspecialchars($nama_guru); ?></b>
             </p>
 
-            <?php if (!empty($error)) { ?>
+            <?php if ($error !== '') { ?>
 
                 <div class="alert alert-warning">
                     <?= htmlspecialchars($error); ?>
@@ -212,7 +276,7 @@ $total_siswa = $resultSiswa ? mysqli_num_rows($resultSiswa) : 0;
 
             <?php } else { ?>
 
-                <!-- INFORMASI KELAS -->
+                <!-- KELAS TANGGUNG JAWAB -->
                 <div class="card shadow-sm mb-4">
                     <div class="card-body">
 
@@ -229,7 +293,7 @@ $total_siswa = $resultSiswa ? mysqli_num_rows($resultSiswa) : 0;
                     </div>
                 </div>
 
-                <!-- JUMLAH SISWA -->
+                <!-- TOTAL SISWA -->
                 <div class="card shadow-sm mb-4">
                     <div class="card-body">
 
@@ -274,54 +338,32 @@ $total_siswa = $resultSiswa ? mysqli_num_rows($resultSiswa) : 0;
                                     <?php
                                     $no = 1;
 
-                                    if ($resultSiswa) {
-                                        while ($siswa = mysqli_fetch_assoc($resultSiswa)) {
+                                    while ($siswa = mysqli_fetch_assoc($resultSiswa)) {
                                     ?>
 
                                         <tr>
                                             <td><?= $no++; ?></td>
 
-                                            <td>
-                                                <?= htmlspecialchars($siswa['nis']); ?>
-                                            </td>
+                                            <td><?= htmlspecialchars($siswa['nis'] ?? ''); ?></td>
+
+                                            <td><?= htmlspecialchars($siswa['nisn'] ?? ''); ?></td>
+
+                                            <td><?= htmlspecialchars($siswa['nama']); ?></td>
+
+                                            <td><?= htmlspecialchars($siswa['jenis_kelamin'] ?? ''); ?></td>
+
+                                            <td><?= htmlspecialchars($siswa['tanggal_lahir'] ?? ''); ?></td>
+
+                                            <td><?= htmlspecialchars($siswa['nama_kelas']); ?></td>
 
                                             <td>
-                                                <?= htmlspecialchars($siswa['nisn']); ?>
-                                            </td>
-
-                                            <td>
-                                                <?= htmlspecialchars($siswa['nama']); ?>
-                                            </td>
-
-                                            <td>
-                                                <?= htmlspecialchars($siswa['jenis_kelamin']); ?>
-                                            </td>
-
-                                            <td>
-                                                <?= htmlspecialchars($siswa['tanggal_lahir']); ?>
-                                            </td>
-
-                                            <td>
-                                                <?= htmlspecialchars($siswa['nama_kelas']); ?>
-                                            </td>
-
-                                            <td>
-                                                <?php if ($siswa['status_aktif'] == 1) { ?>
-                                                    <span class="badge bg-success">
-                                                        Aktif
-                                                    </span>
-                                                <?php } else { ?>
-                                                    <span class="badge bg-secondary">
-                                                        Tidak Aktif
-                                                    </span>
-                                                <?php } ?>
+                                                <span class="badge bg-success">
+                                                    Aktif
+                                                </span>
                                             </td>
                                         </tr>
 
-                                    <?php
-                                        }
-                                    }
-                                    ?>
+                                    <?php } ?>
 
                                 </tbody>
 

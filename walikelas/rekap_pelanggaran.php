@@ -30,6 +30,8 @@ if (!$user_id) {
     exit("ID pengguna tidak ditemukan. Silakan login kembali.");
 }
 
+$user_id = (int) $user_id;
+
 /* =====================================
    AMBIL DATA GURU
 ===================================== */
@@ -40,8 +42,13 @@ $stmtGuru = $koneksi->prepare("
     LIMIT 1
 ");
 
+if (!$stmtGuru) {
+    exit("Query guru gagal: " . htmlspecialchars($koneksi->error));
+}
+
 $stmtGuru->bind_param("i", $user_id);
 $stmtGuru->execute();
+
 $guru = $stmtGuru->get_result()->fetch_assoc();
 $stmtGuru->close();
 
@@ -54,22 +61,31 @@ $nama_guru = $guru['nama'];
 
 /* =====================================
    AMBIL KELAS TANGGUNG JAWAB
+   BESERTA TAHUN AJARAN
 ===================================== */
 $stmtKelas = $koneksi->prepare("
     SELECT DISTINCT
         wk.kelas_id,
+        wk.tahun_ajaran_id,
         k.nama AS nama_kelas
     FROM t_wali_kelas wk
-    JOIN t_kelas k ON k.id = wk.kelas_id
-    JOIN t_tahun_ajaran ta ON ta.id = wk.tahun_ajaran_id
+    INNER JOIN t_kelas k
+        ON k.id = wk.kelas_id
+    INNER JOIN t_tahun_ajaran ta
+        ON ta.id = wk.tahun_ajaran_id
     WHERE wk.guru_id = ?
       AND wk.status_aktif = 1
       AND ta.status_aktif = 1
     ORDER BY k.nama ASC
 ");
 
+if (!$stmtKelas) {
+    exit("Query kelas gagal: " . htmlspecialchars($koneksi->error));
+}
+
 $stmtKelas->bind_param("i", $guru_id);
 $stmtKelas->execute();
+
 $resultKelas = $stmtKelas->get_result();
 
 $kelas_wali = [];
@@ -102,56 +118,106 @@ if (!in_array($filter_status, ['', 'Diproses', 'Selesai'], true)) {
 
 /* =====================================
    QUERY DATA PELANGGARAN
+   NAMA PELANGGARAN DARI TABEL MASTER
+   KELAS DARI PENEMPATAN SISWA AKTIF
 ===================================== */
 $data_pelanggaran = [];
 $total_pelanggaran = 0;
 $total_poin = 0;
 
-if (!empty($kelas_id)) {
+if (!empty($kelas_wali)) {
 
-    $placeholders = implode(',', array_fill(0, count($kelas_id), '?'));
+    $kondisi_kelas = [];
+    $params = [];
+    $types = '';
+
+    foreach ($kelas_wali as $kelas) {
+
+        $kondisi_kelas[] = "
+            (ks.kelas_id = ? AND ks.tahun_ajaran_id = ?)
+        ";
+
+        $params[] = (int) $kelas['kelas_id'];
+        $params[] = (int) $kelas['tahun_ajaran_id'];
+
+        $types .= "ii";
+    }
 
     $sql = "
         SELECT
             ps.id,
             ps.tanggal,
-            ps.nama_siswa,
-            ps.nama_kelas,
-            ps.nama_pelanggaran,
+            s.nama AS nama_siswa,
+            k.nama AS nama_kelas,
+            p.nama AS nama_pelanggaran,
             ps.poin,
             ps.keterangan,
             ps.tindakan,
             ps.status
+
         FROM t_pelanggaran_siswa ps
-        WHERE ps.kelas_id IN ($placeholders)
+
+        INNER JOIN t_siswa s
+            ON s.id = ps.siswa_id
+            AND s.status_aktif = 1
+
+        INNER JOIN t_kelas_siswa ks
+            ON ks.siswa_id = ps.siswa_id
+            AND ks.tahun_ajaran_id = ps.tahun_ajaran_id
+            AND ks.status_aktif = 1
+
+        INNER JOIN t_kelas k
+            ON k.id = ks.kelas_id
+
+        INNER JOIN t_tahun_ajaran ta
+            ON ta.id = ks.tahun_ajaran_id
+            AND ta.status_aktif = 1
+
+        LEFT JOIN t_pelanggaran p
+            ON p.id = ps.pelanggaran_id
+
+        WHERE (
+            " . implode(" OR ", $kondisi_kelas) . "
+        )
     ";
 
-    $params = $kelas_id;
-    $types = str_repeat('i', count($kelas_id));
-
+    /* FILTER KELAS */
     if ($filter_kelas > 0) {
-        $sql .= " AND ps.kelas_id = ?";
+        $sql .= " AND ks.kelas_id = ?";
+
         $params[] = $filter_kelas;
         $types .= "i";
     }
 
+    /* FILTER STATUS */
     if ($filter_status !== '') {
         $sql .= " AND ps.status = ?";
+
         $params[] = $filter_status;
         $types .= "s";
     }
 
-    $sql .= " ORDER BY ps.tanggal DESC, ps.id DESC";
+    $sql .= "
+        ORDER BY ps.tanggal DESC, ps.id DESC
+    ";
 
     $stmtData = $koneksi->prepare($sql);
+
+    if (!$stmtData) {
+        exit("Query rekap gagal: " . htmlspecialchars($koneksi->error));
+    }
+
     $stmtData->bind_param($types, ...$params);
     $stmtData->execute();
 
     $resultData = $stmtData->get_result();
 
     while ($row = $resultData->fetch_assoc()) {
+
         $data_pelanggaran[] = $row;
+
         $total_pelanggaran++;
+
         $total_poin += (int) $row['poin'];
     }
 
@@ -173,26 +239,38 @@ function tanggalIndonesia($tanggal)
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Rekap Pelanggaran Siswa</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
 
-    <link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link
+        href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css"
+        rel="stylesheet"
+    >
+
 </head>
 
 <body>
 
 <div class="container-fluid">
+
     <div class="row">
 
         <!-- SIDEBAR -->
         <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3 position-fixed top-0 start-0">
 
-            <h5 class="text-white mb-4">Sistem Pelanggaran</h5>
+            <h5 class="text-white mb-4">
+                Sistem Pelanggaran
+            </h5>
 
             <ul class="nav nav-pills flex-column gap-2">
 
@@ -229,30 +307,39 @@ function tanggalIndonesia($tanggal)
                 </li>
 
                 <li class="nav-item">
-                    <a href="../logout.php"
-                       class="nav-link text-danger"
-                       onclick="return confirm('Yakin ingin logout?')">
+                    <a
+                        href="../logout.php"
+                        class="nav-link text-danger"
+                        onclick="return confirm('Yakin ingin logout?')"
+                    >
                         Logout
                     </a>
                 </li>
 
             </ul>
+
         </aside>
 
         <!-- KONTEN -->
         <main class="col-md-9 col-lg-10 offset-md-3 offset-lg-2 p-4">
 
-            <h2 class="mb-2">Rekap Pelanggaran Siswa</h2>
+            <h2 class="mb-2">
+                Rekap Pelanggaran Siswa
+            </h2>
 
             <p class="text-muted">
-                Selamat datang, <strong><?= htmlspecialchars($nama_guru) ?></strong>
+                Selamat datang,
+                <strong><?= htmlspecialchars($nama_guru) ?></strong>
             </p>
 
             <!-- KELAS TANGGUNG JAWAB -->
             <div class="card shadow-sm mb-4">
+
                 <div class="card-body">
 
-                    <h6 class="text-muted mb-2">Kelas Tanggung Jawab</h6>
+                    <h6 class="text-muted mb-2">
+                        Kelas Tanggung Jawab
+                    </h6>
 
                     <?php if (!empty($kelas_wali)): ?>
 
@@ -271,14 +358,18 @@ function tanggalIndonesia($tanggal)
                     <?php endif; ?>
 
                 </div>
+
             </div>
 
-            <!-- KARTU TOTAL SEJAJAR -->
+            <!-- KARTU TOTAL -->
             <div class="row g-3 mb-4">
 
                 <div class="col-12 col-md-6">
+
                     <div class="card shadow-sm h-100">
+
                         <div class="card-body">
+
                             <h6 class="text-muted mb-2">
                                 Total Pelanggaran
                             </h6>
@@ -286,13 +377,19 @@ function tanggalIndonesia($tanggal)
                             <h3 class="mb-0">
                                 <?= $total_pelanggaran ?>
                             </h3>
+
                         </div>
+
                     </div>
+
                 </div>
 
                 <div class="col-12 col-md-6">
+
                     <div class="card shadow-sm h-100">
+
                         <div class="card-body">
+
                             <h6 class="text-muted mb-2">
                                 Total Poin
                             </h6>
@@ -300,14 +397,18 @@ function tanggalIndonesia($tanggal)
                             <h3 class="mb-0">
                                 <?= $total_poin ?>
                             </h3>
+
                         </div>
+
                     </div>
+
                 </div>
 
             </div>
 
             <!-- FILTER -->
             <div class="card shadow-sm mb-4">
+
                 <div class="card-body">
 
                     <form method="GET" class="row g-3">
@@ -351,13 +452,17 @@ function tanggalIndonesia($tanggal)
                                     Semua Status
                                 </option>
 
-                                <option value="Diproses"
-                                    <?= $filter_status === 'Diproses' ? 'selected' : '' ?>>
+                                <option
+                                    value="Diproses"
+                                    <?= $filter_status === 'Diproses' ? 'selected' : '' ?>
+                                >
                                     Diproses
                                 </option>
 
-                                <option value="Selesai"
-                                    <?= $filter_status === 'Selesai' ? 'selected' : '' ?>>
+                                <option
+                                    value="Selesai"
+                                    <?= $filter_status === 'Selesai' ? 'selected' : '' ?>
+                                >
                                     Selesai
                                 </option>
 
@@ -371,7 +476,10 @@ function tanggalIndonesia($tanggal)
                                 Tampilkan
                             </button>
 
-                            <a href="rekap_pelanggaran.php" class="btn btn-secondary">
+                            <a
+                                href="rekap_pelanggaran.php"
+                                class="btn btn-secondary"
+                            >
                                 Reset
                             </a>
 
@@ -380,6 +488,7 @@ function tanggalIndonesia($tanggal)
                     </form>
 
                 </div>
+
             </div>
 
             <!-- TABEL REKAP -->
@@ -393,8 +502,10 @@ function tanggalIndonesia($tanggal)
 
                     <div class="table-responsive">
 
-                        <table id="tabelRekap"
-                               class="table table-bordered table-striped table-hover">
+                        <table
+                            id="tabelRekap"
+                            class="table table-bordered table-striped table-hover"
+                        >
 
                             <thead class="table-dark">
 
@@ -420,7 +531,9 @@ function tanggalIndonesia($tanggal)
 
                                     <tr>
 
-                                        <td><?= $no++ ?></td>
+                                        <td>
+                                            <?= $no++ ?>
+                                        </td>
 
                                         <td>
                                             <?= tanggalIndonesia($data['tanggal']) ?>
@@ -451,19 +564,27 @@ function tanggalIndonesia($tanggal)
                                         </td>
 
                                         <td>
+
                                             <?php if (($data['status'] ?? '') === 'Selesai'): ?>
 
                                                 <span class="badge bg-success">
                                                     Selesai
                                                 </span>
 
-                                            <?php else: ?>
+                                            <?php elseif (($data['status'] ?? '') === 'Diproses'): ?>
 
                                                 <span class="badge bg-warning text-dark">
+                                                    Diproses
+                                                </span>
+
+                                            <?php else: ?>
+
+                                                <span class="badge bg-secondary">
                                                     <?= htmlspecialchars($data['status'] ?? '-') ?>
                                                 </span>
 
                                             <?php endif; ?>
+
                                         </td>
 
                                     </tr>
@@ -477,11 +598,13 @@ function tanggalIndonesia($tanggal)
                     </div>
 
                 </div>
+
             </div>
 
         </main>
 
     </div>
+
 </div>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>

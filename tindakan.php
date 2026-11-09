@@ -7,7 +7,7 @@ if (!isset($_SESSION['login'])) {
     exit;
 }
 
-if (strtolower($_SESSION['role'] ?? '') != 'guru') {
+if (strtolower(trim($_SESSION['role'] ?? '')) != 'guru') {
     exit("Anda tidak memiliki akses");
 }
 
@@ -17,14 +17,43 @@ include "config/koneksi.php";
 $notifikasi = $_SESSION['notifikasi'] ?? null;
 unset($_SESSION['notifikasi']);
 
-/* AMBIL DATA TINDAKAN */
-$data = mysqli_query(
-    $koneksi,
-    "SELECT id, nama_siswa, nama_kelas,
-            nama_pelanggaran, tanggal, poin, tindakan, status
-     FROM t_pelanggaran_siswa
-     ORDER BY tanggal DESC, id DESC"
-);
+/* ==========================================
+   AMBIL DATA TINDAKAN
+   KELAS DARI PENEMPATAN SISWA
+   PELANGGARAN DARI TABEL MASTER
+========================================== */
+
+$sql = "
+    SELECT
+        ps.id,
+        ps.nama_siswa,
+
+      COALESCE(k.nama, ps.nama_kelas, '-') AS nama_kelas,
+
+        COALESCE(p.nama, ps.nama_pelanggaran, '-') AS nama_pelanggaran,
+
+        ps.tanggal,
+        ps.poin,
+        ps.tindakan,
+        ps.status
+
+    FROM t_pelanggaran_siswa ps
+
+    LEFT JOIN t_kelas_siswa ks
+        ON ks.siswa_id = ps.siswa_id
+        AND ks.tahun_ajaran_id = ps.tahun_ajaran_id
+        AND ks.status_aktif = 1
+
+    LEFT JOIN t_kelas k
+        ON k.id = ks.kelas_id
+
+    LEFT JOIN t_pelanggaran p
+        ON p.id = ps.pelanggaran_id
+
+    ORDER BY ps.tanggal DESC, ps.id DESC
+";
+
+$data = mysqli_query($koneksi, $sql);
 
 if (!$data) {
     die("Gagal mengambil data: " . mysqli_error($koneksi));
@@ -178,11 +207,11 @@ if (!$data) {
                                             </td>
 
                                             <td>
-                                                <?= htmlspecialchars($row['nama_kelas'] ?? '') ?>
+                                                <?= htmlspecialchars($row['nama_kelas'] ?? '-') ?>
                                             </td>
 
                                             <td>
-                                                <?= htmlspecialchars($row['nama_pelanggaran'] ?? '') ?>
+                                                <?= htmlspecialchars($row['nama_pelanggaran'] ?? '-') ?>
                                             </td>
 
                                             <td>
