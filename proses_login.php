@@ -4,31 +4,25 @@ session_start();
 
 include "config/koneksi.php";
 
-// CEK REQUEST POST
-if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header("Location: login.php");
     exit;
 }
 
-// AMBIL DATA LOGIN
 $email = trim($_POST['email'] ?? '');
 $password = $_POST['password'] ?? '';
 
-// VALIDASI INPUT
-if ($email == '' || $password == '') {
-    $_SESSION['error'] = "Email dan password harus diisi.";
+if ($email === '' || $password === '') {
+    $_SESSION['error'] = "Email dan password wajib diisi.";
     header("Location: login.php");
     exit;
 }
 
-// CARI DATA USER
-$stmt = mysqli_prepare(
-    $koneksi,
-    "SELECT * FROM t_users WHERE email = ? LIMIT 1"
-);
+$query = "SELECT * FROM t_users WHERE email = ? LIMIT 1";
+$stmt = mysqli_prepare($koneksi, $query);
 
 if (!$stmt) {
-    die("Query login gagal: " . mysqli_error($koneksi));
+    die("Query gagal: " . mysqli_error($koneksi));
 }
 
 mysqli_stmt_bind_param($stmt, "s", $email);
@@ -36,52 +30,69 @@ mysqli_stmt_execute($stmt);
 
 $result = mysqli_stmt_get_result($stmt);
 $user = mysqli_fetch_assoc($result);
-
 mysqli_stmt_close($stmt);
 
-// CEK USER
 if (!$user) {
     $_SESSION['error'] = "Email atau password salah.";
     header("Location: login.php");
     exit;
 }
 
-// VALIDASI PASSWORD
 $password_db = $user['password'] ?? '';
 
-$password_cocok = password_verify($password, $password_db);
+$info_hash = password_get_info($password_db);
 
-// PASSWORD LAMA (PLAINTEXT)
-if (!$password_cocok && hash_equals((string) $password_db, $password)) {
-    $password_cocok = true;
+if ($info_hash['algo'] !== null) {
+    $password_valid = password_verify($password, $password_db);
+} else {
+    $password_valid = hash_equals($password_db, $password);
 }
 
-if (!$password_cocok) {
+if (!$password_valid) {
     $_SESSION['error'] = "Email atau password salah.";
     header("Location: login.php");
     exit;
 }
 
-// AMBIL ROLE USER
 $role = strtolower(trim($user['role'] ?? ''));
 
-// IZINKAN ADMIN DAN GURU SAJA
-if (!in_array($role, ['admin', 'guru'], true)) {
-    $_SESSION['error'] = "Role pengguna tidak valid.";
+$role_diizinkan = ['admin', 'guru', 'wali_kelas'];
+
+if (!in_array($role, $role_diizinkan, true)) {
+    $_SESSION['error'] = "Role tidak memiliki akses.";
     header("Location: login.php");
     exit;
 }
 
-// BUAT SESSION BARU
+// Ubah password teks biasa menjadi hash
+if ($info_hash['algo'] === null) {
+    $hash_baru = password_hash($password, PASSWORD_DEFAULT);
+
+    $update = mysqli_prepare(
+        $koneksi,
+        "UPDATE t_users SET password = ? WHERE id = ?"
+    );
+
+    if ($update) {
+        mysqli_stmt_bind_param(
+            $update,
+            "si",
+            $hash_baru,
+            $user['id']
+        );
+
+        mysqli_stmt_execute($update);
+        mysqli_stmt_close($update);
+    }
+}
+
 session_regenerate_id(true);
 
 $_SESSION['login'] = true;
+$_SESSION['user_id'] = $user['id'];
+$_SESSION['id_user'] = $user['id'];
 $_SESSION['role'] = $role;
-$_SESSION['user_id'] = $user['id'] ?? 0;
-$_SESSION['nama'] = $user['nama'] ?? $user['name'] ?? $email;
-$_SESSION['name'] = $_SESSION['nama'];
-$_SESSION['email'] = $email;
+$_SESSION['email'] = $user['email'];
 
-// ARAHKAN KE DASHBOARD
 header("Location: dashboard.php");
 exit;

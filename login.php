@@ -1,7 +1,8 @@
+
 <?php
 session_start();
 
-if (isset($_SESSION['login'])) {
+if (isset($_SESSION['login']) && $_SESSION['login'] === true) {
     header("Location: dashboard.php");
     exit;
 }
@@ -18,7 +19,6 @@ unset($_SESSION['error']);
 
     <title>Login - Sistem Pelanggaran Siswa</title>
 
-    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
           rel="stylesheet">
 </head>
@@ -30,7 +30,6 @@ unset($_SESSION['error']);
     <div class="card border-0 shadow-lg rounded-4 w-100 overflow-hidden"
          style="max-width: 450px;">
 
-        <!-- HEADER BIRU -->
         <div class="card-header bg-primary text-white text-center border-0 py-4">
 
             <img src="logo_smk.jpeg"
@@ -53,10 +52,8 @@ unset($_SESSION['error']);
 
         </div>
 
-        <!-- BAGIAN FORM -->
         <div class="card-body p-4 p-md-5">
 
-            <!-- SELAMAT DATANG -->
             <div class="text-center mb-4">
 
                 <h4 class="fw-bold text-primary mb-2">
@@ -69,7 +66,6 @@ unset($_SESSION['error']);
 
             </div>
 
-            <!-- PESAN ERROR -->
             <?php if ($error != ''): ?>
                 <div class="alert alert-danger alert-dismissible fade show"
                      role="alert">
@@ -87,7 +83,6 @@ unset($_SESSION['error']);
 
             <form action="proses_login.php" method="POST">
 
-                <!-- EMAIL -->
                 <div class="mb-3">
 
                     <label for="email" class="form-label fw-semibold">
@@ -105,7 +100,6 @@ unset($_SESSION['error']);
 
                 </div>
 
-                <!-- PASSWORD -->
                 <div class="mb-4">
 
                     <label for="password" class="form-label fw-semibold">
@@ -123,7 +117,6 @@ unset($_SESSION['error']);
 
                 </div>
 
-                <!-- TOMBOL LOGIN -->
                 <button type="submit"
                         name="login"
                         class="btn btn-primary btn-lg w-100 rounded-3 fw-semibold shadow-sm">
@@ -136,7 +129,6 @@ unset($_SESSION['error']);
 
         </div>
 
-        <!-- FOOTER -->
         <div class="card-footer bg-light text-center border-0 py-3">
 
             <small class="text-secondary d-block">
@@ -153,7 +145,6 @@ unset($_SESSION['error']);
 
 </div>
 
-<!-- Bootstrap JavaScript -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>

@@ -1,18 +1,16 @@
-
+```php
 <?php
 include "auth.php";
 
-$role = strtolower($_SESSION['role'] ?? '');
+$role = strtolower(trim($_SESSION['role'] ?? ''));
 $nama = "Agnia Rosya Noerillah";
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>About Me</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
@@ -24,7 +22,7 @@ $nama = "Agnia Rosya Noerillah";
 <div class="container-fluid">
     <div class="row">
 
-        <!-- SIDEBAR TETAP -->
+        <!-- SIDEBAR -->
         <aside class="col-md-3 col-lg-2 bg-dark vh-100 p-3 position-fixed top-0 start-0 overflow-auto">
 
             <h5 class="text-white mb-4">
@@ -42,82 +40,76 @@ $nama = "Agnia Rosya Noerillah";
                 <?php if ($role == 'admin'): ?>
 
                     <li class="nav-item">
-                        <a href="siswa.php" class="nav-link text-white">
-                            Kelola Siswa
-                        </a>
+                        <a href="siswa.php" class="nav-link text-white">Kelola Siswa</a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="guru.php" class="nav-link text-white">
-                            Kelola Guru
-                        </a>
+                        <a href="guru.php" class="nav-link text-white">Kelola Guru</a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="kelas.php" class="nav-link text-white">
-                            Kelola Kelas
-                        </a>
+                        <a href="kelas.php" class="nav-link text-white">Kelola Kelas</a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="tahun_ajaran.php" class="nav-link text-white">
-                            Tahun Ajaran
-                        </a>
+                        <a href="tahun_ajaran.php" class="nav-link text-white">Tahun Ajaran</a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="penempatan_siswa.php" class="nav-link text-white">
-                            Penempatan Siswa
-                        </a>
+                        <a href="penempatan_siswa.php" class="nav-link text-white">Penempatan Siswa</a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="wali_kelas.php" class="nav-link text-white">
-                            Wali Kelas
-                        </a>
+                        <a href="wali_kelas.php" class="nav-link text-white">Wali Kelas</a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="kategori_pelanggaran.php" class="nav-link text-white">
-                            Kategori Pelanggaran
-                        </a>
+                        <a href="kategori_pelanggaran.php" class="nav-link text-white">Kategori Pelanggaran</a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="jenis_pelanggaran.php" class="nav-link text-white">
-                            Jenis Pelanggaran
-                        </a>
+                        <a href="jenis_pelanggaran.php" class="nav-link text-white">Jenis Pelanggaran</a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="laporan.php" class="nav-link text-white">
-                            Laporan
-                        </a>
+                        <a href="laporan.php" class="nav-link text-white">Laporan</a>
                     </li>
 
                 <?php elseif ($role == 'guru'): ?>
 
                     <li class="nav-item">
-                        <a href="catat_pelanggaran.php" class="nav-link text-white">
-                            Catat Pelanggaran
+                        <a href="catat_pelanggaran.php" class="nav-link text-white">Catat Pelanggaran</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="tindakan.php" class="nav-link text-white">Tindakan</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="riwayat.php" class="nav-link text-white">Riwayat</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="rekap_poin.php" class="nav-link text-white">Rekap Poin</a>
+                    </li>
+
+                <?php elseif ($role == 'wali_kelas'): ?>
+
+                    <li class="nav-item">
+                        <a href="walikelas/data_siswa.php" class="nav-link text-white">
+                            Data Siswa
                         </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="tindakan.php" class="nav-link text-white">
-                            Tindakan
+                        <a href="walikelas/rekap_pelanggaran.php" class="nav-link text-white">
+                            Rekap Pelanggaran
                         </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="riwayat.php" class="nav-link text-white">
-                            Riwayat
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a href="rekap_poin.php" class="nav-link text-white">
-                            Rekap Poin
+                        <a href="walikelas/cetak_rekap.php" class="nav-link text-white">
+                            Cetak Rekap
                         </a>
                     </li>
 
@@ -140,45 +132,35 @@ $nama = "Agnia Rosya Noerillah";
                 </li>
 
             </ul>
-
         </aside>
 
         <!-- KONTEN ABOUT ME -->
         <main class="col-md-9 col-lg-10 offset-md-3 offset-lg-2 p-4 p-lg-5">
 
-            <!-- HEADER -->
             <div class="mb-5">
-
                 <p class="text-primary fw-semibold mb-1">
                     PROFIL PENGEMBANG
                 </p>
 
-                <h2 class="fw-bold text-dark">
-                    About Me
-                </h2>
+                <h2 class="fw-bold text-dark">About Me</h2>
 
                 <p class="text-secondary">
                     Sedikit cerita tentang saya dan proyek yang saya buat.
                 </p>
-
             </div>
 
             <!-- PROFIL -->
             <div class="row align-items-center g-4 mb-5">
 
                 <div class="col-12 col-lg-4 text-center">
-
                     <div class="d-inline-block p-2 rounded-circle bg-white shadow">
-
                         <img src="foto_profil.jpeg"
                              alt="Foto profil"
                              class="rounded-circle"
                              width="220"
                              height="220"
                              style="object-fit: cover;">
-
                     </div>
-
                 </div>
 
                 <div class="col-12 col-lg-8">
@@ -208,46 +190,35 @@ $nama = "Agnia Rosya Noerillah";
                     </a>
 
                 </div>
-
             </div>
 
             <hr class="text-secondary mb-5">
 
             <!-- INFORMASI DIRI -->
-            <h4 class="fw-bold mb-4">
-                Informasi Saya
-            </h4>
+            <h4 class="fw-bold mb-4">Informasi Saya</h4>
 
             <div class="row g-3 mb-5">
 
                 <div class="col-12 col-md-6">
-
                     <div class="card border-0 shadow-sm h-100">
-
                         <div class="card-body p-4">
 
                             <p class="text-primary fw-semibold mb-2">
                                 PENDIDIKAN
                             </p>
 
-                            <h6 class="fw-bold">
-                                XII RPL 2
-                            </h6>
+                            <h6 class="fw-bold">XII RPL 2</h6>
 
                             <p class="text-secondary mb-0">
                                 SMK Muhammadiyah Tasikmalaya
                             </p>
 
                         </div>
-
                     </div>
-
                 </div>
 
                 <div class="col-12 col-md-6">
-
                     <div class="card border-0 shadow-sm h-100">
-
                         <div class="card-body p-4">
 
                             <p class="text-primary fw-semibold mb-2">
@@ -263,9 +234,7 @@ $nama = "Agnia Rosya Noerillah";
                             </p>
 
                         </div>
-
                     </div>
-
                 </div>
 
             </div>
@@ -291,43 +260,21 @@ $nama = "Agnia Rosya Noerillah";
 
                     <div class="d-flex flex-wrap gap-2">
 
-                        <span class="badge bg-light text-primary px-3 py-2">
-                            PHP Native
-                        </span>
-
-                        <span class="badge bg-light text-primary px-3 py-2">
-                            MySQL
-                        </span>
-
-                        <span class="badge bg-light text-primary px-3 py-2">
-                            HTML
-                        </span>
-
-                        <span class="badge bg-light text-primary px-3 py-2">
-                            CSS
-                        </span>
-
-                        <span class="badge bg-light text-primary px-3 py-2">
-                            JavaScript
-                        </span>
+                        <span class="badge bg-light text-primary px-3 py-2">PHP Native</span>
+                        <span class="badge bg-light text-primary px-3 py-2">MySQL</span>
+                        <span class="badge bg-light text-primary px-3 py-2">HTML</span>
+                        <span class="badge bg-light text-primary px-3 py-2">CSS</span>
+                        <span class="badge bg-light text-primary px-3 py-2">JavaScript</span>
 
                     </div>
-
                 </div>
-
             </div>
 
-            <!-- FOOTER -->
             <div class="text-center text-secondary mt-5">
-
-                <small>
-                    Sistem Informasi Pelanggaran Siswa
-                </small>
-
+                <small>Sistem Informasi Pelanggaran Siswa</small>
             </div>
 
         </main>
-
     </div>
 </div>
 
@@ -335,3 +282,4 @@ $nama = "Agnia Rosya Noerillah";
 
 </body>
 </html>
+```
