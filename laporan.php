@@ -2,54 +2,326 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['login'])) {
-    header("Location: login.php");
+if (!isset($_SESSION['login']) || $_SESSION['login'] !== true) {
+    header("Location: ../login.php");
     exit;
 }
 
-if (strtolower($_SESSION['role'] ?? '') != 'admin') {
-    echo "Anda tidak memiliki akses";
-    exit;
+include "../config/koneksi.php";
+
+// ==========================================
+// CEK ROLE
+// HALAMAN KHUSUS WALI KELAS
+// ==========================================
+$role = strtolower(trim($_SESSION['role'] ?? ''));
+
+if ($role !== 'wali_kelas') {
+    exit("Anda tidak memiliki akses ke halaman ini.");
 }
 
-include "config/koneksi.php";
+// ==========================================
+// USER LOGIN
+// ==========================================
+$user_id = (int) (
+    $_SESSION['user_id']
+    ?? $_SESSION['id_user']
+    ?? 0
+);
 
-$query = "SELECT
-            ps.*,
-            s.nama AS nama_siswa_asli,
-            g.nama AS nama_guru_asli
-          FROM t_pelanggaran_siswa ps
-          LEFT JOIN t_siswa s
-            ON ps.siswa_id = s.id
-          LEFT JOIN t_guru g
-            ON ps.guru_id = g.id
-          ORDER BY ps.tanggal DESC";
-
-$result = mysqli_query($koneksi, $query);
-
-if (!$result) {
-    die("Gagal mengambil data laporan: " . mysqli_error($koneksi));
+if ($user_id <= 0) {
+    exit("ID user tidak ditemukan. Silakan login kembali.");
 }
 
+// ==========================================
+// AMBIL NAMA WALI KELAS
+// ==========================================
+$nama_wali = $_SESSION['nama'] ?? 'Wali Kelas';
+
+$stmtNama = mysqli_prepare($koneksi, "
+    SELECT nama
+    FROM t_guru
+    WHERE user_id = ?
+    LIMIT 1
+");
+
+if ($stmtNama) {
+    mysqli_stmt_bind_param($stmtNama, "i", $user_id);
+    mysqli_stmt_execute($stmtNama);
+
+    $hasilNama = mysqli_stmt_get_result($stmtNama);
+
+    if ($dataNama = mysqli_fetch_assoc($hasilNama)) {
+        $nama_wali = $dataNama['nama'];
+    }
+
+    mysqli_stmt_close($stmtNama);
+}
+
+// ==========================================
+// AMBIL KELAS TANGGUNG JAWAB WALI KELAS
+// ==========================================
+$queryKelas = "
+    SELECT DISTINCT
+        k.id,
+        k.nama
+
+    FROM t_wali_kelas wk
+
+    INNER JOIN t_guru g
+        ON g.id = wk.guru_id
+
+    INNER JOIN t_kelas k
+        ON k.id = wk.kelas_id
+
+    WHERE g.user_id = ?
+      AND wk.status_aktif = 1
+
+    ORDER BY k.nama ASC
+";
+
+$stmtKelas = mysqli_prepare($koneksi, $queryKelas);
+
+if (!$stmtKelas) {
+    die("Gagal mengambil kelas: " . mysqli_error($koneksi));
+}
+
+mysqli_stmt_bind_param($stmtKelas, "i", $user_id);
+mysqli_stmt_execute($stmtKelas);
+
+$resultKelas = mysqli_stmt_get_result($stmtKelas);
+
+$daftar_kelas = [];
+
+while ($kelas = mysqli_fetch_assoc($resultKelas)) {
+    $daftar_kelas[] = $kelas;
+}
+
+mysqli_stmt_close($stmtKelas);
+
+// ==========================================
+// FILTER LAPORAN
+// ==========================================
+$filter_kelas = isset($_GET['kelas'])
+    ? (int) $_GET['kelas']
+    : 0;
+
+$filter_status = trim($_GET['status'] ?? '');
+
+$tanggal_awal = trim($_GET['tanggal_awal'] ?? '');
+$tanggal_akhir = trim($_GET['tanggal_akhir'] ?? '');
+
+// ==========================================
+// VALIDASI KELAS YANG DIPILIH
+// ==========================================
+$id_kelas_valid = array_column($daftar_kelas, 'id');
+
+if ($filter_kelas > 0 && !in_array($filter_kelas, $id_kelas_valid)) {
+    $filter_kelas = 0;
+}
+
+// ==========================================
+// VALIDASI STATUS
+// ==========================================
+if (!in_array($filter_status, ['', 'Diproses', 'Selesai'], true)) {
+    $filter_status = '';
+}
+
+// ==========================================
+// VALIDASI TANGGAL
+// ==========================================
+if (
+    $tanggal_awal !== '' &&
+    !preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal_awal)
+) {
+    $tanggal_awal = '';
+}
+
+if (
+    $tanggal_akhir !== '' &&
+    !preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal_akhir)
+) {
+    $tanggal_akhir = '';
+}
+
+if (
+    $tanggal_awal !== '' &&
+    $tanggal_akhir !== '' &&
+    $tanggal_awal > $tanggal_akhir
+) {
+    $tanggal_akhir = '';
+}
+
+// ==========================================
+// QUERY LAPORAN WALI KELAS
+// HANYA KELAS TANGGUNG JAWAB
+// ==========================================
+$query = "
+    SELECT
+        ps.id,
+
+        COALESCE(
+            NULLIF(TRIM(s.nis), ''),
+            '-'
+        ) AS nis,
+
+        COALESCE(
+            NULLIF(NULLIF(TRIM(ps.nama_siswa), ''), '0'),
+            NULLIF(TRIM(s.nama), ''),
+            '-'
+        ) AS nama_siswa,
+
+        COALESCE(
+            NULLIF(NULLIF(TRIM(ps.nama_kelas), ''), '0'),
+            NULLIF(TRIM(k.nama), ''),
+            '-'
+        ) AS nama_kelas,
+
+        COALESCE(
+            NULLIF(NULLIF(TRIM(p.nama), ''), '0'),
+            NULLIF(NULLIF(TRIM(ps.nama_pelanggaran), ''), '0'),
+            '-'
+        ) AS nama_pelanggaran,
+
+        ps.tanggal,
+        ps.poin,
+        ps.keterangan,
+        ps.tindakan,
+        ps.status
+
+    FROM t_pelanggaran_siswa ps
+
+    LEFT JOIN t_siswa s
+        ON s.id = ps.siswa_id
+
+    LEFT JOIN t_kelas k
+        ON k.id = ps.kelas_id
+
+    LEFT JOIN t_pelanggaran p
+        ON p.id = ps.pelanggaran_id
+
+    WHERE EXISTS (
+        SELECT 1
+        FROM t_wali_kelas wk
+
+        INNER JOIN t_guru g
+            ON g.id = wk.guru_id
+
+        WHERE g.user_id = ?
+          AND wk.kelas_id = ps.kelas_id
+          AND wk.tahun_ajaran_id = ps.tahun_ajaran_id
+          AND wk.status_aktif = 1
+    )
+";
+
+$types = "i";
+$params = [$user_id];
+
+// ==========================================
+// FILTER KELAS
+// ==========================================
+if ($filter_kelas > 0) {
+    $query .= " AND ps.kelas_id = ? ";
+    $types .= "i";
+    $params[] = $filter_kelas;
+}
+
+// ==========================================
+// FILTER STATUS
+// ==========================================
+if ($filter_status !== '') {
+    $query .= " AND LOWER(TRIM(ps.status)) = LOWER(?) ";
+    $types .= "s";
+    $params[] = $filter_status;
+}
+
+// ==========================================
+// FILTER TANGGAL AWAL
+// ==========================================
+if ($tanggal_awal !== '') {
+    $query .= " AND ps.tanggal >= ? ";
+    $types .= "s";
+    $params[] = $tanggal_awal;
+}
+
+// ==========================================
+// FILTER TANGGAL AKHIR
+// ==========================================
+if ($tanggal_akhir !== '') {
+    $query .= " AND ps.tanggal <= ? ";
+    $types .= "s";
+    $params[] = $tanggal_akhir;
+}
+
+$query .= "
+    ORDER BY ps.tanggal DESC, ps.id DESC
+";
+
+// ==========================================
+// EKSEKUSI QUERY
+// ==========================================
+$stmt = mysqli_prepare($koneksi, $query);
+
+if (!$stmt) {
+    die("Gagal menyiapkan laporan: " . mysqli_error($koneksi));
+}
+
+mysqli_stmt_bind_param($stmt, $types, ...$params);
+mysqli_stmt_execute($stmt);
+
+$result = mysqli_stmt_get_result($stmt);
+
+// ==========================================
+// HITUNG TOTAL LAPORAN
+// ==========================================
 $rows = [];
+
 $total_data = 0;
+$total_poin = 0;
 $total_selesai = 0;
 $total_diproses = 0;
-$total_poin = 0;
 
 while ($row = mysqli_fetch_assoc($result)) {
+
     $rows[] = $row;
+
     $total_data++;
+
+    $total_poin += (int) ($row['poin'] ?? 0);
 
     $status = strtolower(trim($row['status'] ?? ''));
 
-    if ($status == 'selesai') {
+    if ($status === 'selesai') {
         $total_selesai++;
-    } elseif ($status == 'diproses') {
+    } elseif ($status === 'diproses') {
         $total_diproses++;
     }
+}
 
-    $total_poin += (int)($row['poin'] ?? 0);
+// ==========================================
+// NAMA KELAS TERPILIH
+// ==========================================
+$nama_kelas_terpilih = "Semua Kelas Tanggung Jawab";
+
+foreach ($daftar_kelas as $kelas) {
+    if ((int)$kelas['id'] === $filter_kelas) {
+        $nama_kelas_terpilih = $kelas['nama'];
+        break;
+    }
+}
+
+// ==========================================
+// PERIODE LAPORAN
+// ==========================================
+if ($tanggal_awal !== '' && $tanggal_akhir !== '') {
+    $periode = date('d-m-Y', strtotime($tanggal_awal))
+        . " sampai "
+        . date('d-m-Y', strtotime($tanggal_akhir));
+} elseif ($tanggal_awal !== '') {
+    $periode = "Mulai " . date('d-m-Y', strtotime($tanggal_awal));
+} elseif ($tanggal_akhir !== '') {
+    $periode = "Sampai " . date('d-m-Y', strtotime($tanggal_akhir));
+} else {
+    $periode = "Semua tanggal";
 }
 ?>
 
@@ -62,81 +334,107 @@ while ($row = mysqli_fetch_assoc($result)) {
 
     <title>Laporan Pelanggaran Siswa</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+          rel="stylesheet">
 
-    <link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css"
+          rel="stylesheet">
+
+    <style>
+        body {
+            background: #f8f9fa;
+        }
+
+        .sidebar {
+            width: 250px;
+            z-index: 1000;
+        }
+
+        .main-content {
+            margin-left: 250px;
+        }
+
+        @media (max-width: 767.98px) {
+            .sidebar {
+                width: 100%;
+                position: relative !important;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        @media print {
+            .sidebar,
+            .no-print,
+            .dataTables_length,
+            .dataTables_filter,
+            .dataTables_paginate,
+            .dataTables_info {
+                display: none !important;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+                width: 100% !important;
+            }
+
+            body {
+                background: white !important;
+            }
+        }
+    </style>
 </head>
 
-<body class="bg-light">
+<body>
 
 <div class="container-fluid">
     <div class="row">
 
-        <!-- SIDEBAR SAMA DENGAN JENIS PELANGGARAN -->
-        <aside class="col-md-3 col-lg-2 bg-dark text-white p-3 position-fixed top-0 bottom-0 start-0 overflow-auto">
+        <!-- SIDEBAR -->
+        <aside class="sidebar bg-dark text-white p-3 position-fixed top-0 bottom-0 start-0 overflow-auto">
 
-            <h5 class="text-white mb-4">Sistem Pelanggaran</h5>
+            <h5 class="text-white mb-4">
+                Sistem Pelanggaran
+            </h5>
 
-            <ul class="nav nav-pills flex-column gap-2">
+            <nav class="nav nav-pills flex-column gap-2">
 
-                <li class="nav-item">
-                    <a href="dashboard.php" class="nav-link text-white">Dashboard</a>
-                </li>
+                <a href="../dashboard.php" class="nav-link text-white">
+                    Dashboard
+                </a>
 
-                <li class="nav-item">
-                    <a href="siswa.php" class="nav-link text-white">Kelola Siswa</a>
-                </li>
+                <a href="data_siswa.php" class="nav-link text-white">
+                    Data Siswa
+                </a>
 
-                <li class="nav-item">
-                    <a href="guru.php" class="nav-link text-white">Kelola Guru</a>
-                </li>
+                <a href="rekap_pelanggaran.php" class="nav-link text-white">
+                    Rekap Pelanggaran
+                </a>
 
-                <li class="nav-item">
-                    <a href="kelas.php" class="nav-link text-white">Kelola Kelas</a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="tahun_ajaran.php" class="nav-link text-white">Tahun Ajaran</a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="penempatan_siswa.php" class="nav-link text-white">Penempatan Siswa</a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="wali_kelas.php" class="nav-link text-white">Wali Kelas</a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="kategori_pelanggaran.php" class="nav-link text-white">Kategori Pelanggaran</a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="jenis_pelanggaran.php" class="nav-link text-white">Jenis Pelanggaran</a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="laporan.php" class="nav-link active">Laporan</a>
-                </li>
+                <a href="laporan.php" class="nav-link active">
+                    Laporan
+                </a>
 
                 <hr class="text-secondary">
 
-                <li class="nav-item">
-                    <a href="about_me.php" class="nav-link text-white">About Me</a>
-                </li>
+                <a href="../about_me.php" class="nav-link text-white">
+                    About Me
+                </a>
 
-                <li class="nav-item">
-                    <a href="logout.php" class="nav-link text-danger"
-                       onclick="return confirm('Yakin ingin logout?')">
-                        Logout
-                    </a>
-                </li>
+                <a href="../logout.php"
+                   class="nav-link text-danger"
+                   onclick="return confirm('Yakin ingin logout?')">
+                    Logout
+                </a>
 
-            </ul>
+            </nav>
+
         </aside>
 
-        <!-- KONTEN UTAMA SAMA DENGAN JENIS PELANGGARAN -->
-        <main class="col-md-9 col-lg-10 p-4 offset-md-3 offset-lg-2">
+        <!-- KONTEN UTAMA -->
+        <main class="main-content col-12 p-4">
 
             <!-- HEADER -->
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
@@ -147,17 +445,16 @@ while ($row = mysqli_fetch_assoc($result)) {
                     </h3>
 
                     <p class="text-muted mb-0">
-                        Rekap dan pemantauan data pelanggaran siswa
+                        Selamat datang,
+                        <strong><?= htmlspecialchars($nama_wali); ?></strong>
                     </p>
                 </div>
 
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 no-print">
 
-                    <button type="button"
-                            class="btn btn-outline-secondary"
-                            onclick="resetFilter()">
+                    <a href="laporan.php" class="btn btn-outline-secondary">
                         Reset Filter
-                    </button>
+                    </a>
 
                     <button type="button"
                             class="btn btn-primary"
@@ -169,13 +466,42 @@ while ($row = mysqli_fetch_assoc($result)) {
 
             </div>
 
+            <!-- KELAS TANGGUNG JAWAB -->
+            <div class="card border-0 shadow-sm mb-4">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        Kelas Tanggung Jawab
+                    </small>
+
+                    <h5 class="fw-bold mb-0">
+                        <?php
+                        if (count($daftar_kelas) > 0) {
+                            echo htmlspecialchars(
+                                $filter_kelas > 0
+                                    ? $nama_kelas_terpilih
+                                    : implode(', ', array_column($daftar_kelas, 'nama'))
+                            );
+                        } else {
+                            echo "Belum ada kelas yang ditugaskan";
+                        }
+                        ?>
+                    </h5>
+
+                </div>
+
+            </div>
+
             <!-- RINGKASAN -->
             <div class="row g-3 mb-4">
 
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body">
-                            <p class="text-muted mb-2">Total Pelanggaran</p>
+                            <p class="text-muted mb-2">
+                                Total Pelanggaran
+                            </p>
 
                             <h3 class="fw-bold text-primary">
                                 <?= number_format($total_data, 0, ',', '.'); ?>
@@ -187,7 +513,23 @@ while ($row = mysqli_fetch_assoc($result)) {
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body">
-                            <p class="text-muted mb-2">Pelanggaran Selesai</p>
+                            <p class="text-muted mb-2">
+                                Total Poin
+                            </p>
+
+                            <h3 class="fw-bold text-info">
+                                <?= number_format($total_poin, 0, ',', '.'); ?>
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <p class="text-muted mb-2">
+                                Selesai
+                            </p>
 
                             <h3 class="fw-bold text-success">
                                 <?= number_format($total_selesai, 0, ',', '.'); ?>
@@ -199,7 +541,9 @@ while ($row = mysqli_fetch_assoc($result)) {
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body">
-                            <p class="text-muted mb-2">Sedang Diproses</p>
+                            <p class="text-muted mb-2">
+                                Diproses
+                            </p>
 
                             <h3 class="fw-bold text-warning">
                                 <?= number_format($total_diproses, 0, ',', '.'); ?>
@@ -208,163 +552,253 @@ while ($row = mysqli_fetch_assoc($result)) {
                     </div>
                 </div>
 
-                <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-body">
-                            <p class="text-muted mb-2">Total Poin</p>
+            </div>
 
-                            <h3 class="fw-bold text-info">
-                                <?= number_format($total_poin, 0, ',', '.'); ?>
-                            </h3>
+            <!-- FILTER LAPORAN -->
+            <div class="card border-0 shadow-sm mb-4 no-print">
+
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0">
+                        Filter Laporan
+                    </h5>
+                </div>
+
+                <div class="card-body">
+
+                    <form method="GET" action="laporan.php">
+
+                        <div class="row g-3">
+
+                            <!-- FILTER KELAS -->
+                            <div class="col-12 col-md-3">
+
+                                <label for="kelas" class="form-label">
+                                    Pilih Kelas
+                                </label>
+
+                                <select name="kelas"
+                                        id="kelas"
+                                        class="form-select">
+
+                                    <option value="0">
+                                        Semua Kelas Tanggung Jawab
+                                    </option>
+
+                                    <?php foreach ($daftar_kelas as $kelas): ?>
+
+                                        <option value="<?= (int)$kelas['id']; ?>"
+                                            <?= $filter_kelas == $kelas['id'] ? 'selected' : ''; ?>>
+
+                                            <?= htmlspecialchars($kelas['nama']); ?>
+
+                                        </option>
+
+                                    <?php endforeach; ?>
+
+                                </select>
+
+                            </div>
+
+                            <!-- FILTER STATUS -->
+                            <div class="col-12 col-md-3">
+
+                                <label for="status" class="form-label">
+                                    Status Pelanggaran
+                                </label>
+
+                                <select name="status"
+                                        id="status"
+                                        class="form-select">
+
+                                    <option value="">
+                                        Semua Status
+                                    </option>
+
+                                    <option value="Diproses"
+                                        <?= $filter_status === 'Diproses' ? 'selected' : ''; ?>>
+                                        Diproses
+                                    </option>
+
+                                    <option value="Selesai"
+                                        <?= $filter_status === 'Selesai' ? 'selected' : ''; ?>>
+                                        Selesai
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                            <!-- TANGGAL AWAL -->
+                            <div class="col-12 col-md-3">
+
+                                <label for="tanggal_awal" class="form-label">
+                                    Tanggal Awal
+                                </label>
+
+                                <input type="date"
+                                       name="tanggal_awal"
+                                       id="tanggal_awal"
+                                       class="form-control"
+                                       value="<?= htmlspecialchars($tanggal_awal); ?>">
+
+                            </div>
+
+                            <!-- TANGGAL AKHIR -->
+                            <div class="col-12 col-md-3">
+
+                                <label for="tanggal_akhir" class="form-label">
+                                    Tanggal Akhir
+                                </label>
+
+                                <input type="date"
+                                       name="tanggal_akhir"
+                                       id="tanggal_akhir"
+                                       class="form-control"
+                                       value="<?= htmlspecialchars($tanggal_akhir); ?>">
+
+                            </div>
+
+                            <div class="col-12">
+
+                                <button type="submit" class="btn btn-primary">
+                                    Terapkan Filter
+                                </button>
+
+                                <a href="laporan.php"
+                                   class="btn btn-outline-secondary">
+                                    Reset
+                                </a>
+
+                            </div>
+
                         </div>
-                    </div>
+
+                    </form>
+
                 </div>
 
             </div>
 
-            <!-- TABEL LAPORAN -->
+            <!-- DATA LAPORAN -->
             <div class="card border-0 shadow-sm">
-                <div class="card-body p-3 p-md-4">
 
-                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div class="card-header bg-primary text-white py-3">
+                    Data Laporan Pelanggaran
+                </div>
 
-                        <div>
-                            <h5 class="fw-bold mb-1">Data Laporan</h5>
+                <div class="card-body">
 
-                            <p class="text-muted small mb-0">
-                                Cari dan filter data pelanggaran siswa.
-                            </p>
-                        </div>
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            Kelas:
+                            <strong><?= htmlspecialchars($nama_kelas_terpilih); ?></strong>
+                            <br>
 
-                        <span class="badge bg-primary">
-                            <?= number_format($total_data, 0, ',', '.'); ?> data
-                        </span>
-
+                            Periode:
+                            <strong><?= htmlspecialchars($periode); ?></strong>
+                        </small>
                     </div>
 
-                    <!-- FILTER -->
-                    <div class="row g-3 mb-4">
-
-                        <div class="col-12 col-md-4">
-                            <label for="filterStatus" class="form-label">
-                                Status Pelanggaran
-                            </label>
-
-                            <select id="filterStatus" class="form-select">
-                                <option value="">Semua Status</option>
-                                <option value="Selesai">Selesai</option>
-                                <option value="Diproses">Diproses</option>
-                            </select>
-                        </div>
-
-                        <div class="col-12 col-md-4">
-                            <label for="tanggalMulai" class="form-label">
-                                Dari Tanggal
-                            </label>
-
-                            <input type="date" id="tanggalMulai" class="form-control">
-                        </div>
-
-                        <div class="col-12 col-md-4">
-                            <label for="tanggalAkhir" class="form-label">
-                                Sampai Tanggal
-                            </label>
-
-                            <input type="date" id="tanggalAkhir" class="form-control">
-                        </div>
-
-                    </div>
-
-                    <!-- TABEL -->
                     <div class="table-responsive">
 
                         <table id="tabelLaporan"
                                class="table table-bordered table-hover align-middle">
 
                             <thead class="table-dark">
+
                                 <tr>
                                     <th>No</th>
+                                    <th>Tanggal</th>
+                                    <th>NIS</th>
                                     <th>Nama Siswa</th>
                                     <th>Kelas</th>
-                                    <th>Nama Guru</th>
                                     <th>Jenis Pelanggaran</th>
-                                    <th>Kategori ID</th>
-                                    <th>Tanggal</th>
-                                    <th>Keterangan</th>
                                     <th>Poin</th>
+                                    <th>Keterangan</th>
                                     <th>Tindakan</th>
                                     <th>Status</th>
                                 </tr>
+
                             </thead>
 
                             <tbody>
 
-                            <?php foreach ($rows as $row): ?>
+                                <?php if ($total_data > 0): ?>
 
-                                <tr>
-                                    <td></td>
+                                    <?php $no = 1; ?>
 
-                                    <td>
-                                        <?= htmlspecialchars($row['nama_siswa_asli'] ?? '-'); ?>
-                                    </td>
+                                    <?php foreach ($rows as $row): ?>
 
-                                    <td>
-                                        <?= htmlspecialchars($row['nama_kelas'] ?? '-'); ?>
-                                    </td>
+                                        <tr>
 
-                                    <td>
-                                        <?= htmlspecialchars($row['nama_guru_asli'] ?? '-'); ?>
-                                    </td>
+                                            <td><?= $no++; ?></td>
 
-                                    <td>
-                                        <?= htmlspecialchars($row['nama_pelanggaran'] ?? '-'); ?>
-                                    </td>
+                                            <td>
+                                                <?= !empty($row['tanggal'])
+                                                    ? date('d-m-Y', strtotime($row['tanggal']))
+                                                    : '-'; ?>
+                                            </td>
 
-                                    <td>
-                                        <?= htmlspecialchars($row['pelanggaran_kategori_id'] ?? '-'); ?>
-                                    </td>
+                                            <td>
+                                                <?= htmlspecialchars($row['nis']); ?>
+                                            </td>
 
-                                    <td>
-                                        <?php
-                                        if (!empty($row['tanggal'])) {
-                                            echo date('d-m-Y', strtotime($row['tanggal']));
-                                        } else {
-                                            echo '-';
-                                        }
-                                        ?>
-                                    </td>
+                                            <td>
+                                                <?= htmlspecialchars($row['nama_siswa']); ?>
+                                            </td>
 
-                                    <td>
-                                        <?= htmlspecialchars($row['keterangan'] ?? '-'); ?>
-                                    </td>
+                                            <td>
+                                                <?= htmlspecialchars($row['nama_kelas']); ?>
+                                            </td>
 
-                                    <td>
-                                        <?= (int)($row['poin'] ?? 0); ?>
-                                    </td>
+                                            <td>
+                                                <?= htmlspecialchars($row['nama_pelanggaran']); ?>
+                                            </td>
 
-                                    <td>
-                                        <?= htmlspecialchars($row['tindakan'] ?? '-'); ?>
-                                    </td>
+                                            <td>
+                                                <?= (int)($row['poin'] ?? 0); ?>
+                                            </td>
 
-                                    <td>
-                                        <?php
-                                        $status = trim($row['status'] ?? '');
+                                            <td>
+                                                <?= htmlspecialchars($row['keterangan'] ?? '-'); ?>
+                                            </td>
 
-                                        if (strtolower($status) == 'selesai') {
-                                            echo '<span class="badge bg-success">Selesai</span>';
-                                        } elseif (strtolower($status) == 'diproses') {
-                                            echo '<span class="badge bg-warning text-dark">Diproses</span>';
-                                        } else {
-                                            echo '<span class="badge bg-secondary">'
-                                                . htmlspecialchars($status ?: '-')
-                                                . '</span>';
-                                        }
-                                        ?>
-                                    </td>
+                                            <td>
+                                                <?= htmlspecialchars($row['tindakan'] ?? '-') ?: '-'; ?>
+                                            </td>
 
-                                </tr>
+                                            <td>
 
-                            <?php endforeach; ?>
+                                                <?php
+                                                $status = strtolower(trim($row['status'] ?? ''));
+
+                                                if ($status === 'selesai') {
+                                                    echo '<span class="badge bg-success">Selesai</span>';
+                                                } elseif ($status === 'diproses') {
+                                                    echo '<span class="badge bg-warning text-dark">Diproses</span>';
+                                                } else {
+                                                    echo '<span class="badge bg-secondary">'
+                                                        . htmlspecialchars($row['status'] ?? '-')
+                                                        . '</span>';
+                                                }
+                                                ?>
+
+                                            </td>
+
+                                        </tr>
+
+                                    <?php endforeach; ?>
+
+                                <?php else: ?>
+
+                                    <tr>
+                                        <td colspan="10"
+                                            class="text-center text-muted py-4">
+                                            Tidak ada data pelanggaran untuk filter yang dipilih.
+                                        </td>
+                                    </tr>
+
+                                <?php endif; ?>
 
                             </tbody>
 
@@ -372,29 +806,24 @@ while ($row = mysqli_fetch_assoc($result)) {
 
                     </div>
 
-                    <!-- TOTAL DATA DAN POIN -->
                     <div class="d-flex flex-wrap justify-content-between gap-2 mt-3">
 
                         <small class="text-muted">
                             Total data:
-                            <strong>
-                                <?= number_format($total_data, 0, ',', '.'); ?>
-                            </strong>
+                            <strong><?= number_format($total_data, 0, ',', '.'); ?></strong>
                         </small>
 
                         <small class="text-muted">
                             Total poin:
-                            <strong>
-                                <?= number_format($total_poin, 0, ',', '.'); ?>
-                            </strong>
+                            <strong><?= number_format($total_poin, 0, ',', '.'); ?></strong>
                         </small>
 
                     </div>
 
                 </div>
+
             </div>
 
-            <!-- FOOTER -->
             <div class="text-center text-muted small mt-4">
                 Sistem Informasi Pelanggaran Siswa
             </div>
@@ -416,76 +845,21 @@ while ($row = mysqli_fetch_assoc($result)) {
 <script>
 $(document).ready(function () {
 
-    function ubahTanggal(tanggal) {
-
-        if (!tanggal || tanggal === '-') {
-            return '';
-        }
-
-        const bagian = tanggal.split('-');
-
-        if (bagian.length !== 3) {
-            return '';
-        }
-
-        return bagian[2] + '-' + bagian[1] + '-' + bagian[0];
-    }
-
-    // FILTER STATUS DAN TANGGAL
-    $.fn.dataTable.ext.search.push(function (settings, data) {
-
-        if (settings.nTable.id !== 'tabelLaporan') {
-            return true;
-        }
-
-        const statusDipilih = $('#filterStatus').val();
-        const tanggalMulai = $('#tanggalMulai').val();
-        const tanggalAkhir = $('#tanggalAkhir').val();
-
-        const tanggalBaris = ubahTanggal(data[6]);
-        const statusBaris = $('<div>').html(data[10]).text().trim();
-
-        if (statusDipilih && statusBaris !== statusDipilih) {
-            return false;
-        }
-
-        if (tanggalMulai || tanggalAkhir) {
-
-            if (!tanggalBaris) {
-                return false;
-            }
-
-            if (tanggalMulai && tanggalBaris < tanggalMulai) {
-                return false;
-            }
-
-            if (tanggalAkhir && tanggalBaris > tanggalAkhir) {
-                return false;
-            }
-        }
-
-        return true;
-    });
-
-    // DATATABLES
-    const tabel = $('#tabelLaporan').DataTable({
+    $('#tabelLaporan').DataTable({
 
         pageLength: 10,
 
         lengthMenu: [5, 10, 25, 50],
 
-        order: [[6, 'desc']],
-
-        autoWidth: false,
+        order: [[1, 'desc']],
 
         columnDefs: [
             {
                 targets: 0,
-                orderable: false,
-                searchable: false
+                orderable: false
             },
             {
-                targets: [0, 5, 6, 8, 10],
+                targets: [0, 1, 2, 6, 9],
                 className: 'text-center'
             }
         ],
@@ -514,36 +888,10 @@ $(document).ready(function () {
                 next: "Selanjutnya",
                 previous: "Sebelumnya"
             }
-        },
-
-        // NOMOR URUT OTOMATIS
-        drawCallback: function () {
-
-            const api = this.api();
-            const info = api.page.info();
-
-            api.column(0, { page: 'current' }).nodes().each(function (cell, i) {
-                cell.innerHTML = info.start + i + 1;
-            });
 
         }
 
     });
-
-    // FILTER
-    $('#filterStatus, #tanggalMulai, #tanggalAkhir').on('change', function () {
-        tabel.draw();
-    });
-
-    // RESET FILTER
-    window.resetFilter = function () {
-
-        $('#filterStatus').val('');
-        $('#tanggalMulai').val('');
-        $('#tanggalAkhir').val('');
-
-        tabel.search('').draw();
-    };
 
 });
 </script>

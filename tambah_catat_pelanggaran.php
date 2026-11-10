@@ -2,17 +2,18 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['login'])) {
+if (!isset($_SESSION['login']) || $_SESSION['login'] !== true) {
     header("Location: login.php");
     exit;
 }
 
 include "config/koneksi.php";
 
-$role = strtolower($_SESSION['role'] ?? '');
+$role = strtolower(trim($_SESSION['role'] ?? ''));
+$role = str_replace([' ', '-'], '_', $role);
 
-if (!in_array($role, ['admin', 'guru'])) {
-    exit("Anda tidak memiliki akses");
+if (!in_array($role, ['admin', 'guru', 'wali_kelas'], true)) {
+    exit("Anda tidak memiliki akses.");
 }
 
 $error = '';
@@ -21,80 +22,235 @@ function e($value) {
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 }
 
-/* =====================================
-   AMBIL TAHUN AJARAN AKTIF
-===================================== */
-
-$tahun = mysqli_query(
-    $koneksi,
-    "SELECT id, nama FROM t_tahun_ajaran
-     WHERE status_aktif = 1
-     LIMIT 1"
+$user_id = (int)(
+    $_SESSION['user_id']
+    ?? $_SESSION['id_user']
+    ?? $_SESSION['id']
+    ?? 0
 );
+
+$guru_id = 0;
+
+$daftarKelas = [];
+$daftarSiswa = [];
+
+// =====================================
+// CARI GURU BERDASARKAN USER LOGIN
+// =====================================
+if (in_array($role, ['guru', 'wali_kelas'], true)) {
+
+    if ($user_id > 0) {
+        $stmtGuruLogin = mysqli_prepare($koneksi, "
+            SELECT id
+            FROM t_guru
+            WHERE user_id = ?
+            LIMIT 1
+        ");
+
+        if (!$stmtGuruLogin) {
+            exit("Query guru gagal: " . e(mysqli_error($koneksi)));
+        }
+
+        mysqli_stmt_bind_param($stmtGuruLogin, "i", $user_id);
+        mysqli_stmt_execute($stmtGuruLogin);
+
+        $dataGuruLogin = mysqli_fetch_assoc(
+            mysqli_stmt_get_result($stmtGuruLogin)
+        );
+
+        mysqli_stmt_close($stmtGuruLogin);
+
+        if ($dataGuruLogin) {
+            $guru_id = (int)$dataGuruLogin['id'];
+        }
+    }
+
+    if ($guru_id <= 0 && !empty($_SESSION['guru_id'])) {
+        $guru_id = (int)$_SESSION['guru_id'];
+    }
+}
+
+// =====================================
+// AMBIL TAHUN AJARAN AKTIF
+// =====================================
+$tahun = mysqli_query($koneksi, "
+    SELECT id, nama
+    FROM t_tahun_ajaran
+    WHERE status_aktif = 1
+    LIMIT 1
+");
+
+if (!$tahun) {
+    exit("Gagal mengambil tahun ajaran: " . e(mysqli_error($koneksi)));
+}
 
 $tahunAktif = mysqli_fetch_assoc($tahun);
 $tahun_id = (int)($tahunAktif['id'] ?? 0);
 
+// =====================================
+// AMBIL KELAS
+// ADMIN DAN GURU: SEMUA KELAS AKTIF
+// WALI KELAS: KELAS PENUGASANNYA SAJA
+// =====================================
+if ($tahun_id > 0) {
 
-/* =====================================
-   AMBIL DATA KELAS SESUAI TAHUN AJARAN
-===================================== */
+    if ($role === 'wali_kelas') {
 
-$daftarKelas = [];
+        if ($guru_id <= 0) {
+            $error = "Data guru untuk akun Wali Kelas tidak ditemukan.";
+        } else {
 
-if ($tahun_id) {
+            $queryKelas = mysqli_prepare($koneksi, "
+                SELECT DISTINCT
+                    k.id,
+                    k.nama
+                FROM t_wali_kelas wk
+                INNER JOIN t_kelas k
+                    ON k.id = wk.kelas_id
+                INNER JOIN t_tahun_ajaran ta
+                    ON ta.id = wk.tahun_ajaran_id
+                WHERE wk.guru_id = ?
+                  AND wk.tahun_ajaran_id = ?
+                  AND wk.status_aktif = 1
+                  AND ta.status_aktif = 1
+                  AND k.status_aktif = 1
+                  AND CURDATE() BETWEEN wk.tanggal_mulai
+                                    AND wk.tanggal_selesai
+                ORDER BY k.nama ASC
+            ");
 
-    $queryKelas = mysqli_prepare($koneksi, "
-        SELECT DISTINCT
-            k.id,
-            k.nama
-        FROM t_kelas k
-        INNER JOIN t_kelas_siswa ks
-            ON ks.kelas_id = k.id
-        WHERE ks.tahun_ajaran_id = ?
-          AND ks.status_aktif = 1
-          AND k.status_aktif = 1
-        ORDER BY k.nama ASC
-    ");
+            if (!$queryKelas) {
+                exit("Query kelas gagal: " . e(mysqli_error($koneksi)));
+            }
 
-    mysqli_stmt_bind_param($queryKelas, "i", $tahun_id);
-    mysqli_stmt_execute($queryKelas);
+            mysqli_stmt_bind_param(
+                $queryKelas,
+                "ii",
+                $guru_id,
+                $tahun_id
+            );
 
-    $hasilKelas = mysqli_stmt_get_result($queryKelas);
+            mysqli_stmt_execute($queryKelas);
 
-    while ($row = mysqli_fetch_assoc($hasilKelas)) {
-        $daftarKelas[] = $row;
+            $hasilKelas = mysqli_stmt_get_result($queryKelas);
+
+            while ($row = mysqli_fetch_assoc($hasilKelas)) {
+                $daftarKelas[] = $row;
+            }
+
+            mysqli_stmt_close($queryKelas);
+
+            if (empty($daftarKelas) && $error === '') {
+                $error = "Tidak ada kelas yang menjadi tanggung jawab Anda pada tahun ajaran aktif.";
+            }
+        }
+
+    } else {
+
+        $queryKelas = mysqli_prepare($koneksi, "
+            SELECT DISTINCT
+                k.id,
+                k.nama
+            FROM t_kelas k
+            INNER JOIN t_kelas_siswa ks
+                ON ks.kelas_id = k.id
+            WHERE ks.tahun_ajaran_id = ?
+              AND ks.status_aktif = 1
+              AND k.status_aktif = 1
+            ORDER BY k.nama ASC
+        ");
+
+        if (!$queryKelas) {
+            exit("Query kelas gagal: " . e(mysqli_error($koneksi)));
+        }
+
+        mysqli_stmt_bind_param($queryKelas, "i", $tahun_id);
+        mysqli_stmt_execute($queryKelas);
+
+        $hasilKelas = mysqli_stmt_get_result($queryKelas);
+
+        while ($row = mysqli_fetch_assoc($hasilKelas)) {
+            $daftarKelas[] = $row;
+        }
+
+        mysqli_stmt_close($queryKelas);
     }
 }
 
+// =====================================
+// AMBIL DATA SISWA
+// WALI KELAS HANYA SISWA KELAS TUGASNYA
+// =====================================
+if ($tahun_id > 0) {
 
-/* =====================================
-   AMBIL DATA SISWA BESERTA KELAS
-===================================== */
+    if ($role === 'wali_kelas' && $guru_id > 0) {
 
-$daftarSiswa = [];
+        $querySiswa = mysqli_prepare($koneksi, "
+            SELECT DISTINCT
+                s.id,
+                s.nama,
+                s.nis,
+                ks.kelas_id
+            FROM t_siswa s
+            INNER JOIN t_kelas_siswa ks
+                ON ks.siswa_id = s.id
+            INNER JOIN t_kelas k
+                ON k.id = ks.kelas_id
+            INNER JOIN t_wali_kelas wk
+                ON wk.kelas_id = ks.kelas_id
+               AND wk.tahun_ajaran_id = ks.tahun_ajaran_id
+            INNER JOIN t_tahun_ajaran ta
+                ON ta.id = wk.tahun_ajaran_id
+            WHERE wk.guru_id = ?
+              AND wk.tahun_ajaran_id = ?
+              AND wk.status_aktif = 1
+              AND ta.status_aktif = 1
+              AND CURDATE() BETWEEN wk.tanggal_mulai
+                                AND wk.tanggal_selesai
+              AND ks.status_aktif = 1
+              AND s.status_aktif = 1
+              AND k.status_aktif = 1
+            ORDER BY s.nama ASC
+        ");
 
-if ($tahun_id) {
+        if (!$querySiswa) {
+            exit("Query siswa gagal: " . e(mysqli_error($koneksi)));
+        }
 
-    $querySiswa = mysqli_prepare($koneksi, "
-        SELECT DISTINCT
-            s.id,
-            s.nama,
-            s.nis,
-            ks.kelas_id
-        FROM t_siswa s
-        INNER JOIN t_kelas_siswa ks
-            ON ks.siswa_id = s.id
-        INNER JOIN t_kelas k
-            ON k.id = ks.kelas_id
-        WHERE ks.tahun_ajaran_id = ?
-          AND ks.status_aktif = 1
-          AND s.status_aktif = 1
-          AND k.status_aktif = 1
-        ORDER BY s.nama ASC
-    ");
+        mysqli_stmt_bind_param(
+            $querySiswa,
+            "ii",
+            $guru_id,
+            $tahun_id
+        );
 
-    mysqli_stmt_bind_param($querySiswa, "i", $tahun_id);
+    } else {
+
+        $querySiswa = mysqli_prepare($koneksi, "
+            SELECT DISTINCT
+                s.id,
+                s.nama,
+                s.nis,
+                ks.kelas_id
+            FROM t_siswa s
+            INNER JOIN t_kelas_siswa ks
+                ON ks.siswa_id = s.id
+            INNER JOIN t_kelas k
+                ON k.id = ks.kelas_id
+            WHERE ks.tahun_ajaran_id = ?
+              AND ks.status_aktif = 1
+              AND s.status_aktif = 1
+              AND k.status_aktif = 1
+            ORDER BY s.nama ASC
+        ");
+
+        if (!$querySiswa) {
+            exit("Query siswa gagal: " . e(mysqli_error($koneksi)));
+        }
+
+        mysqli_stmt_bind_param($querySiswa, "i", $tahun_id);
+    }
+
     mysqli_stmt_execute($querySiswa);
 
     $hasilSiswa = mysqli_stmt_get_result($querySiswa);
@@ -102,13 +258,13 @@ if ($tahun_id) {
     while ($row = mysqli_fetch_assoc($hasilSiswa)) {
         $daftarSiswa[] = $row;
     }
+
+    mysqli_stmt_close($querySiswa);
 }
 
-
-/* =====================================
-   AMBIL DATA PELANGGARAN
-===================================== */
-
+// =====================================
+// AMBIL DATA PELANGGARAN
+// =====================================
 $daftarPelanggaran = mysqli_query($koneksi, "
     SELECT id, nama, poin
     FROM t_pelanggaran
@@ -116,11 +272,13 @@ $daftarPelanggaran = mysqli_query($koneksi, "
     ORDER BY nama ASC
 ");
 
+if (!$daftarPelanggaran) {
+    exit("Query pelanggaran gagal: " . e(mysqli_error($koneksi)));
+}
 
-/* =====================================
-   AMBIL DATA GURU
-===================================== */
-
+// =====================================
+// AMBIL DATA GURU
+// =====================================
 $daftarGuru = mysqli_query($koneksi, "
     SELECT id, nama
     FROM t_guru
@@ -128,57 +286,95 @@ $daftarGuru = mysqli_query($koneksi, "
     ORDER BY nama ASC
 ");
 
+if (!$daftarGuru) {
+    exit("Query guru gagal: " . e(mysqli_error($koneksi)));
+}
 
-/* =====================================
-   PROSES SIMPAN
-===================================== */
-
+// =====================================
+// PROSES SIMPAN
+// =====================================
 if (isset($_POST['simpan'])) {
 
-    $tanggal = $_POST['tanggal'] ?? '';
-
+    $tanggal = trim($_POST['tanggal'] ?? '');
     $kelas_id = (int)($_POST['kelas_id'] ?? 0);
-
     $siswa_id = (int)($_POST['siswa_id'] ?? 0);
-
     $nama_pelanggaran = trim($_POST['nama_pelanggaran'] ?? '');
-
     $nama_guru = trim($_POST['nama_guru'] ?? '');
-
     $keterangan = trim($_POST['keterangan'] ?? '');
-
     $poin = (int)($_POST['poin'] ?? 0);
-
     $tindakan = trim($_POST['tindakan'] ?? '');
-
-    $status = $_POST['status'] ?? '';
+    $status = trim($_POST['status'] ?? '');
 
     if (!$tahun_id) {
-
         $error = "Tahun ajaran aktif belum tersedia.";
 
     } elseif (
-        $tanggal == '' ||
+        $tanggal === '' ||
         $kelas_id <= 0 ||
         $siswa_id <= 0 ||
-        $nama_pelanggaran == '' ||
-        $nama_guru == '' ||
-        $keterangan == '' ||
+        $nama_pelanggaran === '' ||
+        $nama_guru === '' ||
+        $keterangan === '' ||
         $poin < 0 ||
-        $tindakan == '' ||
-        $status == ''
+        $tindakan === '' ||
+        !in_array($status, [
+            'Belum Ditindaklanjuti',
+            'Diproses',
+            'Selesai'
+        ], true)
     ) {
-
-        $error = "Semua kolom wajib diisi.";
+        $error = "Semua kolom wajib diisi dengan benar.";
 
     } else {
 
         try {
 
-            /* =====================================
-               CARI SISWA BERDASARKAN KELAS
-            ===================================== */
+            // =====================================
+            // VALIDASI KELAS WALI KELAS
+            // =====================================
+            if ($role === 'wali_kelas') {
 
+                $stmtCekKelas = mysqli_prepare($koneksi, "
+                    SELECT wk.id
+                    FROM t_wali_kelas wk
+                    INNER JOIN t_tahun_ajaran ta
+                        ON ta.id = wk.tahun_ajaran_id
+                    WHERE wk.guru_id = ?
+                      AND wk.kelas_id = ?
+                      AND wk.tahun_ajaran_id = ?
+                      AND wk.status_aktif = 1
+                      AND ta.status_aktif = 1
+                      AND CURDATE() BETWEEN wk.tanggal_mulai
+                                        AND wk.tanggal_selesai
+                    LIMIT 1
+                ");
+
+                mysqli_stmt_bind_param(
+                    $stmtCekKelas,
+                    "iii",
+                    $guru_id,
+                    $kelas_id,
+                    $tahun_id
+                );
+
+                mysqli_stmt_execute($stmtCekKelas);
+
+                $cekKelas = mysqli_fetch_assoc(
+                    mysqli_stmt_get_result($stmtCekKelas)
+                );
+
+                mysqli_stmt_close($stmtCekKelas);
+
+                if (!$cekKelas) {
+                    throw new Exception(
+                        "Anda tidak memiliki hak untuk mencatat pelanggaran pada kelas tersebut."
+                    );
+                }
+            }
+
+            // =====================================
+            // CARI SISWA BERDASARKAN KELAS
+            // =====================================
             $stmtSiswa = mysqli_prepare($koneksi, "
                 SELECT
                     s.id AS siswa_id,
@@ -213,11 +409,11 @@ if (isset($_POST['simpan'])) {
                 mysqli_stmt_get_result($stmtSiswa)
             );
 
+            mysqli_stmt_close($stmtSiswa);
 
-            /* =====================================
-               CARI JENIS PELANGGARAN
-            ===================================== */
-
+            // =====================================
+            // CARI JENIS PELANGGARAN
+            // =====================================
             $stmtPelanggaran = mysqli_prepare($koneksi, "
                 SELECT
                     id,
@@ -242,11 +438,11 @@ if (isset($_POST['simpan'])) {
                 mysqli_stmt_get_result($stmtPelanggaran)
             );
 
+            mysqli_stmt_close($stmtPelanggaran);
 
-            /* =====================================
-               CARI GURU
-            ===================================== */
-
+            // =====================================
+            // CARI GURU
+            // =====================================
             $stmtGuru = mysqli_prepare($koneksi, "
                 SELECT id, nama
                 FROM t_guru
@@ -267,52 +463,51 @@ if (isset($_POST['simpan'])) {
                 mysqli_stmt_get_result($stmtGuru)
             );
 
+            mysqli_stmt_close($stmtGuru);
 
-            /* =====================================
-               VALIDASI DATA
-            ===================================== */
-
+            // =====================================
+            // VALIDASI DATA
+            // =====================================
             if (!$dataSiswa) {
 
-                $error = "Siswa tidak ditemukan pada kelas yang dipilih.";
+                throw new Exception(
+                    "Siswa tidak ditemukan pada kelas yang dipilih."
+                );
 
             } elseif (!$dataPelanggaran) {
 
-                $error = "Nama pelanggaran tidak ditemukan. Pilih pelanggaran yang tersedia.";
+                throw new Exception(
+                    "Nama pelanggaran tidak ditemukan."
+                );
 
             } elseif (!$dataGuru) {
 
-                $error = "Nama guru tidak ditemukan. Pilih guru yang tersedia.";
+                throw new Exception(
+                    "Nama guru tidak ditemukan."
+                );
 
             } else {
 
-                /* =====================================
-                   AMBIL ID DAN NAMA DARI DATABASE
-                ===================================== */
-
+                // =====================================
+                // AMBIL DATA ASLI DARI DATABASE
+                // =====================================
                 $siswa_id = (int)$dataSiswa['siswa_id'];
-
                 $nama_siswa = $dataSiswa['nama_siswa'];
 
                 $kelas_id = (int)$dataSiswa['kelas_id'];
-
                 $nama_kelas = $dataSiswa['nama_kelas'];
 
                 $pelanggaran_id = (int)$dataPelanggaran['id'];
-
-                $nama_pelanggaran = $dataPelanggaran['nama'];
+                $nama_pelanggaran_db = $dataPelanggaran['nama'];
 
                 $kategori_id = (int)$dataPelanggaran['pelanggaran_kategori_id'];
 
-                $guru_id = (int)$dataGuru['id'];
+                $guru_id_input = (int)$dataGuru['id'];
+                $nama_guru_db = $dataGuru['nama'];
 
-                $nama_guru = $dataGuru['nama'];
-
-
-                /* =====================================
-                   SIMPAN KE TABEL PELANGGARAN SISWA
-                ===================================== */
-
+                // =====================================
+                // SIMPAN DATA
+                // =====================================
                 $queryInsert = "
                     INSERT INTO t_pelanggaran_siswa (
                         tahun_ajaran_id,
@@ -338,6 +533,12 @@ if (isset($_POST['simpan'])) {
                     $queryInsert
                 );
 
+                if (!$stmtInsert) {
+                    throw new Exception(
+                        "Gagal menyiapkan penyimpanan: " . mysqli_error($koneksi)
+                    );
+                }
+
                 mysqli_stmt_bind_param(
                     $stmtInsert,
                     "iisisiisiississ",
@@ -347,10 +548,10 @@ if (isset($_POST['simpan'])) {
                     $kelas_id,
                     $nama_kelas,
                     $pelanggaran_id,
-                    $nama_pelanggaran,
+                    $nama_pelanggaran_db,
                     $kategori_id,
-                    $guru_id,
-                    $nama_guru,
+                    $guru_id_input,
+                    $nama_guru_db,
                     $tanggal,
                     $keterangan,
                     $poin,
@@ -358,16 +559,20 @@ if (isset($_POST['simpan'])) {
                     $status
                 );
 
-                mysqli_stmt_execute($stmtInsert);
+                if (!mysqli_stmt_execute($stmtInsert)) {
+                    throw new Exception(
+                        "Gagal menyimpan data: " . mysqli_stmt_error($stmtInsert)
+                    );
+                }
+
+                mysqli_stmt_close($stmtInsert);
 
                 header("Location: catat_pelanggaran.php?pesan=tambah");
                 exit;
             }
 
-        } catch (mysqli_sql_exception $e) {
-
-            $error = "Gagal menyimpan data: " . $e->getMessage();
-
+        } catch (Throwable $e) {
+            $error = $e->getMessage();
         }
     }
 }
@@ -380,7 +585,6 @@ if (isset($_POST['simpan'])) {
 <head>
 
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Tambah Catat Pelanggaran</title>
@@ -395,7 +599,7 @@ if (isset($_POST['simpan'])) {
 <div class="container-fluid">
     <div class="row">
 
-        <!-- SIDEBAR TETAP -->
+        <!-- SIDEBAR -->
         <aside class="col-md-3 col-lg-2 bg-dark text-white p-3 position-fixed top-0 bottom-0 start-0 overflow-auto">
 
             <h5 class="text-white mb-4">
@@ -410,7 +614,7 @@ if (isset($_POST['simpan'])) {
                     </a>
                 </li>
 
-                <?php if ($role == 'admin') { ?>
+                <?php if ($role === 'admin') { ?>
 
                     <li class="nav-item">
                         <a href="siswa.php" class="nav-link text-white">Kelola Siswa</a>
@@ -454,7 +658,7 @@ if (isset($_POST['simpan'])) {
 
                 <?php } ?>
 
-                <?php if ($role == 'guru') { ?>
+                <?php if (in_array($role, ['guru', 'wali_kelas'], true)) { ?>
 
                     <li class="nav-item">
                         <a href="catat_pelanggaran.php" class="nav-link active">
@@ -462,9 +666,13 @@ if (isset($_POST['simpan'])) {
                         </a>
                     </li>
 
-                    <li class="nav-item">
-                        <a href="tindakan.php" class="nav-link text-white">Tindakan</a>
-                    </li>
+                    <?php if ($role === 'guru') { ?>
+
+                        <li class="nav-item">
+                            <a href="tindakan.php" class="nav-link text-white">Tindakan</a>
+                        </li>
+
+                    <?php } ?>
 
                     <li class="nav-item">
                         <a href="riwayat.php" class="nav-link text-white">Riwayat</a>
@@ -473,6 +681,22 @@ if (isset($_POST['simpan'])) {
                     <li class="nav-item">
                         <a href="rekap_poin.php" class="nav-link text-white">Rekap Poin</a>
                     </li>
+
+                    <?php if ($role === 'wali_kelas') { ?>
+
+                        <li class="nav-item">
+                            <a href="walikelas/data_siswa.php" class="nav-link text-white">Data Siswa</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="walikelas/rekap_pelanggaran.php" class="nav-link text-white">Rekap Pelanggaran</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="walikelas/laporan.php" class="nav-link text-white">Laporan</a>
+                        </li>
+
+                    <?php } ?>
 
                 <?php } ?>
 
@@ -494,7 +718,6 @@ if (isset($_POST['simpan'])) {
 
         </aside>
 
-
         <!-- KONTEN UTAMA -->
         <main class="col-md-9 col-lg-10 p-4 offset-md-3 offset-lg-2">
 
@@ -503,7 +726,6 @@ if (isset($_POST['simpan'])) {
             <p class="text-secondary mb-4">
                 Silakan isi data pelanggaran siswa.
             </p>
-
 
             <?php if ($tahunAktif) { ?>
 
@@ -520,15 +742,13 @@ if (isset($_POST['simpan'])) {
 
             <?php } ?>
 
-
-            <?php if ($error != '') { ?>
+            <?php if ($error !== '') { ?>
 
                 <div class="alert alert-danger">
                     <?= e($error); ?>
                 </div>
 
             <?php } ?>
-
 
             <div class="card shadow-sm">
 
@@ -540,37 +760,26 @@ if (isset($_POST['simpan'])) {
 
                     <form method="POST">
 
-                        <!-- TANGGAL -->
                         <div class="mb-3">
-
-                            <label class="form-label">
-                                Tanggal
-                            </label>
+                            <label class="form-label">Tanggal</label>
 
                             <input type="date"
                                    name="tanggal"
                                    class="form-control"
                                    value="<?= e($_POST['tanggal'] ?? date('Y-m-d')); ?>"
                                    required>
-
                         </div>
 
-
-                        <!-- PILIH KELAS -->
                         <div class="mb-3">
 
-                            <label class="form-label">
-                                Nama Kelas
-                            </label>
+                            <label class="form-label">Nama Kelas</label>
 
                             <select name="kelas_id"
                                     id="kelas_id"
                                     class="form-select"
                                     required>
 
-                                <option value="">
-                                    -- Pilih Kelas --
-                                </option>
+                                <option value="">-- Pilih Kelas --</option>
 
                                 <?php foreach ($daftarKelas as $kelas) { ?>
 
@@ -588,22 +797,16 @@ if (isset($_POST['simpan'])) {
 
                         </div>
 
-
-                        <!-- PILIH SISWA -->
                         <div class="mb-3">
 
-                            <label class="form-label">
-                                Nama Siswa
-                            </label>
+                            <label class="form-label">Nama Siswa</label>
 
                             <select name="siswa_id"
                                     id="siswa_id"
                                     class="form-select"
                                     required>
 
-                                <option value="">
-                                    -- Pilih Nama Siswa --
-                                </option>
+                                <option value="">-- Pilih Nama Siswa --</option>
 
                                 <?php foreach ($daftarSiswa as $siswa) { ?>
 
@@ -627,13 +830,9 @@ if (isset($_POST['simpan'])) {
 
                         </div>
 
-
-                        <!-- NAMA PELANGGARAN -->
                         <div class="mb-3">
 
-                            <label class="form-label">
-                                Nama Pelanggaran
-                            </label>
+                            <label class="form-label">Nama Pelanggaran</label>
 
                             <input type="text"
                                    name="nama_pelanggaran"
@@ -659,13 +858,9 @@ if (isset($_POST['simpan'])) {
 
                         </div>
 
-
-                        <!-- NAMA GURU -->
                         <div class="mb-3">
 
-                            <label class="form-label">
-                                Nama Guru
-                            </label>
+                            <label class="form-label">Nama Guru</label>
 
                             <input type="text"
                                    name="nama_guru"
@@ -687,13 +882,9 @@ if (isset($_POST['simpan'])) {
 
                         </div>
 
-
-                        <!-- POIN -->
                         <div class="mb-3">
 
-                            <label class="form-label">
-                                Poin Pelanggaran
-                            </label>
+                            <label class="form-label">Poin Pelanggaran</label>
 
                             <input type="number"
                                    name="poin"
@@ -704,13 +895,9 @@ if (isset($_POST['simpan'])) {
 
                         </div>
 
-
-                        <!-- KETERANGAN -->
                         <div class="mb-3">
 
-                            <label class="form-label">
-                                Keterangan
-                            </label>
+                            <label class="form-label">Keterangan</label>
 
                             <textarea name="keterangan"
                                       class="form-control"
@@ -720,13 +907,9 @@ if (isset($_POST['simpan'])) {
 
                         </div>
 
-
-                        <!-- TINDAKAN -->
                         <div class="mb-3">
 
-                            <label class="form-label">
-                                Tindakan
-                            </label>
+                            <label class="form-label">Tindakan</label>
 
                             <textarea name="tindakan"
                                       class="form-control"
@@ -736,56 +919,40 @@ if (isset($_POST['simpan'])) {
 
                         </div>
 
-
-                        <!-- STATUS -->
                         <div class="mb-4">
 
-                            <label class="form-label">
-                                Status
-                            </label>
+                            <label class="form-label">Status</label>
 
                             <select name="status" class="form-select" required>
 
                                 <option value="Belum Ditindaklanjuti"
-                                    <?= ($_POST['status'] ?? 'Belum Ditindaklanjuti') == 'Belum Ditindaklanjuti' ? 'selected' : ''; ?>>
-
+                                    <?= ($_POST['status'] ?? 'Belum Ditindaklanjuti') === 'Belum Ditindaklanjuti' ? 'selected' : ''; ?>>
                                     Belum Ditindaklanjuti
-
                                 </option>
 
                                 <option value="Diproses"
-                                    <?= ($_POST['status'] ?? '') == 'Diproses' ? 'selected' : ''; ?>>
-
+                                    <?= ($_POST['status'] ?? '') === 'Diproses' ? 'selected' : ''; ?>>
                                     Diproses
-
                                 </option>
 
                                 <option value="Selesai"
-                                    <?= ($_POST['status'] ?? '') == 'Selesai' ? 'selected' : ''; ?>>
-
+                                    <?= ($_POST['status'] ?? '') === 'Selesai' ? 'selected' : ''; ?>>
                                     Selesai
-
                                 </option>
 
                             </select>
 
                         </div>
 
-
-                        <!-- TOMBOL -->
                         <button type="submit"
                                 name="simpan"
-                                class="btn btn-primary">
-
+                                class="btn btn-primary"
+                                <?= (!$tahun_id || ($role === 'wali_kelas' && empty($daftarKelas))) ? 'disabled' : ''; ?>>
                             Simpan
-
                         </button>
 
-                        <a href="catat_pelanggaran.php"
-                           class="btn btn-secondary">
-
+                        <a href="catat_pelanggaran.php" class="btn btn-secondary">
                             Kembali
-
                         </a>
 
                     </form>
@@ -799,21 +966,14 @@ if (isset($_POST['simpan'])) {
     </div>
 </div>
 
-
-<!-- JAVASCRIPT FILTER SISWA BERDASARKAN KELAS -->
-
 <script>
-
 document.addEventListener('DOMContentLoaded', function () {
 
     const pilihKelas = document.getElementById('kelas_id');
-
     const pilihSiswa = document.getElementById('siswa_id');
 
     const semuaSiswa = Array.from(pilihSiswa.options).slice(1);
-
-    const siswaTerpilihAwal = "<?= e($_POST['siswa_id'] ?? ''); ?>";
-
+    const siswaTerpilihAwal = <?= json_encode((string)($_POST['siswa_id'] ?? '')); ?>;
 
     function filterSiswa() {
 
@@ -822,54 +982,42 @@ document.addEventListener('DOMContentLoaded', function () {
         pilihSiswa.innerHTML = '';
 
         const placeholder = document.createElement('option');
-
         placeholder.value = '';
-
         placeholder.textContent = kelasDipilih
             ? '-- Pilih Nama Siswa --'
             : '-- Pilih Kelas Terlebih Dahulu --';
 
         pilihSiswa.appendChild(placeholder);
 
-
         semuaSiswa.forEach(function (option) {
 
-            if (option.dataset.kelas === kelasDipilih && kelasDipilih !== '') {
-
-                const pilihan = option.cloneNode(true);
-
-                pilihSiswa.appendChild(pilihan);
-
+            if (
+                option.dataset.kelas === kelasDipilih &&
+                kelasDipilih !== ''
+            ) {
+                pilihSiswa.appendChild(option.cloneNode(true));
             }
 
         });
 
-
         if (
             siswaTerpilihAwal &&
-            pilihSiswa.querySelector('option[value="' + siswaTerpilihAwal + '"]')
+            pilihSiswa.querySelector(
+                'option[value="' + CSS.escape(siswaTerpilihAwal) + '"]'
+            )
         ) {
-
             pilihSiswa.value = siswaTerpilihAwal;
-
         }
-
     }
 
-
     pilihKelas.addEventListener('change', function () {
-
         filterSiswa();
-
     });
-
 
     filterSiswa();
 
 });
-
 </script>
-
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 

@@ -9,38 +9,52 @@ if (!isset($_SESSION['login']) || $_SESSION['login'] !== true) {
 
 include "config/koneksi.php";
 
+// ==========================================
+// CEK ROLE
+// ==========================================
 $role = strtolower(trim($_SESSION['role'] ?? ''));
+$role = str_replace([' ', '-'], '_', $role);
 
 if (!in_array($role, ['admin', 'guru', 'wali_kelas'], true)) {
-    exit("Anda tidak memiliki akses");
+    exit("Anda tidak memiliki akses.");
 }
 
-/* =========================================
-   DATA DASHBOARD WALI KELAS
-========================================= */
+// ==========================================
+// INISIALISASI DATA
+// ==========================================
+$tampilan_wali_kelas = false;
 
-$nama_wali = $_SESSION['name'] ?? 'Wali Kelas';
+$nama_wali = $_SESSION['name'] ?? $_SESSION['nama'] ?? 'Wali Kelas';
+
+$guru_id = 0;
+
+$user_id = (int)(
+    $_SESSION['user_id']
+    ?? $_SESSION['id_user']
+    ?? $_SESSION['id']
+    ?? 0
+);
+
 $daftar_kelas = [];
 $total_siswa = 0;
 $total_pelanggaran = 0;
 $total_poin = 0;
 $error_wali = '';
-$guru_id = 0;
 
-if ($role === 'wali_kelas') {
+// ==========================================
+// ADMIN TETAP ADMIN
+// ==========================================
+if ($role === 'admin') {
+    $tampilan_wali_kelas = false;
+}
 
-    $user_id = (int) (
-        $_SESSION['user_id']
-        ?? $_SESSION['id_user']
-        ?? $_SESSION['id']
-        ?? 0
-    );
+// ==========================================
+// CARI ID GURU DARI USER LOGIN
+// ==========================================
+if ($role === 'guru' || $role === 'wali_kelas') {
 
-    if ($user_id <= 0) {
-        $error_wali = "ID akun tidak ditemukan.";
-    } else {
+    if ($user_id > 0) {
 
-        // Cari data guru berdasarkan akun login
         $stmtGuru = mysqli_prepare(
             $koneksi,
             "SELECT id, nama
@@ -50,7 +64,7 @@ if ($role === 'wali_kelas') {
         );
 
         if (!$stmtGuru) {
-            die("Query guru gagal: " . mysqli_error($koneksi));
+            exit("Query guru gagal: " . htmlspecialchars(mysqli_error($koneksi)));
         }
 
         mysqli_stmt_bind_param($stmtGuru, "i", $user_id);
@@ -61,133 +75,223 @@ if ($role === 'wali_kelas') {
 
         mysqli_stmt_close($stmtGuru);
 
-        if (!$dataGuru) {
+        if ($dataGuru) {
+            $guru_id = (int)$dataGuru['id'];
+            $nama_wali = $dataGuru['nama'];
+        }
+    }
+
+    // Fallback guru_id session
+    if ($guru_id <= 0 && !empty($_SESSION['guru_id'])) {
+
+        $guru_id = (int)$_SESSION['guru_id'];
+
+        $stmtGuru = mysqli_prepare(
+            $koneksi,
+            "SELECT id, nama
+             FROM t_guru
+             WHERE id = ?
+             LIMIT 1"
+        );
+
+        if (!$stmtGuru) {
+            exit("Query guru gagal: " . htmlspecialchars(mysqli_error($koneksi)));
+        }
+
+        mysqli_stmt_bind_param($stmtGuru, "i", $guru_id);
+        mysqli_stmt_execute($stmtGuru);
+
+        $resultGuru = mysqli_stmt_get_result($stmtGuru);
+        $dataGuru = mysqli_fetch_assoc($resultGuru);
+
+        mysqli_stmt_close($stmtGuru);
+
+        if ($dataGuru) {
+            $nama_wali = $dataGuru['nama'];
+        } else {
+            $guru_id = 0;
+        }
+    }
+
+    // ======================================
+    // CEK PENUGASAN WALI KELAS
+    // ======================================
+    if ($guru_id > 0) {
+
+        $sqlCekWali = "
+            SELECT COUNT(*) AS total
+            FROM t_wali_kelas wk
+            INNER JOIN t_tahun_ajaran ta
+                ON ta.id = wk.tahun_ajaran_id
+            WHERE wk.guru_id = ?
+              AND wk.status_aktif = 1
+              AND ta.status_aktif = 1
+              AND CURDATE() BETWEEN wk.tanggal_mulai
+                                AND wk.tanggal_selesai
+        ";
+
+        $stmtCekWali = mysqli_prepare($koneksi, $sqlCekWali);
+
+        if (!$stmtCekWali) {
+            exit("Query penugasan gagal: " . htmlspecialchars(mysqli_error($koneksi)));
+        }
+
+        mysqli_stmt_bind_param($stmtCekWali, "i", $guru_id);
+        mysqli_stmt_execute($stmtCekWali);
+
+        $resultCekWali = mysqli_stmt_get_result($stmtCekWali);
+        $dataCekWali = mysqli_fetch_assoc($resultCekWali);
+
+        mysqli_stmt_close($stmtCekWali);
+
+        if ((int)($dataCekWali['total'] ?? 0) > 0) {
+            $tampilan_wali_kelas = true;
+        }
+    }
+
+    // Role wali_kelas wajib memiliki penugasan
+    if ($role === 'wali_kelas' && !$tampilan_wali_kelas) {
+
+        if ($guru_id <= 0) {
             $error_wali = "Data guru untuk akun ini tidak ditemukan.";
         } else {
-
-            $guru_id = (int) $dataGuru['id'];
-            $nama_wali = $dataGuru['nama'];
-
-            // Ambil kelas yang ditugaskan kepada wali kelas
-            $stmtKelas = mysqli_prepare(
-                $koneksi,
-                "SELECT
-                    wk.id,
-                    wk.kelas_id,
-                    k.nama AS nama_kelas
-                 FROM t_wali_kelas wk
-                 JOIN t_kelas k
-                    ON k.id = wk.kelas_id
-                 JOIN t_tahun_ajaran ta
-                    ON ta.id = wk.tahun_ajaran_id
-                 WHERE wk.guru_id = ?
-                   AND wk.status_aktif = 1
-                   AND ta.status_aktif = 1
-                 ORDER BY k.nama ASC"
-            );
-
-            if (!$stmtKelas) {
-                die("Query kelas gagal: " . mysqli_error($koneksi));
-            }
-
-            mysqli_stmt_bind_param($stmtKelas, "i", $guru_id);
-            mysqli_stmt_execute($stmtKelas);
-
-            $resultKelas = mysqli_stmt_get_result($stmtKelas);
-
-            while ($kelas = mysqli_fetch_assoc($resultKelas)) {
-                $daftar_kelas[] = $kelas;
-            }
-
-            mysqli_stmt_close($stmtKelas);
-
-            if (count($daftar_kelas) === 0) {
-
-                $error_wali = "Belum ada penugasan wali kelas yang aktif.";
-
-            } else {
-
-                // Hitung siswa hanya dari kelas tugasnya
-                $stmtSiswa = mysqli_prepare(
-                    $koneksi,
-                    "SELECT COUNT(DISTINCT ks.siswa_id) AS total
-                     FROM t_kelas_siswa ks
-                     JOIN t_wali_kelas wk
-                        ON wk.kelas_id = ks.kelas_id
-                     JOIN t_tahun_ajaran ta
-                        ON ta.id = wk.tahun_ajaran_id
-                     WHERE wk.guru_id = ?
-                       AND wk.status_aktif = 1
-                       AND ta.status_aktif = 1"
-                );
-
-                if (!$stmtSiswa) {
-                    die("Query siswa gagal: " . mysqli_error($koneksi));
-                }
-
-                mysqli_stmt_bind_param($stmtSiswa, "i", $guru_id);
-                mysqli_stmt_execute($stmtSiswa);
-
-                $resultSiswa = mysqli_stmt_get_result($stmtSiswa);
-                $dataSiswa = mysqli_fetch_assoc($resultSiswa);
-
-                $total_siswa = (int) ($dataSiswa['total'] ?? 0);
-
-                mysqli_stmt_close($stmtSiswa);
-
-                // Hitung pelanggaran kelas yang ditugaskan
-                $stmtPelanggaran = mysqli_prepare(
-                    $koneksi,
-                    "SELECT
-                        COUNT(DISTINCT ps.id) AS total_pelanggaran,
-                        COALESCE(SUM(ps.poin), 0) AS total_poin
-                     FROM t_pelanggaran_siswa ps
-                     JOIN t_wali_kelas wk
-                        ON wk.kelas_id = ps.kelas_id
-                     JOIN t_tahun_ajaran ta
-                        ON ta.id = wk.tahun_ajaran_id
-                     WHERE wk.guru_id = ?
-                       AND wk.status_aktif = 1
-                       AND ta.status_aktif = 1"
-                );
-
-                if (!$stmtPelanggaran) {
-                    die("Query pelanggaran gagal: " . mysqli_error($koneksi));
-                }
-
-                mysqli_stmt_bind_param(
-                    $stmtPelanggaran,
-                    "i",
-                    $guru_id
-                );
-
-                mysqli_stmt_execute($stmtPelanggaran);
-
-                $resultPelanggaran = mysqli_stmt_get_result($stmtPelanggaran);
-                $dataPelanggaran = mysqli_fetch_assoc($resultPelanggaran);
-
-                $total_pelanggaran = (int) (
-                    $dataPelanggaran['total_pelanggaran'] ?? 0
-                );
-
-                $total_poin = (int) (
-                    $dataPelanggaran['total_poin'] ?? 0
-                );
-
-                mysqli_stmt_close($stmtPelanggaran);
-            }
+            $error_wali = "Belum ada penugasan Wali Kelas yang aktif.";
         }
+
+        $tampilan_wali_kelas = true;
     }
 }
 
-/* =========================================
-   DASHBOARD ADMIN DAN GURU
-========================================= */
+// ==========================================
+// DATA DASHBOARD WALI KELAS
+// ==========================================
+if ($tampilan_wali_kelas && $guru_id > 0) {
 
-$query = "SELECT * FROM t_pelanggaran_siswa ORDER BY tanggal DESC";
-$result = mysqli_query($koneksi, $query);
-$error = $result ? '' : mysqli_error($koneksi);
+    // ======================================
+    // DAFTAR KELAS TANGGUNG JAWAB
+    // ======================================
+    $sqlKelas = "
+        SELECT
+            wk.id,
+            wk.kelas_id,
+            wk.tahun_ajaran_id,
+            k.nama AS nama_kelas,
+            ta.nama AS nama_tahun_ajaran
+        FROM t_wali_kelas wk
+        INNER JOIN t_kelas k
+            ON k.id = wk.kelas_id
+        INNER JOIN t_tahun_ajaran ta
+            ON ta.id = wk.tahun_ajaran_id
+        WHERE wk.guru_id = ?
+          AND wk.status_aktif = 1
+          AND ta.status_aktif = 1
+          AND CURDATE() BETWEEN wk.tanggal_mulai
+                            AND wk.tanggal_selesai
+        ORDER BY k.nama ASC
+    ";
 
+    $stmtKelas = mysqli_prepare($koneksi, $sqlKelas);
+
+    if (!$stmtKelas) {
+        exit("Query kelas gagal: " . htmlspecialchars(mysqli_error($koneksi)));
+    }
+
+    mysqli_stmt_bind_param($stmtKelas, "i", $guru_id);
+    mysqli_stmt_execute($stmtKelas);
+
+    $resultKelas = mysqli_stmt_get_result($stmtKelas);
+
+    while ($kelas = mysqli_fetch_assoc($resultKelas)) {
+        $daftar_kelas[] = $kelas;
+    }
+
+    mysqli_stmt_close($stmtKelas);
+
+    if (empty($daftar_kelas)) {
+
+        $error_wali = "Belum ada penugasan Wali Kelas yang aktif.";
+
+    } else {
+
+        // ======================================
+        // HITUNG JUMLAH SISWA
+        // ======================================
+        $sqlSiswa = "
+            SELECT COUNT(DISTINCT ks.siswa_id) AS total
+            FROM t_kelas_siswa ks
+            INNER JOIN t_wali_kelas wk
+                ON wk.kelas_id = ks.kelas_id
+               AND wk.tahun_ajaran_id = ks.tahun_ajaran_id
+            INNER JOIN t_tahun_ajaran ta
+                ON ta.id = wk.tahun_ajaran_id
+            INNER JOIN t_siswa s
+                ON s.id = ks.siswa_id
+            WHERE wk.guru_id = ?
+              AND wk.status_aktif = 1
+              AND ta.status_aktif = 1
+              AND CURDATE() BETWEEN wk.tanggal_mulai
+                                AND wk.tanggal_selesai
+              AND ks.status_aktif = 1
+              AND s.status_aktif = 1
+        ";
+
+        $stmtSiswa = mysqli_prepare($koneksi, $sqlSiswa);
+
+        if (!$stmtSiswa) {
+            exit("Query siswa gagal: " . htmlspecialchars(mysqli_error($koneksi)));
+        }
+
+        mysqli_stmt_bind_param($stmtSiswa, "i", $guru_id);
+        mysqli_stmt_execute($stmtSiswa);
+
+        $resultSiswa = mysqli_stmt_get_result($stmtSiswa);
+        $dataSiswa = mysqli_fetch_assoc($resultSiswa);
+
+        $total_siswa = (int)($dataSiswa['total'] ?? 0);
+
+        mysqli_stmt_close($stmtSiswa);
+
+        // ======================================
+        // HITUNG PELANGGARAN DAN POIN
+        // ======================================
+        $sqlPelanggaran = "
+            SELECT
+                COUNT(DISTINCT ps.id) AS total_pelanggaran,
+                COALESCE(SUM(ps.poin), 0) AS total_poin
+            FROM t_pelanggaran_siswa ps
+            WHERE EXISTS (
+                SELECT 1
+                FROM t_wali_kelas wk
+                INNER JOIN t_tahun_ajaran ta
+                    ON ta.id = wk.tahun_ajaran_id
+                WHERE wk.guru_id = ?
+                  AND wk.kelas_id = ps.kelas_id
+                  AND wk.tahun_ajaran_id = ps.tahun_ajaran_id
+                  AND wk.status_aktif = 1
+                  AND ta.status_aktif = 1
+                  AND CURDATE() BETWEEN wk.tanggal_mulai
+                                    AND wk.tanggal_selesai
+            )
+        ";
+
+        $stmtPelanggaran = mysqli_prepare($koneksi, $sqlPelanggaran);
+
+        if (!$stmtPelanggaran) {
+            exit("Query pelanggaran gagal: " . htmlspecialchars(mysqli_error($koneksi)));
+        }
+
+        mysqli_stmt_bind_param($stmtPelanggaran, "i", $guru_id);
+        mysqli_stmt_execute($stmtPelanggaran);
+
+        $resultPelanggaran = mysqli_stmt_get_result($stmtPelanggaran);
+        $dataPelanggaran = mysqli_fetch_assoc($resultPelanggaran);
+
+        $total_pelanggaran = (int)($dataPelanggaran['total_pelanggaran'] ?? 0);
+        $total_poin = (int)($dataPelanggaran['total_poin'] ?? 0);
+
+        mysqli_stmt_close($stmtPelanggaran);
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -218,8 +322,7 @@ $error = $result ? '' : mysqli_error($koneksi);
             <ul class="nav nav-pills flex-column gap-2">
 
                 <li class="nav-item">
-                    <a href="dashboard.php"
-                       class="nav-link active">
+                    <a href="dashboard.php" class="nav-link active">
                         Dashboard
                     </a>
                 </li>
@@ -227,103 +330,83 @@ $error = $result ? '' : mysqli_error($koneksi);
                 <?php if ($role === 'admin') { ?>
 
                     <li class="nav-item">
-                        <a href="siswa.php" class="nav-link text-white">
-                            Kelola Siswa
-                        </a>
+                        <a href="siswa.php" class="nav-link text-white">Kelola Siswa</a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="guru.php" class="nav-link text-white">
-                            Kelola Guru
-                        </a>
+                        <a href="guru.php" class="nav-link text-white">Kelola Guru</a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="kelas.php" class="nav-link text-white">
-                            Kelola Kelas
-                        </a>
+                        <a href="kelas.php" class="nav-link text-white">Kelola Kelas</a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="tahun_ajaran.php" class="nav-link text-white">
-                            Tahun Ajaran
-                        </a>
+                        <a href="tahun_ajaran.php" class="nav-link text-white">Tahun Ajaran</a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="penempatan_siswa.php" class="nav-link text-white">
-                            Penempatan Siswa
-                        </a>
+                        <a href="penempatan_siswa.php" class="nav-link text-white">Penempatan Siswa</a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="wali_kelas.php" class="nav-link text-white">
-                            Wali Kelas
-                        </a>
+                        <a href="wali_kelas.php" class="nav-link text-white">Wali Kelas</a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="kategori_pelanggaran.php" class="nav-link text-white">
-                            Kategori Pelanggaran
-                        </a>
+                        <a href="kategori_pelanggaran.php" class="nav-link text-white">Kategori Pelanggaran</a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="jenis_pelanggaran.php" class="nav-link text-white">
-                            Jenis Pelanggaran
-                        </a>
+                        <a href="jenis_pelanggaran.php" class="nav-link text-white">Jenis Pelanggaran</a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="laporan.php" class="nav-link text-white">
-                            Laporan
-                        </a>
+                        <a href="laporan.php" class="nav-link text-white">Laporan</a>
                     </li>
 
-                <?php } elseif ($role === 'guru') { ?>
+                <?php } elseif ($role === 'guru' && !$tampilan_wali_kelas) { ?>
 
                     <li class="nav-item">
-                        <a href="catat_pelanggaran.php" class="nav-link text-white">
-                            Catat Pelanggaran
-                        </a>
+                        <a href="catat_pelanggaran.php" class="nav-link text-white">Catat Pelanggaran</a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="tindakan.php" class="nav-link text-white">
-                            Tindakan
-                        </a>
+                        <a href="tindakan.php" class="nav-link text-white">Tindakan</a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="riwayat.php" class="nav-link text-white">
-                            Riwayat
-                        </a>
+                        <a href="riwayat.php" class="nav-link text-white">Riwayat</a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="rekap_poin.php" class="nav-link text-white">
-                            Rekap Poin
-                        </a>
+                        <a href="rekap_poin.php" class="nav-link text-white">Rekap Poin</a>
                     </li>
 
-                <?php } elseif ($role === 'wali_kelas') { ?>
+                <?php } elseif ($tampilan_wali_kelas) { ?>
 
                     <li class="nav-item">
-                        <a href="walikelas/data_siswa.php" class="nav-link text-white">
-                            Data Siswa
-                        </a>
+                        <a href="catat_pelanggaran.php" class="nav-link text-white">Catat Pelanggaran</a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="walikelas/rekap_pelanggaran.php" class="nav-link text-white">
-                            Rekap Pelanggaran
-                        </a>
+                        <a href="walikelas/data_siswa.php" class="nav-link text-white">Data Siswa</a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="walikelas/cetak_rekap.php" class="nav-link text-white">
-                            Cetak Rekap
-                        </a>
+                        <a href="walikelas/rekap_pelanggaran.php" class="nav-link text-white">Rekap Pelanggaran</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="walikelas/laporan.php" class="nav-link text-white">Laporan</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="riwayat.php" class="nav-link text-white">Riwayat</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="rekap_poin.php" class="nav-link text-white">Rekap Poin</a>
                     </li>
 
                 <?php } ?>
@@ -331,9 +414,7 @@ $error = $result ? '' : mysqli_error($koneksi);
                 <hr class="text-secondary">
 
                 <li class="nav-item">
-                    <a href="about_me.php" class="nav-link text-white">
-                        About Me
-                    </a>
+                    <a href="about_me.php" class="nav-link text-white">About Me</a>
                 </li>
 
                 <li class="nav-item">
@@ -382,16 +463,9 @@ $error = $result ? '' : mysqli_error($koneksi);
                         <div class="col-md-4 mb-3">
                             <div class="card shadow-sm">
                                 <div class="card-body">
-                                    <h5 class="card-title">
-                                        <?= htmlspecialchars($menu[0]); ?>
-                                    </h5>
-
-                                    <p class="card-text">
-                                        <?= htmlspecialchars($menu[1]); ?>
-                                    </p>
-
-                                    <a href="<?= htmlspecialchars($menu[2]); ?>"
-                                       class="btn btn-primary">
+                                    <h5 class="card-title"><?= htmlspecialchars($menu[0]); ?></h5>
+                                    <p class="card-text"><?= htmlspecialchars($menu[1]); ?></p>
+                                    <a href="<?= htmlspecialchars($menu[2]); ?>" class="btn btn-primary">
                                         Lihat Data
                                     </a>
                                 </div>
@@ -403,7 +477,7 @@ $error = $result ? '' : mysqli_error($koneksi);
                 </div>
 
             <!-- DASHBOARD GURU -->
-            <?php } elseif ($role === 'guru') { ?>
+            <?php } elseif ($role === 'guru' && !$tampilan_wali_kelas) { ?>
 
                 <h2>Dashboard Guru</h2>
 
@@ -428,16 +502,9 @@ $error = $result ? '' : mysqli_error($koneksi);
                         <div class="col-md-4 mb-3">
                             <div class="card shadow-sm">
                                 <div class="card-body">
-                                    <h5 class="card-title">
-                                        <?= htmlspecialchars($menu[0]); ?>
-                                    </h5>
-
-                                    <p class="card-text">
-                                        <?= htmlspecialchars($menu[1]); ?>
-                                    </p>
-
-                                    <a href="<?= htmlspecialchars($menu[2]); ?>"
-                                       class="btn btn-primary">
+                                    <h5 class="card-title"><?= htmlspecialchars($menu[0]); ?></h5>
+                                    <p class="card-text"><?= htmlspecialchars($menu[1]); ?></p>
+                                    <a href="<?= htmlspecialchars($menu[2]); ?>" class="btn btn-primary">
                                         Buka
                                     </a>
                                 </div>
@@ -449,7 +516,7 @@ $error = $result ? '' : mysqli_error($koneksi);
                 </div>
 
             <!-- DASHBOARD WALI KELAS -->
-            <?php } elseif ($role === 'wali_kelas') { ?>
+            <?php } elseif ($tampilan_wali_kelas) { ?>
 
                 <h2>Dashboard Wali Kelas</h2>
 
@@ -466,19 +533,14 @@ $error = $result ? '' : mysqli_error($koneksi);
 
                 <?php } else { ?>
 
-                    <!-- KELAS TANGGUNG JAWAB -->
                     <div class="mb-4">
-
                         <h5>Kelas Tanggung Jawab</h5>
 
                         <?php foreach ($daftar_kelas as $kelas) { ?>
-
                             <span class="badge bg-primary me-2 mb-2 p-2">
                                 <?= htmlspecialchars($kelas['nama_kelas']); ?>
                             </span>
-
                         <?php } ?>
-
                     </div>
 
                     <!-- RINGKASAN -->
@@ -513,24 +575,15 @@ $error = $result ? '' : mysqli_error($koneksi);
 
                     </div>
 
-                    <!-- MENU WALI KELAS -->
-                    <h5 class="mt-4 mb-3">Menu Wali Kelas</h5>
-
-                    <div class="row">
+                    <!-- MENU DASHBOARD WALI KELAS -->
+                    <div class="row mt-3">
 
                         <div class="col-md-4 mb-3">
                             <div class="card shadow-sm h-100">
                                 <div class="card-body">
-                                    <h5>Data Siswa</h5>
-
-                                    <p>
-                                        Melihat data siswa kelas sendiri.
-                                    </p>
-
-                                    <a href="walikelas/data_siswa.php"
-                                       class="btn btn-primary">
-                                        Lihat Data
-                                    </a>
+                                    <h5 class="card-title">Catat Pelanggaran</h5>
+                                    <p class="card-text">Mencatat pelanggaran siswa pada kelas tanggung jawab.</p>
+                                    <a href="catat_pelanggaran.php" class="btn btn-primary">Buka</a>
                                 </div>
                             </div>
                         </div>
@@ -538,16 +591,9 @@ $error = $result ? '' : mysqli_error($koneksi);
                         <div class="col-md-4 mb-3">
                             <div class="card shadow-sm h-100">
                                 <div class="card-body">
-                                    <h5>Rekap Pelanggaran</h5>
-
-                                    <p>
-                                        Melihat rekap pelanggaran siswa kelas sendiri.
-                                    </p>
-
-                                    <a href="walikelas/rekap_pelanggaran.php"
-                                       class="btn btn-primary">
-                                        Lihat Rekap
-                                    </a>
+                                    <h5 class="card-title">Data Siswa</h5>
+                                    <p class="card-text">Melihat data siswa pada kelas tanggung jawab.</p>
+                                    <a href="walikelas/data_siswa.php" class="btn btn-primary">Buka</a>
                                 </div>
                             </div>
                         </div>
@@ -555,16 +601,39 @@ $error = $result ? '' : mysqli_error($koneksi);
                         <div class="col-md-4 mb-3">
                             <div class="card shadow-sm h-100">
                                 <div class="card-body">
-                                    <h5>Cetak Rekap</h5>
+                                    <h5 class="card-title">Rekap Pelanggaran</h5>
+                                    <p class="card-text">Melihat rekap pelanggaran siswa.</p>
+                                    <a href="walikelas/rekap_pelanggaran.php" class="btn btn-primary">Buka</a>
+                                </div>
+                            </div>
+                        </div>
 
-                                    <p>
-                                        Mencetak laporan pelanggaran kelas sendiri.
-                                    </p>
+                        <div class="col-md-4 mb-3">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">Laporan</h5>
+                                    <p class="card-text">Melihat laporan pelanggaran siswa.</p>
+                                    <a href="walikelas/laporan.php" class="btn btn-primary">Buka</a>
+                                </div>
+                            </div>
+                        </div>
 
-                                    <a href="walikelas/cetak_rekap.php"
-                                       class="btn btn-success">
-                                        Cetak Rekap
-                                    </a>
+                        <div class="col-md-4 mb-3">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">Riwayat</h5>
+                                    <p class="card-text">Melihat riwayat catatan pelanggaran.</p>
+                                    <a href="riwayat.php" class="btn btn-primary">Buka</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">Rekap Poin</h5>
+                                    <p class="card-text">Melihat jumlah poin pelanggaran siswa.</p>
+                                    <a href="rekap_poin.php" class="btn btn-primary">Buka</a>
                                 </div>
                             </div>
                         </div>

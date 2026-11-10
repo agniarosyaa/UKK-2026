@@ -19,8 +19,14 @@ unset($_SESSION['notifikasi']);
 
 /* ==========================================
    AMBIL DATA TINDAKAN
-   KELAS DARI PENEMPATAN SISWA
-   PELANGGARAN DARI TABEL MASTER
+
+   HANYA MENAMPILKAN:
+   - Diproses
+   - Belum Diproses
+   - Status lain yang belum Selesai
+
+   TIDAK MENAMPILKAN:
+   - Selesai
 ========================================== */
 
 $sql = "
@@ -28,9 +34,13 @@ $sql = "
         ps.id,
         ps.nama_siswa,
 
-      COALESCE(k.nama, ps.nama_kelas, '-') AS nama_kelas,
+        COALESCE(k.nama, ps.nama_kelas, '-') AS nama_kelas,
 
-        COALESCE(p.nama, ps.nama_pelanggaran, '-') AS nama_pelanggaran,
+        COALESCE(
+            NULLIF(NULLIF(TRIM(p.nama), ''), '0'),
+            NULLIF(NULLIF(TRIM(ps.nama_pelanggaran), ''), '0'),
+            '-'
+        ) AS nama_pelanggaran,
 
         ps.tanggal,
         ps.poin,
@@ -49,6 +59,8 @@ $sql = "
 
     LEFT JOIN t_pelanggaran p
         ON p.id = ps.pelanggaran_id
+
+    WHERE LOWER(TRIM(COALESCE(ps.status, ''))) <> 'selesai'
 
     ORDER BY ps.tanggal DESC, ps.id DESC
 ";
@@ -81,7 +93,7 @@ if (!$data) {
 <div class="container-fluid">
     <div class="row">
 
-        <!-- SIDEBAR TETAP -->
+        <!-- SIDEBAR -->
         <aside class="col-md-3 col-lg-2 bg-dark text-white p-3 position-fixed top-0 bottom-0 start-0 overflow-auto">
 
             <h5 class="text-white mb-4">
@@ -137,15 +149,19 @@ if (!$data) {
                 </li>
 
             </ul>
+
         </aside>
 
         <!-- KONTEN -->
         <main class="col-md-9 col-lg-10 p-4 offset-md-3 offset-lg-2">
 
-            <h1 class="mb-2">Tindakan Pelanggaran</h1>
+            <h1 class="mb-2">
+                Tindakan Pelanggaran
+            </h1>
 
             <!-- NOTIFIKASI -->
             <?php if ($notifikasi) { ?>
+
                 <div class="alert alert-<?= htmlspecialchars($notifikasi['tipe']); ?> alert-dismissible fade show"
                      role="alert"
                      id="pesan">
@@ -155,12 +171,16 @@ if (!$data) {
                     <button type="button"
                             class="btn-close"
                             data-bs-dismiss="alert"
-                            aria-label="Close"></button>
+                            aria-label="Close">
+                    </button>
+
                 </div>
+
             <?php } ?>
 
             <p class="text-secondary mb-4">
                 Kelola tindakan dan status pelanggaran siswa.
+                Hanya menampilkan pelanggaran yang belum selesai ditangani.
             </p>
 
             <div class="card border-0 shadow-sm">
@@ -200,7 +220,9 @@ if (!$data) {
 
                                         <tr>
 
-                                            <td><?= $no++ ?></td>
+                                            <td>
+                                                <?= $no++ ?>
+                                            </td>
 
                                             <td>
                                                 <?= htmlspecialchars($row['nama_siswa'] ?? '') ?>
@@ -230,19 +252,21 @@ if (!$data) {
 
                                             <td>
 
-                                                <?php if (($row['status'] ?? '') == 'Selesai'): ?>
+                                                <?php
+                                                $status = strtolower(trim($row['status'] ?? ''));
 
-                                                    <span class="badge bg-success">
-                                                        Selesai
-                                                    </span>
+                                                if ($status == 'selesai') {
+                                                    $warna = 'bg-success';
+                                                } elseif ($status == 'diproses' || $status == 'proses') {
+                                                    $warna = 'bg-warning text-dark';
+                                                } else {
+                                                    $warna = 'bg-secondary';
+                                                }
+                                                ?>
 
-                                                <?php else: ?>
-
-                                                    <span class="badge bg-warning text-dark">
-                                                        <?= htmlspecialchars($row['status'] ?? 'Diproses') ?>
-                                                    </span>
-
-                                                <?php endif; ?>
+                                                <span class="badge <?= $warna ?>">
+                                                    <?= htmlspecialchars($row['status'] ?? 'Belum Diproses') ?>
+                                                </span>
 
                                             </td>
 
@@ -271,7 +295,7 @@ if (!$data) {
                                     <tr>
                                         <td colspan="9"
                                             class="text-center text-secondary py-4">
-                                            Belum ada data pelanggaran siswa.
+                                            Tidak ada pelanggaran yang masih perlu ditindak.
                                         </td>
                                     </tr>
 
@@ -282,6 +306,7 @@ if (!$data) {
                         </table>
 
                     </div>
+
                 </div>
             </div>
 
@@ -291,6 +316,7 @@ if (!$data) {
 </div>
 
 <!-- JAVASCRIPT -->
+
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
@@ -300,6 +326,7 @@ if (!$data) {
 <script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
+
 $(document).ready(function () {
 
     $('#tabelTindakan').DataTable({
@@ -316,20 +343,33 @@ $(document).ready(function () {
         ],
 
         language: {
+
             search: "Cari:",
+
             lengthMenu: "Tampilkan _MENU_ data",
+
             info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+
             infoEmpty: "Tidak ada data",
+
             infoFiltered: "(difilter dari _MAX_ data)",
+
             zeroRecords: "Data tidak ditemukan",
+
             emptyTable: "Belum ada data pelanggaran siswa",
 
             paginate: {
+
                 first: "Pertama",
+
                 last: "Terakhir",
+
                 next: "Selanjutnya",
+
                 previous: "Sebelumnya"
+
             }
+
         }
 
     });
@@ -337,6 +377,7 @@ $(document).ready(function () {
 });
 
 /* HILANGKAN NOTIFIKASI OTOMATIS */
+
 setTimeout(function () {
 
     let pesan = document.getElementById('pesan');
@@ -347,6 +388,7 @@ setTimeout(function () {
     }
 
 }, 2000);
+
 </script>
 
 </body>

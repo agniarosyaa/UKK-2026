@@ -2,70 +2,113 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['login'])) {
+if (!isset($_SESSION['login']) || $_SESSION['login'] !== true) {
     header("Location: ../login.php");
     exit;
 }
 
 include "../config/koneksi.php";
 
+/* =====================================
+   CEK ROLE
+===================================== */
 $role = strtolower(trim($_SESSION['role'] ?? ''));
+$role = str_replace([' ', '-'], '_', $role);
 
-if ($role !== 'wali_kelas') {
+if (!in_array($role, ['guru', 'wali_kelas'], true)) {
     exit("Anda tidak memiliki akses ke halaman ini.");
 }
 
-/* ==============================
-   ID USER LOGIN
-============================== */
-$user_id = $_SESSION['user_id']
+/* =====================================
+   AMBIL ID USER LOGIN
+===================================== */
+$user_id = (int)(
+    $_SESSION['user_id']
     ?? $_SESSION['id_user']
     ?? $_SESSION['id']
-    ?? null;
-
-if (!$user_id) {
-    exit("ID akun tidak ditemukan. Periksa session login.php.");
-}
-
-$user_id = (int) $user_id;
-
-/* ==============================
-   DATA GURU
-============================== */
-$stmtGuru = mysqli_prepare(
-    $koneksi,
-    "SELECT id, nama
-     FROM t_guru
-     WHERE user_id = ?
-     LIMIT 1"
+    ?? 0
 );
 
-if (!$stmtGuru) {
-    exit("Query guru gagal: " . htmlspecialchars(mysqli_error($koneksi)));
+$guru_id = 0;
+$nama_guru = $_SESSION['name'] ?? $_SESSION['nama'] ?? 'Wali Kelas';
+
+/* =====================================
+   AMBIL DATA GURU
+===================================== */
+if ($user_id > 0) {
+
+    $stmtGuru = mysqli_prepare(
+        $koneksi,
+        "SELECT id, nama
+         FROM t_guru
+         WHERE user_id = ?
+         LIMIT 1"
+    );
+
+    if (!$stmtGuru) {
+        exit("Query guru gagal: " . htmlspecialchars(mysqli_error($koneksi)));
+    }
+
+    mysqli_stmt_bind_param($stmtGuru, "i", $user_id);
+    mysqli_stmt_execute($stmtGuru);
+
+    $resultGuru = mysqli_stmt_get_result($stmtGuru);
+    $dataGuru = mysqli_fetch_assoc($resultGuru);
+
+    mysqli_stmt_close($stmtGuru);
+
+    if ($dataGuru) {
+        $guru_id = (int)$dataGuru['id'];
+        $nama_guru = $dataGuru['nama'];
+    }
 }
 
-mysqli_stmt_bind_param($stmtGuru, "i", $user_id);
-mysqli_stmt_execute($stmtGuru);
+/* =====================================
+   FALLBACK ID GURU DARI SESSION
+===================================== */
+if ($guru_id <= 0 && !empty($_SESSION['guru_id'])) {
 
-$resultGuru = mysqli_stmt_get_result($stmtGuru);
-$dataGuru = mysqli_fetch_assoc($resultGuru);
-mysqli_stmt_close($stmtGuru);
+    $guru_id = (int)$_SESSION['guru_id'];
 
-if (!$dataGuru) {
-    exit("Data guru tidak ditemukan.");
+    $stmtGuru = mysqli_prepare(
+        $koneksi,
+        "SELECT id, nama
+         FROM t_guru
+         WHERE id = ?
+         LIMIT 1"
+    );
+
+    mysqli_stmt_bind_param($stmtGuru, "i", $guru_id);
+    mysqli_stmt_execute($stmtGuru);
+
+    $resultGuru = mysqli_stmt_get_result($stmtGuru);
+    $dataGuru = mysqli_fetch_assoc($resultGuru);
+
+    mysqli_stmt_close($stmtGuru);
+
+    if ($dataGuru) {
+        $nama_guru = $dataGuru['nama'];
+    } else {
+        $guru_id = 0;
+    }
 }
 
-$guru_id = (int) $dataGuru['id'];
-$nama_guru = $dataGuru['nama'];
+if ($guru_id <= 0) {
+    exit("Data guru tidak ditemukan. Periksa hubungan akun login dengan data guru.");
+}
 
-/* ==============================
-   KELAS TANGGUNG JAWAB WALI KELAS
-============================== */
+/* =====================================
+   AMBIL PENUGASAN WALI KELAS AKTIF
+===================================== */
 $sqlKelas = "
     SELECT DISTINCT
+        wk.id,
         wk.kelas_id,
         k.nama AS nama_kelas,
-        wk.tahun_ajaran_id
+        wk.tahun_ajaran_id,
+        ta.nama AS nama_tahun_ajaran,
+        wk.tanggal_mulai,
+        wk.tanggal_selesai
     FROM t_wali_kelas wk
     INNER JOIN t_kelas k
         ON k.id = wk.kelas_id
@@ -74,6 +117,8 @@ $sqlKelas = "
     WHERE wk.guru_id = ?
       AND wk.status_aktif = 1
       AND ta.status_aktif = 1
+      AND CURDATE() BETWEEN wk.tanggal_mulai
+                        AND wk.tanggal_selesai
     ORDER BY k.nama ASC
 ";
 
@@ -96,42 +141,36 @@ while ($row = mysqli_fetch_assoc($resultKelas)) {
 
 mysqli_stmt_close($stmtKelas);
 
-$error = '';
-$resultSiswa = false;
-$total_siswa = 0;
-
-/* ==============================
-   AMBIL SISWA SESUAI PENUGASAN
-   KELAS DAN TAHUN AJARAN
-============================== */
+/* =====================================
+   CEK PENUGASAN
+===================================== */
 if (empty($kelas_wali)) {
 
-    $error = "Anda belum memiliki penugasan wali kelas aktif.";
+    if ($role === 'guru') {
+        exit("Anda tidak memiliki penugasan Wali Kelas yang aktif.");
+    }
+
+    $error = "Anda belum memiliki penugasan Wali Kelas yang aktif.";
 
 } else {
 
-    $conditions = [];
-    $params = [];
-    $types = '';
+    $error = '';
+}
 
-    foreach ($kelas_wali as $kelas) {
-        $conditions[] = "
-            (
-                ks.kelas_id = ?
-                AND ks.tahun_ajaran_id = ?
-            )
-        ";
+/* =====================================
+   PERSIAPAN DATA SISWA
+===================================== */
+$resultSiswa = false;
+$total_siswa = 0;
 
-        $params[] = (int) $kelas['kelas_id'];
-        $params[] = (int) $kelas['tahun_ajaran_id'];
-
-        $types .= "ii";
-    }
-
-    $whereKelas = implode(" OR ", $conditions);
+/* =====================================
+   AMBIL DATA SISWA
+   BERDASARKAN KELAS DAN TAHUN AJARAN
+===================================== */
+if ($error === '') {
 
     $sqlSiswa = "
-        SELECT
+        SELECT DISTINCT
             s.id,
             s.nis,
             s.nisn,
@@ -146,6 +185,10 @@ if (empty($kelas_wali)) {
 
         FROM t_kelas_siswa ks
 
+        INNER JOIN t_wali_kelas wk
+            ON wk.kelas_id = ks.kelas_id
+           AND wk.tahun_ajaran_id = ks.tahun_ajaran_id
+
         INNER JOIN t_siswa s
             ON s.id = ks.siswa_id
 
@@ -153,12 +196,17 @@ if (empty($kelas_wali)) {
             ON k.id = ks.kelas_id
 
         INNER JOIN t_tahun_ajaran ta
-            ON ta.id = ks.tahun_ajaran_id
+            ON ta.id = wk.tahun_ajaran_id
 
-        WHERE ks.status_aktif = 1
-          AND s.status_aktif = 1
+        WHERE wk.guru_id = ?
+          AND wk.status_aktif = 1
           AND ta.status_aktif = 1
-          AND ($whereKelas)
+
+          AND CURDATE() BETWEEN wk.tanggal_mulai
+                            AND wk.tanggal_selesai
+
+          AND ks.status_aktif = 1
+          AND s.status_aktif = 1
 
         ORDER BY
             ks.kelas_id ASC,
@@ -171,7 +219,7 @@ if (empty($kelas_wali)) {
         exit("Query siswa gagal: " . htmlspecialchars(mysqli_error($koneksi)));
     }
 
-    mysqli_stmt_bind_param($stmtSiswa, $types, ...$params);
+    mysqli_stmt_bind_param($stmtSiswa, "i", $guru_id);
     mysqli_stmt_execute($stmtSiswa);
 
     $resultSiswa = mysqli_stmt_get_result($stmtSiswa);
@@ -206,7 +254,7 @@ if (empty($kelas_wali)) {
     <div class="row">
 
         <!-- SIDEBAR -->
-        <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3 position-fixed top-0 start-0">
+        <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3 position-fixed top-0 bottom-0 start-0 overflow-auto">
 
             <h5 class="text-white mb-4">
                 Sistem Pelanggaran
@@ -233,8 +281,8 @@ if (empty($kelas_wali)) {
                 </li>
 
                 <li class="nav-item">
-                    <a href="cetak_rekap.php" class="nav-link text-white">
-                        Cetak Rekap
+                    <a href="laporan.php" class="nav-link text-white">
+                        Laporan
                     </a>
                 </li>
 
@@ -338,23 +386,36 @@ if (empty($kelas_wali)) {
                                     <?php
                                     $no = 1;
 
-                                    while ($siswa = mysqli_fetch_assoc($resultSiswa)) {
+                                    if ($resultSiswa) {
+                                        while ($siswa = mysqli_fetch_assoc($resultSiswa)) {
                                     ?>
 
                                         <tr>
                                             <td><?= $no++; ?></td>
 
-                                            <td><?= htmlspecialchars($siswa['nis'] ?? ''); ?></td>
+                                            <td>
+                                                <?= htmlspecialchars($siswa['nis'] ?? ''); ?>
+                                            </td>
 
-                                            <td><?= htmlspecialchars($siswa['nisn'] ?? ''); ?></td>
+                                            <td>
+                                                <?= htmlspecialchars($siswa['nisn'] ?? ''); ?>
+                                            </td>
 
-                                            <td><?= htmlspecialchars($siswa['nama']); ?></td>
+                                            <td>
+                                                <?= htmlspecialchars($siswa['nama']); ?>
+                                            </td>
 
-                                            <td><?= htmlspecialchars($siswa['jenis_kelamin'] ?? ''); ?></td>
+                                            <td>
+                                                <?= htmlspecialchars($siswa['jenis_kelamin'] ?? ''); ?>
+                                            </td>
 
-                                            <td><?= htmlspecialchars($siswa['tanggal_lahir'] ?? ''); ?></td>
+                                            <td>
+                                                <?= htmlspecialchars($siswa['tanggal_lahir'] ?? ''); ?>
+                                            </td>
 
-                                            <td><?= htmlspecialchars($siswa['nama_kelas']); ?></td>
+                                            <td>
+                                                <?= htmlspecialchars($siswa['nama_kelas']); ?>
+                                            </td>
 
                                             <td>
                                                 <span class="badge bg-success">
@@ -363,7 +424,10 @@ if (empty($kelas_wali)) {
                                             </td>
                                         </tr>
 
-                                    <?php } ?>
+                                    <?php
+                                        }
+                                    }
+                                    ?>
 
                                 </tbody>
 
@@ -391,24 +455,32 @@ if (empty($kelas_wali)) {
 
 <script>
 $(document).ready(function () {
-    $('#tabelSiswa').DataTable({
-        pageLength: 10,
-        lengthMenu: [5, 10, 25, 50],
-        language: {
-            search: "Cari:",
-            lengthMenu: "Tampilkan _MENU_ data",
-            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-            infoEmpty: "Tidak ada data",
-            zeroRecords: "Data siswa tidak ditemukan",
-            emptyTable: "Belum ada data siswa",
-            paginate: {
-                first: "Pertama",
-                last: "Terakhir",
-                next: "Selanjutnya",
-                previous: "Sebelumnya"
+
+    if ($('#tabelSiswa').length) {
+
+        $('#tabelSiswa').DataTable({
+            pageLength: 10,
+            lengthMenu: [5, 10, 25, 50],
+
+            language: {
+                search: "Cari:",
+                lengthMenu: "Tampilkan _MENU_ data",
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                infoEmpty: "Tidak ada data",
+                zeroRecords: "Data siswa tidak ditemukan",
+                emptyTable: "Belum ada data siswa",
+
+                paginate: {
+                    first: "Pertama",
+                    last: "Terakhir",
+                    next: "Selanjutnya",
+                    previous: "Sebelumnya"
+                }
             }
-        }
-    });
+        });
+
+    }
+
 });
 </script>
 

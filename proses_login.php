@@ -3,6 +3,9 @@
 session_start();
 include "config/koneksi.php";
 
+// ==========================================
+// CEK REQUEST
+// ==========================================
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header("Location: login.php");
     exit;
@@ -17,12 +20,14 @@ if ($email === '' || $password === '') {
     exit;
 }
 
-// Cari akun berdasarkan email
+// ==========================================
+// CARI AKUN
+// ==========================================
 $sql = "SELECT * FROM t_users WHERE email = ? LIMIT 1";
 $stmt = mysqli_prepare($koneksi, $sql);
 
 if (!$stmt) {
-    die("Kesalahan query: " . mysqli_error($koneksi));
+    die("Query akun gagal: " . mysqli_error($koneksi));
 }
 
 mysqli_stmt_bind_param($stmt, "s", $email);
@@ -30,6 +35,7 @@ mysqli_stmt_execute($stmt);
 
 $result = mysqli_stmt_get_result($stmt);
 $user = mysqli_fetch_assoc($result);
+
 mysqli_stmt_close($stmt);
 
 if (!$user) {
@@ -38,9 +44,10 @@ if (!$user) {
     exit;
 }
 
-// Verifikasi password
+// ==========================================
+// VERIFIKASI PASSWORD
+// ==========================================
 $password_db = $user['password'];
-
 $info_hash = password_get_info($password_db);
 
 if ($info_hash['algo'] !== null) {
@@ -55,30 +62,47 @@ if (!$password_valid) {
     exit;
 }
 
-// Ambil role asli
-$role_asli = strtolower(trim($user['role']));
+// ==========================================
+// ROLE ASLI USER
+// ==========================================
+$role = strtolower(trim($user['role'] ?? ''));
 
-// Role admin tidak boleh berubah
-if ($role_asli === 'admin') {
-    $role_final = 'admin';
+if (!in_array($role, ['admin', 'guru', 'wali_kelas'], true)) {
+    $_SESSION['error'] = "Role akun tidak memiliki akses.";
+    header("Location: login.php");
+    exit;
+}
 
-} elseif ($role_asli === 'guru' || $role_asli === 'wali_kelas') {
+// ==========================================
+// CEK DATA GURU
+// ==========================================
+$guru_id = 0;
+$is_wali_kelas = false;
+$nama_login = $user['nama'] ?? '';
 
-    // Cari data guru berdasarkan user_id
+// Admin tidak diubah meskipun menjadi wali kelas
+if (in_array($role, ['guru', 'wali_kelas'], true)) {
+
     $sql_guru = "
-        SELECT id
+        SELECT id, nama
         FROM t_guru
         WHERE user_id = ?
-        AND status_aktif = 1
+          AND status_aktif = 1
         LIMIT 1
     ";
 
     $stmt_guru = mysqli_prepare($koneksi, $sql_guru);
+
+    if (!$stmt_guru) {
+        die("Query guru gagal: " . mysqli_error($koneksi));
+    }
+
     mysqli_stmt_bind_param($stmt_guru, "i", $user['id']);
     mysqli_stmt_execute($stmt_guru);
 
     $result_guru = mysqli_stmt_get_result($stmt_guru);
     $guru = mysqli_fetch_assoc($result_guru);
+
     mysqli_stmt_close($stmt_guru);
 
     if (!$guru) {
@@ -87,39 +111,53 @@ if ($role_asli === 'admin') {
         exit;
     }
 
-    // Cek penugasan wali kelas aktif
+    $guru_id = (int)$guru['id'];
+    $nama_login = $guru['nama'];
+
+    // ======================================
+    // CEK PENUGASAN WALI KELAS
+    // ======================================
     $sql_wali = "
-        SELECT id
-        FROM t_wali_kelas
-        WHERE guru_id = ?
-        AND status_aktif = 1
-        AND tanggal_mulai <= CURDATE()
-        AND tanggal_selesai >= CURDATE()
+        SELECT wk.id
+        FROM t_wali_kelas wk
+        INNER JOIN t_tahun_ajaran ta
+            ON ta.id = wk.tahun_ajaran_id
+        WHERE wk.guru_id = ?
+          AND wk.status_aktif = 1
+          AND ta.status_aktif = 1
+          AND CURDATE() BETWEEN wk.tanggal_mulai
+                            AND wk.tanggal_selesai
         LIMIT 1
     ";
 
     $stmt_wali = mysqli_prepare($koneksi, $sql_wali);
-    mysqli_stmt_bind_param($stmt_wali, "i", $guru['id']);
+
+    if (!$stmt_wali) {
+        die("Query wali kelas gagal: " . mysqli_error($koneksi));
+    }
+
+    mysqli_stmt_bind_param($stmt_wali, "i", $guru_id);
     mysqli_stmt_execute($stmt_wali);
 
     $result_wali = mysqli_stmt_get_result($stmt_wali);
     $wali = mysqli_fetch_assoc($result_wali);
+
     mysqli_stmt_close($stmt_wali);
 
-    if ($wali) {
-        $role_final = 'wali_kelas';
-    } else {
-        $role_final = 'guru';
-    }
+    $is_wali_kelas = ($wali !== null);
 
-} else {
-    $_SESSION['error'] = "Role akun tidak memiliki akses.";
-    header("Location: login.php");
-    exit;
+    if ($role === 'wali_kelas' && !$is_wali_kelas) {
+        $_SESSION['error'] = "Penugasan Wali Kelas belum aktif.";
+        header("Location: login.php");
+        exit;
+    }
 }
 
-// Upgrade password teks biasa menjadi hash
+// ==========================================
+// UPGRADE PASSWORD LAMA
+// ==========================================
 if ($info_hash['algo'] === null) {
+
     $hash_baru = password_hash($password, PASSWORD_DEFAULT);
 
     $update = mysqli_prepare(
@@ -140,16 +178,30 @@ if ($info_hash['algo'] === null) {
     }
 }
 
-// Buat session login
+// ==========================================
+// BUAT SESSION
+// ==========================================
 session_regenerate_id(true);
 
 $_SESSION['login'] = true;
-$_SESSION['user_id'] = $user['id'];
-$_SESSION['id_user'] = $user['id'];
-$_SESSION['role'] = $role_final;
-$_SESSION['email'] = $user['email'];
-$_SESSION['nama'] = $user['nama'];
 
-// Arahkan ke dashboard
+$_SESSION['user_id'] = (int)$user['id'];
+$_SESSION['id_user'] = (int)$user['id'];
+
+$_SESSION['role'] = $role;
+$_SESSION['role_asli'] = $role;
+
+$_SESSION['email'] = $user['email'];
+$_SESSION['nama'] = $nama_login;
+$_SESSION['name'] = $nama_login;
+
+$_SESSION['guru_id'] = $guru_id;
+
+$_SESSION['is_wali_kelas'] = $is_wali_kelas;
+$_SESSION['akses_wali_kelas'] = $is_wali_kelas;
+
+// ==========================================
+// REDIRECT
+// ==========================================
 header("Location: dashboard.php");
 exit;

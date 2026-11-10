@@ -2,22 +2,39 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['login'])) {
+if (!isset($_SESSION['login']) || $_SESSION['login'] !== true) {
     header("Location: login.php");
     exit;
 }
 
+include "config/koneksi.php";
+
+// ==========================================
+// CEK ROLE
+// ADMIN TETAP ADMIN
+// ==========================================
 $role = strtolower(trim($_SESSION['role'] ?? ''));
 
-if (!in_array($role, ['admin', 'guru'], true)) {
+if (!in_array($role, ['admin', 'guru', 'wali_kelas'], true)) {
     exit("Anda tidak memiliki akses.");
 }
 
-include "config/koneksi.php";
+// ==========================================
+// ID USER LOGIN
+// ==========================================
+$user_id = (int) (
+    $_SESSION['user_id']
+    ?? $_SESSION['id_user']
+    ?? 0
+);
 
-/* ==========================================
-   QUERY RIWAYAT PELANGGARAN
-========================================== */
+if ($user_id <= 0 && $role !== 'admin') {
+    exit("ID user tidak ditemukan. Silakan login kembali.");
+}
+
+// ==========================================
+// QUERY DASAR RIWAYAT
+// ==========================================
 $query = "
     SELECT
         ps.id,
@@ -48,12 +65,85 @@ $query = "
 
     LEFT JOIN t_kelas k
         ON k.id = ps.kelas_id
-
-    ORDER BY ps.tanggal DESC, ps.id DESC
 ";
 
-$result = mysqli_query($koneksi, $query);
+// ==========================================
+// FILTER BERDASARKAN ROLE
+// ==========================================
 
+// ADMIN: MELIHAT SEMUA DATA
+if ($role === 'admin') {
+
+    $query .= "
+        ORDER BY ps.tanggal DESC, ps.id DESC
+    ";
+
+    $result = mysqli_query($koneksi, $query);
+
+// ==========================================
+// GURU: HANYA DATA YANG DICATAT OLEH DIRINYA
+// ==========================================
+} elseif ($role === 'guru') {
+
+    $query .= "
+        WHERE ps.guru_id = (
+            SELECT g.id
+            FROM t_guru g
+            WHERE g.user_id = ?
+            LIMIT 1
+        )
+
+        ORDER BY ps.tanggal DESC, ps.id DESC
+    ";
+
+    $stmt = mysqli_prepare($koneksi, $query);
+
+    if (!$stmt) {
+        die("Gagal menyiapkan query: " . mysqli_error($koneksi));
+    }
+
+    mysqli_stmt_bind_param($stmt, "i", $user_id);
+    mysqli_stmt_execute($stmt);
+
+    $result = mysqli_stmt_get_result($stmt);
+
+// ==========================================
+// WALI KELAS: HANYA DATA KELAS TANGGUNG JAWAB
+// ==========================================
+} else {
+
+    $query .= "
+        WHERE EXISTS (
+            SELECT 1
+            FROM t_wali_kelas wk
+
+            INNER JOIN t_guru g
+                ON g.id = wk.guru_id
+
+            WHERE g.user_id = ?
+              AND wk.kelas_id = ps.kelas_id
+              AND wk.tahun_ajaran_id = ps.tahun_ajaran_id
+              AND wk.status_aktif = 1
+        )
+
+        ORDER BY ps.tanggal DESC, ps.id DESC
+    ";
+
+    $stmt = mysqli_prepare($koneksi, $query);
+
+    if (!$stmt) {
+        die("Gagal menyiapkan query: " . mysqli_error($koneksi));
+    }
+
+    mysqli_stmt_bind_param($stmt, "i", $user_id);
+    mysqli_stmt_execute($stmt);
+
+    $result = mysqli_stmt_get_result($stmt);
+}
+
+// ==========================================
+// CEK HASIL QUERY
+// ==========================================
 if (!$result) {
     die("Gagal mengambil data riwayat: " . mysqli_error($koneksi));
 }
@@ -228,7 +318,9 @@ $total_catatan = mysqli_num_rows($result);
 
                                         <tr>
 
-                                            <td><?= $no++; ?></td>
+                                            <td>
+                                                <?= $no++; ?>
+                                            </td>
 
                                             <td>
                                                 <?= htmlspecialchars($row['nama_siswa'] ?? '-'); ?>
@@ -259,7 +351,7 @@ $total_catatan = mysqli_num_rows($result);
                                             <td>
 
                                                 <?php
-                                                $status = $row['status'] ?? '';
+                                                $status = trim($row['status'] ?? '');
 
                                                 if (strtolower($status) === 'selesai') {
                                                     echo '<span class="badge bg-success">Selesai</span>';
@@ -279,10 +371,10 @@ $total_catatan = mysqli_num_rows($result);
                                             </td>
 
                                             <td>
-                                              <a href="edit_keterangan.php?id=<?= (int)$row['id']; ?>"
-   class="btn btn-primary btn-sm">
-    Edit
-</a>
+                                                <a href="edit_keterangan.php?id=<?= (int)$row['id']; ?>"
+                                                   class="btn btn-primary btn-sm">
+                                                    Edit
+                                                </a>
                                             </td>
 
                                         </tr>
@@ -345,12 +437,19 @@ $(document).ready(function () {
         ],
 
         language: {
+
             search: "Cari:",
+
             lengthMenu: "Tampilkan _MENU_ data",
+
             info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+
             infoEmpty: "Tidak ada data",
+
             infoFiltered: "(difilter dari _MAX_ data)",
+
             zeroRecords: "Data tidak ditemukan",
+
             emptyTable: "Belum ada riwayat pelanggaran",
 
             paginate: {
@@ -359,6 +458,7 @@ $(document).ready(function () {
                 next: "Selanjutnya",
                 previous: "Sebelumnya"
             }
+
         }
 
     });
