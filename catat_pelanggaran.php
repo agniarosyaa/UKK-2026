@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 
@@ -14,20 +15,43 @@ if (!in_array($role, ['admin', 'guru'])) {
     exit("Anda tidak memiliki akses");
 }
 
-$query = "SELECT * FROM t_pelanggaran_siswa ORDER BY tanggal DESC";
+/* =====================================
+   AMBIL DATA PELANGGARAN SISWA
+===================================== */
+
+$query = "
+    SELECT
+        ps.*,
+        COALESCE(
+            NULLIF(NULLIF(TRIM(p.nama), ''), '0'),
+            NULLIF(NULLIF(TRIM(ps.nama_pelanggaran), ''), '0'),
+            '-'
+        ) AS tampilan_nama_pelanggaran
+    FROM t_pelanggaran_siswa ps
+    LEFT JOIN t_pelanggaran p
+        ON ps.pelanggaran_id = p.id
+    ORDER BY ps.tanggal DESC, ps.id DESC
+";
+
 $result = mysqli_query($koneksi, $query);
 $error = $result ? '' : mysqli_error($koneksi);
+
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <title>Catatan Pelanggaran</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+
 </head>
 
 <body class="bg-light">
@@ -35,7 +59,7 @@ $error = $result ? '' : mysqli_error($koneksi);
 <div class="container-fluid">
 <div class="row">
 
-    <!-- SIDEBAR TETAP SAAT SCROLL -->
+    <!-- SIDEBAR -->
     <aside class="col-md-3 col-lg-2 bg-dark text-white p-3 position-fixed top-0 bottom-0 start-0 overflow-auto">
 
         <h5 class="text-white mb-4">
@@ -53,39 +77,57 @@ $error = $result ? '' : mysqli_error($koneksi);
             <?php if ($role == 'admin') { ?>
 
                 <li class="nav-item">
-                    <a href="siswa.php" class="nav-link text-white">Kelola Siswa</a>
+                    <a href="siswa.php" class="nav-link text-white">
+                        Kelola Siswa
+                    </a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="guru.php" class="nav-link text-white">Kelola Guru</a>
+                    <a href="guru.php" class="nav-link text-white">
+                        Kelola Guru
+                    </a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="kelas.php" class="nav-link text-white">Kelola Kelas</a>
+                    <a href="kelas.php" class="nav-link text-white">
+                        Kelola Kelas
+                    </a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="tahun_ajaran.php" class="nav-link text-white">Tahun Ajaran</a>
+                    <a href="tahun_ajaran.php" class="nav-link text-white">
+                        Tahun Ajaran
+                    </a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="penempatan_siswa.php" class="nav-link text-white">Penempatan Siswa</a>
+                    <a href="penempatan_siswa.php" class="nav-link text-white">
+                        Penempatan Siswa
+                    </a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="wali_kelas.php" class="nav-link text-white">Wali Kelas</a>
+                    <a href="wali_kelas.php" class="nav-link text-white">
+                        Wali Kelas
+                    </a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="kategori_pelanggaran.php" class="nav-link text-white">Kategori Pelanggaran</a>
+                    <a href="kategori_pelanggaran.php" class="nav-link text-white">
+                        Kategori Pelanggaran
+                    </a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="jenis_pelanggaran.php" class="nav-link text-white">Jenis Pelanggaran</a>
+                    <a href="jenis_pelanggaran.php" class="nav-link text-white">
+                        Jenis Pelanggaran
+                    </a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="laporan.php" class="nav-link text-white">Laporan</a>
+                    <a href="laporan.php" class="nav-link text-white">
+                        Laporan
+                    </a>
                 </li>
 
             <?php } ?>
@@ -135,12 +177,15 @@ $error = $result ? '' : mysqli_error($koneksi);
             </li>
 
         </ul>
+
     </aside>
 
     <!-- KONTEN UTAMA -->
     <main class="col-md-9 col-lg-10 p-4 offset-md-3 offset-lg-2">
 
-        <h2 class="mb-2">Catatan Pelanggaran Siswa</h2>
+        <h2 class="mb-2">
+            Catatan Pelanggaran Siswa
+        </h2>
 
         <p class="text-secondary">
             Daftar catatan pelanggaran siswa.
@@ -162,10 +207,14 @@ $error = $result ? '' : mysqli_error($koneksi);
         <?php if (isset($_GET['pesan']) && $_GET['pesan'] == 'tambah') { ?>
 
             <div class="alert alert-success alert-dismissible fade show">
+
                 Catatan pelanggaran berhasil ditambahkan.
 
-                <button type="button" class="btn-close"
-                        data-bs-dismiss="alert"></button>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert">
+                </button>
+
             </div>
 
         <?php } ?>
@@ -181,22 +230,27 @@ $error = $result ? '' : mysqli_error($koneksi);
 
         <!-- TABEL DATA -->
         <div class="card shadow-sm">
+
             <div class="card-body">
 
                 <div class="table-responsive">
 
-                    <table id="tabelPelanggaran" class="table table-bordered table-hover align-middle">
+                    <table id="tabelPelanggaran"
+                           class="table table-bordered table-hover align-middle">
 
                         <thead class="table-light">
+
                             <tr>
                                 <th>No</th>
                                 <th>Tanggal</th>
                                 <th>Nama Siswa</th>
+                                <th>Nama Kelas</th>
                                 <th>Nama Pelanggaran</th>
                                 <th>Poin</th>
                                 <th>Tindakan</th>
                                 <th>Status</th>
                             </tr>
+
                         </thead>
 
                         <tbody>
@@ -221,36 +275,53 @@ $error = $result ? '' : mysqli_error($koneksi);
                                         <?= htmlspecialchars($data['nama_siswa'] ?? '-'); ?>
                                     </td>
 
+                                    <!-- NAMA KELAS -->
                                     <td>
-                                        <?= htmlspecialchars($data['nama_pelanggaran'] ?? '-'); ?>
+                                        <?= htmlspecialchars($data['nama_kelas'] ?? '-'); ?>
                                     </td>
 
+                                    <!-- NAMA PELANGGARAN -->
+                                    <td>
+                                        <?= htmlspecialchars($data['tampilan_nama_pelanggaran'] ?? '-'); ?>
+                                    </td>
+
+                                    <!-- POIN -->
                                     <td>
                                         <span class="badge bg-danger">
                                             <?= htmlspecialchars((string)($data['poin'] ?? 0)); ?> Poin
                                         </span>
                                     </td>
 
-                                    <!-- TINDAKAN TANPA WARNA -->
+                                    <!-- TINDAKAN -->
                                     <td>
                                         <?= htmlspecialchars($data['tindakan'] ?? '-'); ?>
                                     </td>
 
-                                    <!-- STATUS MENGGUNAKAN WARNA -->
+                                    <!-- STATUS -->
                                     <td>
 
                                         <?php
+
                                         $status = strtolower(trim($data['status'] ?? ''));
 
                                         if ($status == 'selesai') {
+
                                             $warna = 'bg-success';
+
                                         } elseif ($status == 'proses' || $status == 'diproses') {
+
                                             $warna = 'bg-warning text-dark';
+
                                         } elseif ($status == 'belum diproses' || $status == 'belum') {
+
                                             $warna = 'bg-secondary';
+
                                         } else {
+
                                             $warna = 'bg-primary';
+
                                         }
+
                                         ?>
 
                                         <span class="badge <?= $warna; ?>">
@@ -266,7 +337,7 @@ $error = $result ? '' : mysqli_error($koneksi);
                         <?php } else { ?>
 
                             <tr>
-                                <td colspan="7" class="text-center">
+                                <td colspan="8" class="text-center">
                                     Belum ada catatan pelanggaran.
                                 </td>
                             </tr>
@@ -280,6 +351,7 @@ $error = $result ? '' : mysqli_error($koneksi);
                 </div>
 
             </div>
+
         </div>
 
         <?php } ?>
@@ -290,6 +362,7 @@ $error = $result ? '' : mysqli_error($koneksi);
 </div>
 
 <!-- JAVASCRIPT -->
+
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
@@ -299,6 +372,7 @@ $error = $result ? '' : mysqli_error($koneksi);
 <script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
+
 $(document).ready(function () {
 
     $('#tabelPelanggaran').DataTable({
@@ -315,25 +389,39 @@ $(document).ready(function () {
         ],
 
         language: {
+
             search: "Cari:",
+
             lengthMenu: "Tampilkan _MENU_ data",
+
             info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+
             infoEmpty: "Tidak ada data",
+
             infoFiltered: "(difilter dari _MAX_ data)",
+
             zeroRecords: "Data tidak ditemukan",
+
             emptyTable: "Belum ada catatan pelanggaran",
 
             paginate: {
+
                 first: "Pertama",
+
                 last: "Terakhir",
+
                 next: "Selanjutnya",
+
                 previous: "Sebelumnya"
+
             }
+
         }
 
     });
 
 });
+
 </script>
 
 </body>

@@ -10,64 +10,55 @@ if (!isset($_SESSION['login'])) {
 $role = strtolower(trim($_SESSION['role'] ?? ''));
 
 if (!in_array($role, ['admin', 'guru'], true)) {
-    echo "Anda tidak memiliki akses";
-    exit;
+    exit("Anda tidak memiliki akses.");
 }
 
 include "config/koneksi.php";
 
 /* ==========================================
    QUERY RIWAYAT PELANGGARAN
-   KELAS DARI PENEMPATAN AKTIF
-   PELANGGARAN DARI TABEL MASTER
 ========================================== */
-
 $query = "
     SELECT
         ps.id,
         ps.nama_siswa,
 
-        COALESCE(k.nama, ps.nama_kelas, '-') AS nama_kelas,
+        COALESCE(
+            NULLIF(NULLIF(TRIM(ps.nama_kelas), ''), '0'),
+            NULLIF(k.nama, ''),
+            '-'
+        ) AS nama_kelas,
 
         COALESCE(
-            NULLIF(jp.nama, ''),
-            NULLIF(ps.nama_pelanggaran, ''),
+            NULLIF(NULLIF(TRIM(p.nama), ''), '0'),
+            NULLIF(NULLIF(TRIM(ps.nama_pelanggaran), ''), '0'),
             '-'
         ) AS nama_pelanggaran,
 
         ps.tanggal,
-        ps.keterangan,
         ps.poin,
         ps.tindakan,
-        ps.status
+        ps.status,
+        ps.keterangan
 
     FROM t_pelanggaran_siswa ps
 
-    LEFT JOIN t_pelanggaran jp
-        ON jp.id = ps.pelanggaran_id
-
-    LEFT JOIN t_kelas_siswa ks
-        ON ks.siswa_id = ps.siswa_id
-        AND ks.tahun_ajaran_id = (
-            SELECT id
-            FROM t_tahun_ajaran
-            WHERE status_aktif = 1
-            ORDER BY id DESC
-            LIMIT 1
-        )
-        AND ks.status_aktif = 1
+    LEFT JOIN t_pelanggaran p
+        ON p.id = ps.pelanggaran_id
 
     LEFT JOIN t_kelas k
-        ON k.id = ks.kelas_id
+        ON k.id = ps.kelas_id
 
     ORDER BY ps.tanggal DESC, ps.id DESC
 ";
 
-$data = mysqli_query($koneksi, $query);
+$result = mysqli_query($koneksi, $query);
 
-if (!$data) {
+if (!$result) {
     die("Gagal mengambil data riwayat: " . mysqli_error($koneksi));
 }
+
+$total_catatan = mysqli_num_rows($result);
 ?>
 
 <!DOCTYPE html>
@@ -100,39 +91,29 @@ if (!$data) {
 
             <nav class="nav nav-pills flex-column gap-2">
 
-                <a href="dashboard.php"
-                   class="nav-link text-white">
+                <a href="dashboard.php" class="nav-link text-white">
                     Dashboard
                 </a>
 
-                <?php if ($role == 'guru'): ?>
+                <a href="catat_pelanggaran.php" class="nav-link text-white">
+                    Catat Pelanggaran
+                </a>
 
-                    <a href="catat_pelanggaran.php"
-                       class="nav-link text-white">
-                        Catat Pelanggaran
-                    </a>
+                <a href="tindakan.php" class="nav-link text-white">
+                    Tindakan
+                </a>
 
-                    <a href="tindakan.php"
-                       class="nav-link text-white">
-                        Tindakan
-                    </a>
-
-                <?php endif; ?>
-
-                <a href="riwayat.php"
-                   class="nav-link active">
+                <a href="riwayat.php" class="nav-link active">
                     Riwayat
                 </a>
 
-                <a href="rekap_poin.php"
-                   class="nav-link text-white">
+                <a href="rekap_poin.php" class="nav-link text-white">
                     Rekap Poin
                 </a>
 
                 <hr class="text-secondary">
 
-                <a href="about_me.php"
-                   class="nav-link text-white">
+                <a href="about_me.php" class="nav-link text-white">
                     About Me
                 </a>
 
@@ -155,7 +136,33 @@ if (!$data) {
                 Daftar catatan pelanggaran siswa yang tersimpan.
             </p>
 
-            <!-- RINGKASAN -->
+            <!-- NOTIFIKASI BERHASIL -->
+            <?php if (isset($_GET['updated'])): ?>
+
+                <div class="alert alert-success alert-dismissible fade show">
+                    Keterangan berhasil diperbarui.
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert"></button>
+                </div>
+
+            <?php endif; ?>
+
+            <!-- NOTIFIKASI GAGAL -->
+            <?php if (isset($_GET['error'])): ?>
+
+                <div class="alert alert-danger alert-dismissible fade show">
+                    Keterangan gagal diperbarui.
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert"></button>
+                </div>
+
+            <?php endif; ?>
+
+            <!-- TOTAL CATATAN -->
             <div class="row g-3 mb-4">
 
                 <div class="col-md-4">
@@ -169,7 +176,7 @@ if (!$data) {
                             </p>
 
                             <h3 class="mb-0">
-                                <?= mysqli_num_rows($data); ?>
+                                <?= $total_catatan; ?>
                             </h3>
 
                         </div>
@@ -206,23 +213,22 @@ if (!$data) {
                                     <th>Tindakan</th>
                                     <th>Status</th>
                                     <th>Keterangan</th>
+                                    <th>Aksi</th>
                                 </tr>
 
                             </thead>
 
                             <tbody>
 
-                                <?php if (mysqli_num_rows($data) > 0): ?>
+                                <?php if ($total_catatan > 0): ?>
 
                                     <?php $no = 1; ?>
 
-                                    <?php while ($row = mysqli_fetch_assoc($data)): ?>
+                                    <?php while ($row = mysqli_fetch_assoc($result)): ?>
 
                                         <tr>
 
-                                            <td>
-                                                <?= $no++; ?>
-                                            </td>
+                                            <td><?= $no++; ?></td>
 
                                             <td>
                                                 <?= htmlspecialchars($row['nama_siswa'] ?? '-'); ?>
@@ -241,13 +247,13 @@ if (!$data) {
                                             </td>
 
                                             <td>
-                                                <span class="badge bg-primary">
-                                                    <?= (int) $row['poin']; ?> poin
-                                                </span>
+                                                <strong>
+                                                    <?= (int)($row['poin'] ?? 0); ?> poin
+                                                </strong>
                                             </td>
 
                                             <td>
-                                                <?= htmlspecialchars($row['tindakan'] ?? '') ?: '-'; ?>
+                                                <?= htmlspecialchars($row['tindakan'] ?? '-') ?: '-'; ?>
                                             </td>
 
                                             <td>
@@ -255,9 +261,9 @@ if (!$data) {
                                                 <?php
                                                 $status = $row['status'] ?? '';
 
-                                                if (strtolower($status) == 'selesai') {
+                                                if (strtolower($status) === 'selesai') {
                                                     echo '<span class="badge bg-success">Selesai</span>';
-                                                } elseif (strtolower($status) == 'diproses') {
+                                                } elseif (strtolower($status) === 'diproses') {
                                                     echo '<span class="badge bg-warning text-dark">Diproses</span>';
                                                 } else {
                                                     echo '<span class="badge bg-secondary">'
@@ -272,6 +278,13 @@ if (!$data) {
                                                 <?= htmlspecialchars($row['keterangan'] ?? '-'); ?>
                                             </td>
 
+                                            <td>
+                                              <a href="edit_keterangan.php?id=<?= (int)$row['id']; ?>"
+   class="btn btn-primary btn-sm">
+    Edit
+</a>
+                                            </td>
+
                                         </tr>
 
                                     <?php endwhile; ?>
@@ -279,7 +292,7 @@ if (!$data) {
                                 <?php else: ?>
 
                                     <tr>
-                                        <td colspan="9"
+                                        <td colspan="10"
                                             class="text-center text-secondary py-4">
                                             Belum ada riwayat pelanggaran.
                                         </td>
@@ -293,8 +306,7 @@ if (!$data) {
 
                     </div>
 
-                    <a href="dashboard.php"
-                       class="btn btn-secondary mt-2">
+                    <a href="dashboard.php" class="btn btn-secondary mt-2">
                         Kembali ke Dashboard
                     </a>
 
@@ -328,7 +340,7 @@ $(document).ready(function () {
         columnDefs: [
             {
                 orderable: false,
-                targets: [0]
+                targets: [0, 9]
             }
         ],
 
