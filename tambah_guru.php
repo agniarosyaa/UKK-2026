@@ -37,10 +37,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     ) {
         $pesan = "Semua data wajib diisi.";
 
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $pesan = "Format email tidak valid.";
+    } elseif (!ctype_digit($nip) || strlen($nip) > 18) {
+    $pesan = "NIP harus berupa angka dan maksimal 18 digit.";
 
-    } elseif ($password !== $konfirmasi_password) {
+} elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    $pesan = "Format email tidak valid.";
+
+} elseif (strlen($password) > 8) {
+    $pesan = "Password maksimal 8 karakter.";
+
+} elseif (strlen($konfirmasi_password) > 8) {
+    $pesan = "Konfirmasi password maksimal 8 karakter.";
+
+} elseif ($password !== $konfirmasi_password) {
+    $pesan = "Konfirmasi password tidak sama.";
         $pesan = "Konfirmasi password tidak sama.";
 
     } elseif (!in_array($status_aktif, ['0', '1'], true)) {
@@ -87,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $stmt_user = mysqli_prepare(
                     $koneksi,
                     "INSERT INTO t_users
-                    (name, email, password, role, created_at, update_at)
+                    (nama, email, password, role, created_at, update_at)
                     VALUES (?, ?, ?, 'guru', NOW(), NOW())"
                 );
 
@@ -145,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             } catch (Throwable $e) {
                 mysqli_rollback($koneksi);
 
-                $pesan = "Data gagal disimpan. Periksa struktur database dan pastikan email serta NIP belum digunakan.";
+                $pesan = "ERROR DATABASE: " . mysqli_error($koneksi) . " | " . $e->getMessage();
             }
         }
 
@@ -285,9 +295,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <div class="mb-3">
                             <label class="form-label">NIP</label>
                             <input type="text" name="nip"
-                                   class="form-control"
-                                   value="<?= htmlspecialchars($nip) ?>"
-                                   required>
+       id="nip"
+       class="form-control"
+       value="<?= htmlspecialchars($nip) ?>"
+       maxlength="18"
+       inputmode="numeric"
+       required>
                         </div>
 
                         <div class="mb-3">
@@ -308,19 +321,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                         <div class="mb-3">
                             <label class="form-label">Password</label>
-                            <input type="password" name="password"
-                                   class="form-control"
-                                   autocomplete="new-password"
-                                   required>
+                           <input type="password" name="password"
+       id="password"
+       class="form-control"
+       autocomplete="new-password"
+       maxlength="8"
+       required>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Konfirmasi Password</label>
-                            <input type="password"
-                                   name="konfirmasi_password"
-                                   class="form-control"
-                                   autocomplete="new-password"
-                                   required>
+                           <input type="password"
+       name="konfirmasi_password"
+       id="konfirmasi_password"
+       class="form-control"
+       autocomplete="new-password"
+       maxlength="8"
+       required>
                         </div>
 
                         <div class="mb-4">
@@ -354,6 +371,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.getElementById('nip').addEventListener('input', function () {
+    this.value = this.value.replace(/[^0-9]/g, '').slice(0, 18);
+});
 
+document.getElementById('password').addEventListener('input', function () {
+    this.value = this.value.slice(0, 8);
+});
+
+document.getElementById('konfirmasi_password').addEventListener('input', function () {
+    this.value = this.value.slice(0, 8);
+});
+</script>
+
+</body>
+</html>
 </body>
 </html>

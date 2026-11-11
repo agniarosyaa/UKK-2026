@@ -11,7 +11,6 @@ include "../config/koneksi.php";
 
 /* =====================================
    CEK ROLE
-   ADMIN TETAP ADMIN
 ===================================== */
 $role = strtolower(trim($_SESSION['role'] ?? ''));
 $role = str_replace([' ', '-'], '_', $role);
@@ -54,7 +53,7 @@ if ($user_id > 0) {
     $stmtGuru->close();
 }
 
-/* Fallback ID guru dari session */
+/* FALLBACK ID GURU */
 if (!$guru && !empty($_SESSION['guru_id'])) {
     $guru_id_session = (int) $_SESSION['guru_id'];
 
@@ -145,7 +144,7 @@ if ($filter_kelas !== '') {
     }
 }
 
-/* Validasi filter kelas berdasarkan penugasan */
+/* VALIDASI FILTER KELAS */
 $filter_valid = false;
 
 if ($kelas_filter_id > 0 && $tahun_filter_id > 0) {
@@ -166,7 +165,7 @@ if (!$filter_valid) {
     $filter_kelas = '';
 }
 
-/* Validasi status */
+/* VALIDASI STATUS */
 if (!in_array($filter_status, ['', 'Diproses', 'Selesai'], true)) {
     $filter_status = '';
 }
@@ -242,7 +241,7 @@ $sql = "
     )
 ";
 
-/* FILTER KELAS + TAHUN AJARAN */
+/* FILTER KELAS */
 if ($kelas_filter_id > 0 && $tahun_filter_id > 0) {
     $sql .= "
         AND ps.kelas_id = ?
@@ -263,9 +262,7 @@ if ($filter_status !== '') {
     $types .= "s";
 }
 
-$sql .= "
-    ORDER BY ps.tanggal DESC, ps.id DESC
-";
+$sql .= " ORDER BY ps.tanggal DESC, ps.id DESC";
 
 /* EKSEKUSI QUERY */
 $stmtData = $koneksi->prepare($sql);
@@ -289,7 +286,7 @@ while ($row = $resultData->fetch_assoc()) {
 $stmtData->close();
 
 /* =====================================
-   FORMAT TANGGAL INDONESIA
+   FORMAT TANGGAL
 ===================================== */
 function tanggalIndonesia($tanggal)
 {
@@ -311,39 +308,29 @@ function tanggalIndonesia($tanggal)
 <html lang="id">
 
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Rekap Pelanggaran Siswa</title>
 
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+          rel="stylesheet">
 
-    <link
-        href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css"
-        rel="stylesheet"
-    >
+    <link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css"
+          rel="stylesheet">
 
     <style>
-
         body {
             background-color: #f8f9fa;
             margin: 0;
         }
 
-        /* =====================================
-           SIDEBAR
-           UKURAN SAMA DENGAN CATAT PELANGGARAN
-        ===================================== */
+        /* SIDEBAR SAMA DENGAN DASHBOARD */
         .sidebar {
-            width: 250px;
-            min-width: 250px;
-            max-width: 250px;
+            width: 275px;
+            min-width: 275px;
+            max-width: 275px;
             height: 100vh;
-            min-height: 100vh;
             position: fixed;
             top: 0;
             left: 0;
@@ -368,22 +355,17 @@ function tanggalIndonesia($tanggal)
             background-color: #0d6efd;
         }
 
-        /* =====================================
-           KONTEN UTAMA
-        ===================================== */
+        /* KONTEN UTAMA */
         .content {
-            margin-left: 250px;
-            width: calc(100% - 250px);
+            margin-left: 275px;
+            width: calc(100% - 275px);
             min-height: 100vh;
             padding: 25px;
             box-sizing: border-box;
         }
 
-        /* =====================================
-           RESPONSIVE
-        ===================================== */
+        /* RESPONSIVE */
         @media (max-width: 767px) {
-
             .sidebar {
                 position: relative;
                 width: 100%;
@@ -398,378 +380,333 @@ function tanggalIndonesia($tanggal)
                 width: 100%;
                 padding: 15px;
             }
-
         }
-
     </style>
-
 </head>
 
 <body>
 
-<!-- =====================================
-     SIDEBAR
-===================================== -->
-<aside class="sidebar">
+<div class="container-fluid">
+    <div class="row">
 
-    <h5 class="text-white mb-4">
-        Sistem Pelanggaran
-    </h5>
+        <!-- SIDEBAR -->
+     <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3 position-fixed top-0 start-0 overflow-auto">
 
-    <ul class="nav nav-pills flex-column gap-2">
-
-        <li class="nav-item">
-            <a href="../dashboard.php" class="nav-link">
-                Dashboard
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a href="../catat_pelanggaran.php" class="nav-link">
-                Catat Pelanggaran
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a href="data_siswa.php" class="nav-link">
-                Data Siswa
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a href="rekap_pelanggaran.php" class="nav-link active">
-                Rekap Pelanggaran
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a href="laporan.php" class="nav-link">
-                Laporan
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a href="../riwayat.php" class="nav-link">
-                Riwayat
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a href="../rekap_poin.php" class="nav-link">
-                Rekap Poin
-            </a>
-        </li>
-
-        <hr class="text-secondary">
-
-        <li class="nav-item">
-            <a href="../about_me.php" class="nav-link">
-                About Me
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a
-                href="../logout.php"
-                class="nav-link text-danger"
-                onclick="return confirm('Yakin ingin logout?')"
-            >
-                Logout
-            </a>
-        </li>
-
-    </ul>
-
-</aside>
-
-<!-- =====================================
-     KONTEN UTAMA
-===================================== -->
-<main class="content">
-
-    <h2 class="mb-2">
-        Rekap Pelanggaran Siswa
-    </h2>
-
-    <p class="text-muted">
-        Selamat datang,
-        <strong><?= htmlspecialchars($nama_guru) ?></strong>
-    </p>
-
-    <!-- KELAS TANGGUNG JAWAB -->
-    <div class="card shadow-sm mb-4">
-
-        <div class="card-body">
-
-            <h6 class="text-muted mb-2">
-                Kelas Tanggung Jawab
-            </h6>
-
-            <strong>
-                <?= htmlspecialchars(
-                    implode(', ', array_column($kelas_wali, 'nama_kelas'))
-                ) ?>
-            </strong>
-
-        </div>
-
-    </div>
-
-    <!-- TOTAL -->
-    <div class="row g-3 mb-4">
-
-        <div class="col-md-6">
-
-            <div class="card shadow-sm h-100">
-
-                <div class="card-body">
-
-                    <h6 class="text-muted mb-2">
-                        Total Pelanggaran
-                    </h6>
-
-                    <h3 class="mb-0">
-                        <?= $total_pelanggaran ?>
-                    </h3>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="col-md-6">
-
-            <div class="card shadow-sm h-100">
-
-                <div class="card-body">
-
-                    <h6 class="text-muted mb-2">
-                        Total Poin
-                    </h6>
-
-                    <h3 class="mb-0">
-                        <?= $total_poin ?>
-                    </h3>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <!-- FILTER -->
-    <div class="card shadow-sm mb-4">
-
-        <div class="card-body">
-
-            <form method="GET" class="row g-3">
-
-                <div class="col-md-6">
-
-                    <label class="form-label">
-                        Pilih Kelas
-                    </label>
-
-                    <select name="kelas" class="form-select">
-
-                        <option value="">
-                            Semua Kelas Tanggung Jawab
-                        </option>
-
-                        <?php foreach ($kelas_wali as $kelas): ?>
-
-                            <?php
-                            $nilai_kelas =
-                                (int) $kelas['kelas_id'] . '|' .
-                                (int) $kelas['tahun_ajaran_id'];
-                            ?>
-
-                            <option
-                                value="<?= htmlspecialchars($nilai_kelas) ?>"
-                                <?= $filter_kelas === $nilai_kelas ? 'selected' : '' ?>
-                            >
-
-                                <?= htmlspecialchars($kelas['nama_kelas']) ?>
-                                -
-                                <?= htmlspecialchars($kelas['nama_tahun_ajaran']) ?>
-
-                            </option>
-
-                        <?php endforeach; ?>
-
-                    </select>
-
-                </div>
-
-                <div class="col-md-6">
-
-                    <label class="form-label">
-                        Status Pelanggaran
-                    </label>
-
-                    <select name="status" class="form-select">
-
-                        <option value="">
-                            Semua Status
-                        </option>
-
-                        <option
-                            value="Diproses"
-                            <?= $filter_status === 'Diproses' ? 'selected' : '' ?>
-                        >
-                            Diproses
-                        </option>
-
-                        <option
-                            value="Selesai"
-                            <?= $filter_status === 'Selesai' ? 'selected' : '' ?>
-                        >
-                            Selesai
-                        </option>
-
-                    </select>
-
-                </div>
-
-                <div class="col-12">
-
-                    <button type="submit" class="btn btn-primary">
-                        Tampilkan
-                    </button>
-
-                    <a
-                        href="rekap_pelanggaran.php"
-                        class="btn btn-secondary"
-                    >
-                        Reset
-                    </a>
-
-                </div>
-
-            </form>
-
-        </div>
-
-    </div>
-
-    <!-- TABEL REKAP -->
-    <div class="card shadow-sm mb-4">
-
-        <div class="card-body">
-
-            <h5 class="mb-3">
-                Data Rekap Pelanggaran
+            <h5 class="text-white mb-4">
+                Sistem Pelanggaran
             </h5>
 
-            <div class="table-responsive">
+            <ul class="nav nav-pills flex-column gap-2">
 
-                <table
-                    id="tabelRekap"
-                    class="table table-bordered table-striped table-hover align-middle"
-                >
+                <li class="nav-item">
+                    <a href="../dashboard.php" class="nav-link text-white">
+                        Dashboard
+                    </a>
+                </li>
 
-                    <thead class="table-dark">
+                <li class="nav-item">
+                    <a href="../catat_pelanggaran.php" class="nav-link text-white">
+                        Catat Pelanggaran
+                    </a>
+                </li>
 
-                        <tr>
-                            <th>No</th>
-                            <th>Tanggal</th>
-                            <th>Nama Siswa</th>
-                            <th>Kelas</th>
-                            <th>Jenis Pelanggaran</th>
-                            <th>Poin</th>
-                            <th>Keterangan</th>
-                            <th>Tindakan</th>
-                            <th>Status</th>
-                        </tr>
+                <li class="nav-item">
+                    <a href="data_siswa.php" class="nav-link text-white">
+                        Data Siswa
+                    </a>
+                </li>
 
-                    </thead>
+                <li class="nav-item">
+                    <a href="rekap_pelanggaran.php" class="nav-link active">
+                        Rekap Pelanggaran
+                    </a>
+                </li>
 
-                    <tbody>
+                <li class="nav-item">
+                    <a href="laporan.php" class="nav-link text-white">
+                        Laporan
+                    </a>
+                </li>
 
-                        <?php $no = 1; ?>
+                <li class="nav-item">
+                    <a href="../riwayat.php" class="nav-link text-white">
+                        Riwayat
+                    </a>
+                </li>
 
-                        <?php foreach ($data_pelanggaran as $data): ?>
+                <li class="nav-item">
+                    <a href="../rekap_poin.php" class="nav-link text-white">
+                        Rekap Poin
+                    </a>
+                </li>
 
-                            <tr>
+                <hr class="text-secondary">
 
-                                <td>
-                                    <?= $no++ ?>
-                                </td>
+                <li class="nav-item">
+                    <a href="../about_me.php" class="nav-link text-white">
+                        About Me
+                    </a>
+                </li>
 
-                                <td>
-                                    <?= tanggalIndonesia($data['tanggal']) ?>
-                                </td>
+                <li class="nav-item">
+                    <a href="../logout.php"
+                       class="nav-link text-danger"
+                       onclick="return confirm('Yakin ingin logout?')">
+                        Logout
+                    </a>
+                </li>
 
-                                <td>
-                                    <?= htmlspecialchars($data['nama_siswa'] ?? '-') ?>
-                                </td>
+            </ul>
+        </aside>
 
-                                <td>
-                                    <?= htmlspecialchars($data['nama_kelas'] ?? '-') ?>
-                                </td>
+        <!-- KONTEN UTAMA -->
+    <main class="col-md-9 col-lg-10 offset-md-3 offset-lg-2 p-4">
 
-                                <td>
-                                    <?= htmlspecialchars($data['nama_pelanggaran'] ?? '-') ?>
-                                </td>
+            <h2 class="mb-2">
+                Rekap Pelanggaran Siswa
+            </h2>
 
-                                <td>
-                                    <?= (int) $data['poin'] ?>
-                                </td>
+            <p class="text-muted">
+                Selamat datang,
+                <strong><?= htmlspecialchars($nama_guru) ?></strong>
+            </p>
 
-                                <td>
-                                    <?= htmlspecialchars($data['keterangan'] ?? '-') ?>
-                                </td>
+            <!-- KELAS TANGGUNG JAWAB -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
 
-                                <td>
-                                    <?= htmlspecialchars($data['tindakan'] ?? '-') ?>
-                                </td>
+                    <h6 class="text-muted mb-2">
+                        Kelas Tanggung Jawab
+                    </h6>
 
-                                <td>
+                    <strong>
+                        <?= htmlspecialchars(
+                            implode(', ', array_column($kelas_wali, 'nama_kelas'))
+                        ) ?>
+                    </strong>
 
-                                    <?php if (($data['status'] ?? '') === 'Selesai'): ?>
+                </div>
+            </div>
 
-                                        <span class="badge bg-success">
-                                            Selesai
-                                        </span>
+            <!-- TOTAL -->
+            <div class="row g-3 mb-4">
 
-                                    <?php elseif (($data['status'] ?? '') === 'Diproses'): ?>
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
 
-                                        <span class="badge bg-warning text-dark">
-                                            Diproses
-                                        </span>
+                            <h6 class="text-muted mb-2">
+                                Total Pelanggaran
+                            </h6>
 
-                                    <?php else: ?>
+                            <h3 class="mb-0">
+                                <?= $total_pelanggaran ?>
+                            </h3>
 
-                                        <span class="badge bg-secondary">
-                                            <?= htmlspecialchars($data['status'] ?? '-') ?>
-                                        </span>
+                        </div>
+                    </div>
+                </div>
 
-                                    <?php endif; ?>
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
 
-                                </td>
+                            <h6 class="text-muted mb-2">
+                                Total Poin
+                            </h6>
 
-                            </tr>
+                            <h3 class="mb-0">
+                                <?= $total_poin ?>
+                            </h3>
 
-                        <?php endforeach; ?>
-
-                    </tbody>
-
-                </table>
+                        </div>
+                    </div>
+                </div>
 
             </div>
 
-        </div>
+            <!-- FILTER -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+
+                    <form method="GET" class="row g-3">
+
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                Pilih Kelas
+                            </label>
+
+                            <select name="kelas" class="form-select">
+
+                                <option value="">
+                                    Semua Kelas Tanggung Jawab
+                                </option>
+
+                                <?php foreach ($kelas_wali as $kelas): ?>
+
+                                    <?php
+                                    $nilai_kelas =
+                                        (int) $kelas['kelas_id'] . '|' .
+                                        (int) $kelas['tahun_ajaran_id'];
+                                    ?>
+
+                                    <option
+                                        value="<?= htmlspecialchars($nilai_kelas) ?>"
+                                        <?= $filter_kelas === $nilai_kelas ? 'selected' : '' ?>
+                                    >
+                                        <?= htmlspecialchars($kelas['nama_kelas']) ?>
+                                        -
+                                        <?= htmlspecialchars($kelas['nama_tahun_ajaran']) ?>
+                                    </option>
+
+                                <?php endforeach; ?>
+
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                Status Pelanggaran
+                            </label>
+
+                            <select name="status" class="form-select">
+
+                                <option value="">
+                                    Semua Status
+                                </option>
+
+                                <option value="Diproses"
+                                    <?= $filter_status === 'Diproses' ? 'selected' : '' ?>>
+                                    Diproses
+                                </option>
+
+                                <option value="Selesai"
+                                    <?= $filter_status === 'Selesai' ? 'selected' : '' ?>>
+                                    Selesai
+                                </option>
+
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                Tampilkan
+                            </button>
+
+                            <a href="rekap_pelanggaran.php" class="btn btn-secondary">
+                                Reset
+                            </a>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+            <!-- TABEL REKAP -->
+            <div class="card shadow-sm mb-4">
+
+                <div class="card-body">
+
+                    <h5 class="mb-3">
+                        Data Rekap Pelanggaran
+                    </h5>
+
+                    <div class="table-responsive">
+
+                        <table id="tabelRekap"
+                               class="table table-bordered table-striped table-hover align-middle">
+
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>No</th>
+                                    <th>Tanggal</th>
+                                    <th>Nama Siswa</th>
+                                    <th>Kelas</th>
+                                    <th>Jenis Pelanggaran</th>
+                                    <th>Poin</th>
+                                    <th>Keterangan</th>
+                                    <th>Tindakan</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                <?php $no = 1; ?>
+
+                                <?php foreach ($data_pelanggaran as $data): ?>
+
+                                    <tr>
+                                        <td><?= $no++ ?></td>
+
+                                        <td>
+                                            <?= tanggalIndonesia($data['tanggal']) ?>
+                                        </td>
+
+                                        <td>
+                                            <?= htmlspecialchars($data['nama_siswa'] ?? '-') ?>
+                                        </td>
+
+                                        <td>
+                                            <?= htmlspecialchars($data['nama_kelas'] ?? '-') ?>
+                                        </td>
+
+                                        <td>
+                                            <?= htmlspecialchars($data['nama_pelanggaran'] ?? '-') ?>
+                                        </td>
+
+                                        <td>
+                                            <?= (int) $data['poin'] ?>
+                                        </td>
+
+                                        <td>
+                                            <?= htmlspecialchars($data['keterangan'] ?? '-') ?>
+                                        </td>
+
+                                        <td>
+                                            <?= htmlspecialchars($data['tindakan'] ?? '-') ?>
+                                        </td>
+
+                                        <td>
+                                            <?php if (($data['status'] ?? '') === 'Selesai'): ?>
+
+                                                <span class="badge bg-success">
+                                                    Selesai
+                                                </span>
+
+                                            <?php elseif (($data['status'] ?? '') === 'Diproses'): ?>
+
+                                                <span class="badge bg-warning text-dark">
+                                                    Diproses
+                                                </span>
+
+                                            <?php else: ?>
+
+                                                <span class="badge bg-secondary">
+                                                    <?= htmlspecialchars($data['status'] ?? '-') ?>
+                                                </span>
+
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+
+                                <?php endforeach; ?>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+
+        </main>
 
     </div>
+</div>
 
-</main>
-
-<!-- =====================================
-     JAVASCRIPT
-===================================== -->
+<!-- JAVASCRIPT -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
@@ -782,41 +719,26 @@ function tanggalIndonesia($tanggal)
 $(document).ready(function () {
 
     $('#tabelRekap').DataTable({
-
         pageLength: 10,
 
         lengthMenu: [5, 10, 25, 50],
 
         language: {
-
             search: "Cari:",
-
             lengthMenu: "Tampilkan _MENU_ data",
-
             info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-
             infoEmpty: "Tidak ada data",
-
             infoFiltered: "(difilter dari _MAX_ data)",
-
             zeroRecords: "Data pelanggaran tidak ditemukan",
-
             emptyTable: "Belum ada data pelanggaran",
 
             paginate: {
-
                 first: "Pertama",
-
                 last: "Terakhir",
-
                 next: "Selanjutnya",
-
                 previous: "Sebelumnya"
-
             }
-
         }
-
     });
 
 });

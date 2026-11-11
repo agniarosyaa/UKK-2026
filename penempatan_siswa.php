@@ -18,7 +18,7 @@ include "config/koneksi.php";
 $notifikasi = $_SESSION['notifikasi'] ?? null;
 unset($_SESSION['notifikasi']);
 
-/* AMBIL DATA PENEMPATAN SISWA */
+/* AMBIL DATA PENEMPATAN SESUAI TAHUN AJARAN AKTIF */
 $query = "
     SELECT
         ks.id,
@@ -28,7 +28,9 @@ $query = "
     FROM t_kelas_siswa ks
     LEFT JOIN t_siswa s ON ks.siswa_id = s.id
     LEFT JOIN t_kelas k ON ks.kelas_id = k.id
-    LEFT JOIN t_tahun_ajaran ta ON ks.tahun_ajaran_id = ta.id
+    INNER JOIN t_tahun_ajaran ta 
+        ON ks.tahun_ajaran_id = ta.id
+        AND ta.status_aktif = 1
     ORDER BY ks.id DESC
 ";
 

@@ -77,10 +77,12 @@ if ($role === 'wali_kelas') {
 
 // ==========================================
 // QUERY DATA PELANGGARAN
-// ADMIN : SEMUA DATA
-// GURU BIASA : SEMUA DATA
+// ADMIN : SEMUA DATA YANG BELUM SELESAI
+// GURU BIASA : SEMUA DATA YANG BELUM SELESAI
 // WALI : HANYA KELAS TANGGUNG JAWAB
+//         DAN BELUM SELESAI
 // ==========================================
+
 $query = "
     SELECT
         ps.*,
@@ -95,11 +97,14 @@ $query = "
 
     LEFT JOIN t_pelanggaran p
         ON ps.pelanggaran_id = p.id
+
+    WHERE LOWER(TRIM(COALESCE(ps.status, ''))) <> 'selesai'
 ";
 
 // ==========================================
 // FILTER WALI KELAS
 // ==========================================
+
 if ($mode_wali_kelas) {
 
     if ($user_id <= 0) {
@@ -107,7 +112,7 @@ if ($mode_wali_kelas) {
     }
 
     $query .= "
-        WHERE EXISTS (
+        AND EXISTS (
             SELECT 1
             FROM t_wali_kelas wk
 
@@ -131,6 +136,7 @@ if ($mode_wali_kelas) {
 // ==========================================
 // URUTKAN DATA
 // ==========================================
+
 $query .= "
     ORDER BY ps.tanggal DESC, ps.id DESC
 ";

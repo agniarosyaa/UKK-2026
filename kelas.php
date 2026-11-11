@@ -23,7 +23,10 @@ $data = mysqli_query(
     $koneksi,
     "SELECT * FROM t_kelas
      WHERE status_aktif = 1
-     ORDER BY id ASC"
+     ORDER BY
+        CAST(tingkat AS UNSIGNED) ASC,
+        FIELD(jurusan, 'RPL', 'TKJ', 'BD', 'TKR', 'TSM') ASC,
+        CAST(SUBSTRING_INDEX(nama, ' ', -1) AS UNSIGNED) ASC"
 );
 
 if (!$data) {

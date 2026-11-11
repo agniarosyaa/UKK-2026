@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 
@@ -26,9 +25,13 @@ $kelas = mysqli_query(
     "SELECT id, nama FROM t_kelas ORDER BY nama ASC"
 );
 
+/* AMBIL TAHUN AJARAN YANG AKTIF SAJA */
 $tahun = mysqli_query(
     $koneksi,
-    "SELECT id, nama FROM t_tahun_ajaran ORDER BY id DESC"
+    "SELECT id, nama 
+     FROM t_tahun_ajaran 
+     WHERE status_aktif = 1 
+     ORDER BY id DESC"
 );
 
 if (!$siswa || !$kelas || !$tahun) {
@@ -48,42 +51,73 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     } else {
 
-        $stmt = mysqli_prepare(
+        /* CEK TAHUN AJARAN HARUS AKTIF */
+        $cekTahun = mysqli_prepare(
             $koneksi,
-            "INSERT INTO t_kelas_siswa
-             (siswa_id, kelas_id, tahun_ajaran_id)
-             VALUES (?, ?, ?)"
+            "SELECT id 
+             FROM t_tahun_ajaran 
+             WHERE id = ? AND status_aktif = 1"
         );
 
-        if (!$stmt) {
-            $error = "Gagal menyiapkan penyimpanan data.";
+        mysqli_stmt_bind_param(
+            $cekTahun,
+            "i",
+            $tahun_ajaran_id
+        );
+
+        mysqli_stmt_execute($cekTahun);
+
+        $hasilTahun = mysqli_stmt_get_result($cekTahun);
+
+        if (mysqli_num_rows($hasilTahun) == 0) {
+
+            $error = "Tahun ajaran yang dipilih tidak aktif.";
+
+            mysqli_stmt_close($cekTahun);
+
         } else {
 
-            mysqli_stmt_bind_param(
-                $stmt,
-                "iii",
-                $siswa_id,
-                $kelas_id,
-                $tahun_ajaran_id
+            mysqli_stmt_close($cekTahun);
+
+            $stmt = mysqli_prepare(
+                $koneksi,
+                "INSERT INTO t_kelas_siswa
+                 (siswa_id, kelas_id, tahun_ajaran_id)
+                 VALUES (?, ?, ?)"
             );
 
-            if (mysqli_stmt_execute($stmt)) {
+            if (!$stmt) {
 
-                mysqli_stmt_close($stmt);
-
-                $_SESSION['notifikasi'] = [
-                    'tipe' => 'success',
-                    'pesan' => 'Data penempatan siswa berhasil ditambahkan!'
-                ];
-
-                header("Location: penempatan_siswa.php");
-                exit;
+                $error = "Gagal menyiapkan penyimpanan data.";
 
             } else {
 
-                $error = "Gagal menyimpan data. Pastikan siswa belum ditempatkan pada kombinasi kelas dan tahun ajaran yang sama.";
+                mysqli_stmt_bind_param(
+                    $stmt,
+                    "iii",
+                    $siswa_id,
+                    $kelas_id,
+                    $tahun_ajaran_id
+                );
 
-                mysqli_stmt_close($stmt);
+                if (mysqli_stmt_execute($stmt)) {
+
+                    mysqli_stmt_close($stmt);
+
+                    $_SESSION['notifikasi'] = [
+                        'tipe' => 'success',
+                        'pesan' => 'Data penempatan siswa berhasil ditambahkan!'
+                    ];
+
+                    header("Location: penempatan_siswa.php");
+                    exit;
+
+                } else {
+
+                    $error = "Gagal menyimpan data. Pastikan siswa belum ditempatkan pada kombinasi kelas dan tahun ajaran yang sama.";
+
+                    mysqli_stmt_close($stmt);
+                }
             }
         }
     }
@@ -203,9 +237,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             <!-- PESAN ERROR -->
             <?php if ($error != "") { ?>
+
                 <div class="alert alert-danger">
                     <?= htmlspecialchars($error); ?>
                 </div>
+
             <?php } ?>
 
             <!-- FORM TAMBAH -->
@@ -221,6 +257,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                         <!-- NAMA SISWA -->
                         <div class="mb-3">
+
                             <label for="siswa_id" class="form-label">
                                 Nama Siswa
                             </label>
@@ -231,9 +268,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 class="form-select"
                                 required>
 
-                                <option value="">-- Pilih Siswa --</option>
+                                <option value="">
+                                    -- Pilih Siswa --
+                                </option>
 
                                 <?php while ($row = mysqli_fetch_assoc($siswa)) { ?>
+
                                     <option
                                         value="<?= (int) $row['id']; ?>"
                                         <?= (($_POST['siswa_id'] ?? '') == $row['id']) ? 'selected' : ''; ?>>
@@ -241,13 +281,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                         <?= htmlspecialchars($row['nama']); ?>
 
                                     </option>
+
                                 <?php } ?>
 
                             </select>
+
                         </div>
 
                         <!-- KELAS -->
                         <div class="mb-3">
+
                             <label for="kelas_id" class="form-label">
                                 Kelas
                             </label>
@@ -258,9 +301,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 class="form-select"
                                 required>
 
-                                <option value="">-- Pilih Kelas --</option>
+                                <option value="">
+                                    -- Pilih Kelas --
+                                </option>
 
                                 <?php while ($row = mysqli_fetch_assoc($kelas)) { ?>
+
                                     <option
                                         value="<?= (int) $row['id']; ?>"
                                         <?= (($_POST['kelas_id'] ?? '') == $row['id']) ? 'selected' : ''; ?>>
@@ -268,13 +314,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                         <?= htmlspecialchars($row['nama']); ?>
 
                                     </option>
+
                                 <?php } ?>
 
                             </select>
+
                         </div>
 
                         <!-- TAHUN AJARAN -->
                         <div class="mb-4">
+
                             <label for="tahun_ajaran_id" class="form-label">
                                 Tahun Ajaran
                             </label>
@@ -285,19 +334,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 class="form-select"
                                 required>
 
-                                <option value="">-- Pilih Tahun Ajaran --</option>
-
                                 <?php while ($row = mysqli_fetch_assoc($tahun)) { ?>
+
                                     <option
                                         value="<?= (int) $row['id']; ?>"
-                                        <?= (($_POST['tahun_ajaran_id'] ?? '') == $row['id']) ? 'selected' : ''; ?>>
+                                        <?= (
+                                            isset($_POST['tahun_ajaran_id'])
+                                                ? ((int)$_POST['tahun_ajaran_id'] == (int)$row['id'])
+                                                : true
+                                        ) ? 'selected' : ''; ?>>
 
                                         <?= htmlspecialchars($row['nama']); ?>
 
                                     </option>
+
                                 <?php } ?>
 
                             </select>
+
                         </div>
 
                         <!-- TOMBOL -->

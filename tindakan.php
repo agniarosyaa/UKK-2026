@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 
@@ -23,7 +22,6 @@ unset($_SESSION['notifikasi']);
    HANYA MENAMPILKAN:
    - Diproses
    - Belum Diproses
-   - Status lain yang belum Selesai
 
    TIDAK MENAMPILKAN:
    - Selesai
@@ -60,7 +58,7 @@ $sql = "
     LEFT JOIN t_pelanggaran p
         ON p.id = ps.pelanggaran_id
 
-    WHERE LOWER(TRIM(COALESCE(ps.status, ''))) <> 'selesai'
+    WHERE LOWER(TRIM(COALESCE(ps.status, ''))) NOT IN ('', 'selesai')
 
     ORDER BY ps.tanggal DESC, ps.id DESC
 ";
@@ -251,53 +249,33 @@ if (!$data) {
                                             </td>
 
                                             <td>
+<?php
+$status = strtolower(trim($row['status'] ?? ''));
 
-                                                <?php
-                                                $status = strtolower(trim($row['status'] ?? ''));
+if ($status == 'diproses' || $status == 'proses') {
+    $warna = 'bg-warning text-dark';
+} elseif ($status == 'belum diproses' || $status == 'belum') {
+    $warna = 'bg-secondary';
+} else {
+    $warna = 'bg-secondary';
+}
+?>
 
-                                                if ($status == 'selesai') {
-                                                    $warna = 'bg-success';
-                                                } elseif ($status == 'diproses' || $status == 'proses') {
-                                                    $warna = 'bg-warning text-dark';
-                                                } else {
-                                                    $warna = 'bg-secondary';
-                                                }
-                                                ?>
-
-                                                <span class="badge <?= $warna ?>">
-                                                    <?= htmlspecialchars($row['status'] ?? 'Belum Diproses') ?>
-                                                </span>
-
-                                            </td>
-
-                                            <!-- TOMBOL AKSI -->
-                                            <td>
-
-                                                <a href="edit_tindakan.php?id=<?= (int)$row['id'] ?>"
-                                                   class="btn btn-primary btn-sm">
-                                                    Edit
-                                                </a>
-
-                                                <a href="hapus_tindakan.php?id=<?= (int)$row['id'] ?>"
-                                                   class="btn btn-danger btn-sm"
-                                                   onclick="return confirm('Yakin ingin menghapus tindakan ini?')">
-                                                    Hapus
-                                                </a>
+<span class="badge <?= $warna ?>">
+    <?= htmlspecialchars($row['status'] ?? 'Belum Diproses') ?>
+</span>
 
                                             </td>
-
+<!-- TOMBOL AKSI -->
+<td>
+    <a href="edit_tindakan.php?id=<?= (int)$row['id'] ?>"
+       class="btn btn-primary btn-sm">
+        Tindakan
+    </a>
+</td>
                                         </tr>
 
                                     <?php endwhile; ?>
-
-                                <?php else: ?>
-
-                                    <tr>
-                                        <td colspan="9"
-                                            class="text-center text-secondary py-4">
-                                            Tidak ada pelanggaran yang masih perlu ditindak.
-                                        </td>
-                                    </tr>
 
                                 <?php endif; ?>
 

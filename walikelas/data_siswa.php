@@ -253,58 +253,78 @@ if ($error === '') {
 <div class="container-fluid">
     <div class="row">
 
-        <!-- SIDEBAR -->
-        <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3 position-fixed top-0 bottom-0 start-0 overflow-auto">
+        
+<!-- SIDEBAR -->
+<aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3 position-fixed top-0 bottom-0 start-0 overflow-auto">
 
-            <h5 class="text-white mb-4">
-                Sistem Pelanggaran
-            </h5>
+    <h5 class="text-white mb-4">
+        Sistem Pelanggaran
+    </h5>
 
-            <ul class="nav nav-pills flex-column gap-2">
+    <ul class="nav nav-pills flex-column gap-2">
 
-                <li class="nav-item">
-                    <a href="../dashboard.php" class="nav-link text-white">
-                        Dashboard
-                    </a>
-                </li>
+        <li class="nav-item">
+            <a href="../dashboard.php" class="nav-link text-white">
+                Dashboard
+            </a>
+        </li>
 
-                <li class="nav-item">
-                    <a href="data_siswa.php" class="nav-link active">
-                        Data Siswa
-                    </a>
-                </li>
+        <li class="nav-item">
+            <a href="../catat_pelanggaran.php" class="nav-link text-white">
+                Catat Pelanggaran
+            </a>
+        </li>
 
-                <li class="nav-item">
-                    <a href="rekap_pelanggaran.php" class="nav-link text-white">
-                        Rekap Pelanggaran
-                    </a>
-                </li>
+        <li class="nav-item">
+            <a href="data_siswa.php" class="nav-link active">
+                Data Siswa
+            </a>
+        </li>
 
-                <li class="nav-item">
-                    <a href="laporan.php" class="nav-link text-white">
-                        Laporan
-                    </a>
-                </li>
+        <li class="nav-item">
+            <a href="rekap_pelanggaran.php" class="nav-link text-white">
+                Rekap Pelanggaran
+            </a>
+        </li>
 
-                <hr class="text-secondary">
+        <li class="nav-item">
+            <a href="laporan.php" class="nav-link text-white">
+                Laporan
+            </a>
+        </li>
 
-                <li class="nav-item">
-                    <a href="../about_me.php" class="nav-link text-white">
-                        About Me
-                    </a>
-                </li>
+        <li class="nav-item">
+            <a href="../riwayat.php" class="nav-link text-white">
+                Riwayat
+            </a>
+        </li>
 
-                <li class="nav-item">
-                    <a href="../logout.php"
-                       class="nav-link text-danger"
-                       onclick="return confirm('Yakin ingin logout?')">
-                        Logout
-                    </a>
-                </li>
+        <li class="nav-item">
+            <a href="../rekap_poin.php" class="nav-link text-white">
+                Rekap Poin
+            </a>
+        </li>
 
-            </ul>
+        <hr class="text-secondary">
 
-        </aside>
+        <li class="nav-item">
+            <a href="../about_me.php" class="nav-link text-white">
+                About Me
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="../logout.php"
+               class="nav-link text-danger"
+               onclick="return confirm('Yakin ingin logout?')">
+                Logout
+            </a>
+        </li>
+
+    </ul>
+
+</aside>
+
 
         <!-- KONTEN -->
         <main class="col-md-9 col-lg-10 offset-md-3 offset-lg-2 p-4">

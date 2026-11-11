@@ -2,6 +2,9 @@
 <?php
 session_start();
 
+/* ==========================================
+   CEK LOGIN
+========================================== */
 if (!isset($_SESSION['login']) || $_SESSION['login'] !== true) {
     header("Location: login.php");
     exit;
@@ -9,9 +12,9 @@ if (!isset($_SESSION['login']) || $_SESSION['login'] !== true) {
 
 include "config/koneksi.php";
 
-// ==========================================
-// CEK ROLE
-// ==========================================
+/* ==========================================
+   CEK ROLE
+========================================== */
 $role = strtolower(trim($_SESSION['role'] ?? ''));
 $role = str_replace([' ', '-'], '_', $role);
 
@@ -19,14 +22,10 @@ if (!in_array($role, ['admin', 'guru', 'wali_kelas'], true)) {
     exit("Anda tidak memiliki akses.");
 }
 
-// ==========================================
-// INISIALISASI DATA
-// ==========================================
+/* ==========================================
+   INISIALISASI DATA
+========================================== */
 $tampilan_wali_kelas = false;
-
-$nama_wali = $_SESSION['name'] ?? $_SESSION['nama'] ?? 'Wali Kelas';
-
-$guru_id = 0;
 
 $user_id = (int)(
     $_SESSION['user_id']
@@ -35,45 +34,49 @@ $user_id = (int)(
     ?? 0
 );
 
+$guru_id = (int)($_SESSION['guru_id'] ?? 0);
+
+$nama_wali = $_SESSION['name'] ?? $_SESSION['nama'] ?? 'Pengguna';
+
 $daftar_kelas = [];
+
 $total_siswa = 0;
 $total_pelanggaran = 0;
 $total_poin = 0;
+
 $error_wali = '';
 
-// ==========================================
-// ADMIN TETAP ADMIN
-// ==========================================
+/* ==========================================
+   ADMIN
+========================================== */
 if ($role === 'admin') {
     $tampilan_wali_kelas = false;
 }
 
-// ==========================================
-// CARI ID GURU DARI USER LOGIN
-// ==========================================
-if ($role === 'guru' || $role === 'wali_kelas') {
+/* ==========================================
+   AMBIL DATA GURU
+========================================== */
+if (in_array($role, ['guru', 'wali_kelas'], true)) {
 
     if ($user_id > 0) {
 
-        $stmtGuru = mysqli_prepare(
-            $koneksi,
-            "SELECT id, nama
-             FROM t_guru
-             WHERE user_id = ?
-             LIMIT 1"
-        );
+        $stmtGuru = $koneksi->prepare("
+            SELECT id, nama
+            FROM t_guru
+            WHERE user_id = ?
+            LIMIT 1
+        ");
 
         if (!$stmtGuru) {
-            exit("Query guru gagal: " . htmlspecialchars(mysqli_error($koneksi)));
+            exit("Query guru gagal: " . htmlspecialchars($koneksi->error));
         }
 
-        mysqli_stmt_bind_param($stmtGuru, "i", $user_id);
-        mysqli_stmt_execute($stmtGuru);
+        $stmtGuru->bind_param("i", $user_id);
+        $stmtGuru->execute();
 
-        $resultGuru = mysqli_stmt_get_result($stmtGuru);
-        $dataGuru = mysqli_fetch_assoc($resultGuru);
+        $dataGuru = $stmtGuru->get_result()->fetch_assoc();
 
-        mysqli_stmt_close($stmtGuru);
+        $stmtGuru->close();
 
         if ($dataGuru) {
             $guru_id = (int)$dataGuru['id'];
@@ -81,30 +84,28 @@ if ($role === 'guru' || $role === 'wali_kelas') {
         }
     }
 
-    // Fallback guru_id session
-    if ($guru_id <= 0 && !empty($_SESSION['guru_id'])) {
+    /* ======================================
+       FALLBACK GURU ID
+    ====================================== */
+    if ($guru_id > 0 && !isset($dataGuru)) {
 
-        $guru_id = (int)$_SESSION['guru_id'];
-
-        $stmtGuru = mysqli_prepare(
-            $koneksi,
-            "SELECT id, nama
-             FROM t_guru
-             WHERE id = ?
-             LIMIT 1"
-        );
+        $stmtGuru = $koneksi->prepare("
+            SELECT id, nama
+            FROM t_guru
+            WHERE id = ?
+            LIMIT 1
+        ");
 
         if (!$stmtGuru) {
-            exit("Query guru gagal: " . htmlspecialchars(mysqli_error($koneksi)));
+            exit("Query guru gagal: " . htmlspecialchars($koneksi->error));
         }
 
-        mysqli_stmt_bind_param($stmtGuru, "i", $guru_id);
-        mysqli_stmt_execute($stmtGuru);
+        $stmtGuru->bind_param("i", $guru_id);
+        $stmtGuru->execute();
 
-        $resultGuru = mysqli_stmt_get_result($stmtGuru);
-        $dataGuru = mysqli_fetch_assoc($resultGuru);
+        $dataGuru = $stmtGuru->get_result()->fetch_assoc();
 
-        mysqli_stmt_close($stmtGuru);
+        $stmtGuru->close();
 
         if ($dataGuru) {
             $nama_wali = $dataGuru['nama'];
@@ -113,64 +114,64 @@ if ($role === 'guru' || $role === 'wali_kelas') {
         }
     }
 
-    // ======================================
-    // CEK PENUGASAN WALI KELAS
-    // ======================================
+    /* ======================================
+       CEK PENUGASAN WALI KELAS AKTIF
+    ====================================== */
     if ($guru_id > 0) {
 
-        $sqlCekWali = "
+        $stmtCekWali = $koneksi->prepare("
             SELECT COUNT(*) AS total
             FROM t_wali_kelas wk
             INNER JOIN t_tahun_ajaran ta
                 ON ta.id = wk.tahun_ajaran_id
+            INNER JOIN t_kelas k
+                ON k.id = wk.kelas_id
             WHERE wk.guru_id = ?
               AND wk.status_aktif = 1
               AND ta.status_aktif = 1
+              AND k.status_aktif = 1
               AND CURDATE() BETWEEN wk.tanggal_mulai
                                 AND wk.tanggal_selesai
-        ";
-
-        $stmtCekWali = mysqli_prepare($koneksi, $sqlCekWali);
+        ");
 
         if (!$stmtCekWali) {
-            exit("Query penugasan gagal: " . htmlspecialchars(mysqli_error($koneksi)));
+            exit("Query penugasan gagal: " . htmlspecialchars($koneksi->error));
         }
 
-        mysqli_stmt_bind_param($stmtCekWali, "i", $guru_id);
-        mysqli_stmt_execute($stmtCekWali);
+        $stmtCekWali->bind_param("i", $guru_id);
+        $stmtCekWali->execute();
 
-        $resultCekWali = mysqli_stmt_get_result($stmtCekWali);
-        $dataCekWali = mysqli_fetch_assoc($resultCekWali);
+        $dataCekWali = $stmtCekWali->get_result()->fetch_assoc();
 
-        mysqli_stmt_close($stmtCekWali);
+        $stmtCekWali->close();
 
         if ((int)($dataCekWali['total'] ?? 0) > 0) {
             $tampilan_wali_kelas = true;
         }
     }
 
-    // Role wali_kelas wajib memiliki penugasan
-    if ($role === 'wali_kelas' && !$tampilan_wali_kelas) {
+    /* ======================================
+       ROLE WALI KELAS WAJIB PUNYA PENUGASAN
+    ====================================== */
+    if ($role === 'wali_kelas') {
+
+        $tampilan_wali_kelas = true;
 
         if ($guru_id <= 0) {
             $error_wali = "Data guru untuk akun ini tidak ditemukan.";
-        } else {
-            $error_wali = "Belum ada penugasan Wali Kelas yang aktif.";
         }
-
-        $tampilan_wali_kelas = true;
     }
 }
 
-// ==========================================
-// DATA DASHBOARD WALI KELAS
-// ==========================================
+/* ==========================================
+   DATA DASHBOARD WALI KELAS
+========================================== */
 if ($tampilan_wali_kelas && $guru_id > 0) {
 
-    // ======================================
-    // DAFTAR KELAS TANGGUNG JAWAB
-    // ======================================
-    $sqlKelas = "
+    /* ======================================
+       DAFTAR KELAS TANGGUNG JAWAB
+    ====================================== */
+    $stmtKelas = $koneksi->prepare("
         SELECT
             wk.id,
             wk.kelas_id,
@@ -185,27 +186,26 @@ if ($tampilan_wali_kelas && $guru_id > 0) {
         WHERE wk.guru_id = ?
           AND wk.status_aktif = 1
           AND ta.status_aktif = 1
+          AND k.status_aktif = 1
           AND CURDATE() BETWEEN wk.tanggal_mulai
                             AND wk.tanggal_selesai
         ORDER BY k.nama ASC
-    ";
-
-    $stmtKelas = mysqli_prepare($koneksi, $sqlKelas);
+    ");
 
     if (!$stmtKelas) {
-        exit("Query kelas gagal: " . htmlspecialchars(mysqli_error($koneksi)));
+        exit("Query kelas gagal: " . htmlspecialchars($koneksi->error));
     }
 
-    mysqli_stmt_bind_param($stmtKelas, "i", $guru_id);
-    mysqli_stmt_execute($stmtKelas);
+    $stmtKelas->bind_param("i", $guru_id);
+    $stmtKelas->execute();
 
-    $resultKelas = mysqli_stmt_get_result($stmtKelas);
+    $resultKelas = $stmtKelas->get_result();
 
-    while ($kelas = mysqli_fetch_assoc($resultKelas)) {
+    while ($kelas = $resultKelas->fetch_assoc()) {
         $daftar_kelas[] = $kelas;
     }
 
-    mysqli_stmt_close($stmtKelas);
+    $stmtKelas->close();
 
     if (empty($daftar_kelas)) {
 
@@ -213,10 +213,10 @@ if ($tampilan_wali_kelas && $guru_id > 0) {
 
     } else {
 
-        // ======================================
-        // HITUNG JUMLAH SISWA
-        // ======================================
-        $sqlSiswa = "
+        /* ======================================
+           HITUNG JUMLAH SISWA
+        ====================================== */
+        $stmtSiswa = $koneksi->prepare("
             SELECT COUNT(DISTINCT ks.siswa_id) AS total
             FROM t_kelas_siswa ks
             INNER JOIN t_wali_kelas wk
@@ -233,30 +233,27 @@ if ($tampilan_wali_kelas && $guru_id > 0) {
                                 AND wk.tanggal_selesai
               AND ks.status_aktif = 1
               AND s.status_aktif = 1
-        ";
-
-        $stmtSiswa = mysqli_prepare($koneksi, $sqlSiswa);
+        ");
 
         if (!$stmtSiswa) {
-            exit("Query siswa gagal: " . htmlspecialchars(mysqli_error($koneksi)));
+            exit("Query siswa gagal: " . htmlspecialchars($koneksi->error));
         }
 
-        mysqli_stmt_bind_param($stmtSiswa, "i", $guru_id);
-        mysqli_stmt_execute($stmtSiswa);
+        $stmtSiswa->bind_param("i", $guru_id);
+        $stmtSiswa->execute();
 
-        $resultSiswa = mysqli_stmt_get_result($stmtSiswa);
-        $dataSiswa = mysqli_fetch_assoc($resultSiswa);
+        $dataSiswa = $stmtSiswa->get_result()->fetch_assoc();
 
         $total_siswa = (int)($dataSiswa['total'] ?? 0);
 
-        mysqli_stmt_close($stmtSiswa);
+        $stmtSiswa->close();
 
-        // ======================================
-        // HITUNG PELANGGARAN DAN POIN
-        // ======================================
-        $sqlPelanggaran = "
+        /* ======================================
+           HITUNG PELANGGARAN DAN POIN
+        ====================================== */
+        $stmtPelanggaran = $koneksi->prepare("
             SELECT
-                COUNT(DISTINCT ps.id) AS total_pelanggaran,
+                COUNT(ps.id) AS total_pelanggaran,
                 COALESCE(SUM(ps.poin), 0) AS total_poin
             FROM t_pelanggaran_siswa ps
             WHERE EXISTS (
@@ -272,24 +269,21 @@ if ($tampilan_wali_kelas && $guru_id > 0) {
                   AND CURDATE() BETWEEN wk.tanggal_mulai
                                     AND wk.tanggal_selesai
             )
-        ";
-
-        $stmtPelanggaran = mysqli_prepare($koneksi, $sqlPelanggaran);
+        ");
 
         if (!$stmtPelanggaran) {
-            exit("Query pelanggaran gagal: " . htmlspecialchars(mysqli_error($koneksi)));
+            exit("Query pelanggaran gagal: " . htmlspecialchars($koneksi->error));
         }
 
-        mysqli_stmt_bind_param($stmtPelanggaran, "i", $guru_id);
-        mysqli_stmt_execute($stmtPelanggaran);
+        $stmtPelanggaran->bind_param("i", $guru_id);
+        $stmtPelanggaran->execute();
 
-        $resultPelanggaran = mysqli_stmt_get_result($stmtPelanggaran);
-        $dataPelanggaran = mysqli_fetch_assoc($resultPelanggaran);
+        $dataPelanggaran = $stmtPelanggaran->get_result()->fetch_assoc();
 
         $total_pelanggaran = (int)($dataPelanggaran['total_pelanggaran'] ?? 0);
         $total_poin = (int)($dataPelanggaran['total_poin'] ?? 0);
 
-        mysqli_stmt_close($stmtPelanggaran);
+        $stmtPelanggaran->close();
     }
 }
 ?>
@@ -303,16 +297,20 @@ if ($tampilan_wali_kelas && $guru_id > 0) {
 
     <title>Dashboard Sistem Pelanggaran</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
 </head>
 
-<body>
+<body class="bg-body-tertiary">
 
 <div class="container-fluid">
     <div class="row">
 
-        <!-- SIDEBAR -->
+        <!-- =================================
+             SIDEBAR
+        ================================== -->
         <aside class="col-md-3 col-lg-2 bg-dark min-vh-100 p-3 position-fixed top-0 start-0 overflow-auto">
 
             <h5 class="text-white mb-4">
@@ -327,86 +325,127 @@ if ($tampilan_wali_kelas && $guru_id > 0) {
                     </a>
                 </li>
 
+                <!-- MENU ADMIN -->
                 <?php if ($role === 'admin') { ?>
 
                     <li class="nav-item">
-                        <a href="siswa.php" class="nav-link text-white">Kelola Siswa</a>
+                        <a href="siswa.php" class="nav-link text-white">
+                            Kelola Siswa
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="guru.php" class="nav-link text-white">Kelola Guru</a>
+                        <a href="guru.php" class="nav-link text-white">
+                            Kelola Guru
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="kelas.php" class="nav-link text-white">Kelola Kelas</a>
+                        <a href="kelas.php" class="nav-link text-white">
+                            Kelola Kelas
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="tahun_ajaran.php" class="nav-link text-white">Tahun Ajaran</a>
+                        <a href="tahun_ajaran.php" class="nav-link text-white">
+                            Tahun Ajaran
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="penempatan_siswa.php" class="nav-link text-white">Penempatan Siswa</a>
+                        <a href="penempatan_siswa.php" class="nav-link text-white">
+                            Penempatan Siswa
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="wali_kelas.php" class="nav-link text-white">Wali Kelas</a>
+                        <a href="wali_kelas.php" class="nav-link text-white">
+                            Wali Kelas
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="kategori_pelanggaran.php" class="nav-link text-white">Kategori Pelanggaran</a>
+                        <a href="kategori_pelanggaran.php" class="nav-link text-white">
+                            Kategori Pelanggaran
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="jenis_pelanggaran.php" class="nav-link text-white">Jenis Pelanggaran</a>
+                        <a href="jenis_pelanggaran.php" class="nav-link text-white">
+                            Jenis Pelanggaran
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="laporan.php" class="nav-link text-white">Laporan</a>
+                        <a href="laporan.php" class="nav-link text-white">
+                            Laporan
+                        </a>
                     </li>
 
+                <!-- MENU GURU BIASA -->
                 <?php } elseif ($role === 'guru' && !$tampilan_wali_kelas) { ?>
 
                     <li class="nav-item">
-                        <a href="catat_pelanggaran.php" class="nav-link text-white">Catat Pelanggaran</a>
+                        <a href="catat_pelanggaran.php" class="nav-link text-white">
+                            Catat Pelanggaran
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="tindakan.php" class="nav-link text-white">Tindakan</a>
+                        <a href="tindakan.php" class="nav-link text-white">
+                            Tindakan
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="riwayat.php" class="nav-link text-white">Riwayat</a>
+                        <a href="riwayat.php" class="nav-link text-white">
+                            Riwayat
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="rekap_poin.php" class="nav-link text-white">Rekap Poin</a>
+                        <a href="rekap_poin.php" class="nav-link text-white">
+                            Rekap Poin
+                        </a>
                     </li>
 
+                <!-- MENU WALI KELAS -->
                 <?php } elseif ($tampilan_wali_kelas) { ?>
 
                     <li class="nav-item">
-                        <a href="catat_pelanggaran.php" class="nav-link text-white">Catat Pelanggaran</a>
+                        <a href="catat_pelanggaran.php" class="nav-link text-white">
+                            Catat Pelanggaran
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="walikelas/data_siswa.php" class="nav-link text-white">Data Siswa</a>
+                        <a href="walikelas/data_siswa.php" class="nav-link text-white">
+                            Data Siswa
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="walikelas/rekap_pelanggaran.php" class="nav-link text-white">Rekap Pelanggaran</a>
+                        <a href="walikelas/rekap_pelanggaran.php" class="nav-link text-white">
+                            Rekap Pelanggaran
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="walikelas/laporan.php" class="nav-link text-white">Laporan</a>
+                        <a href="walikelas/laporan.php" class="nav-link text-white">
+                            Laporan
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="riwayat.php" class="nav-link text-white">Riwayat</a>
+                        <a href="riwayat.php" class="nav-link text-white">
+                            Riwayat
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="rekap_poin.php" class="nav-link text-white">Rekap Poin</a>
+                        <a href="walikelas/rekap_poin.php" class="nav-link text-white">
+                            Rekap Poin
+                        </a>
                     </li>
 
                 <?php } ?>
@@ -414,13 +453,17 @@ if ($tampilan_wali_kelas && $guru_id > 0) {
                 <hr class="text-secondary">
 
                 <li class="nav-item">
-                    <a href="about_me.php" class="nav-link text-white">About Me</a>
+                    <a href="about_me.php" class="nav-link text-white">
+                        About Me
+                    </a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="logout.php"
-                       class="nav-link text-danger"
-                       onclick="return confirm('Yakin ingin logout?')">
+                    <a
+                        href="logout.php"
+                        class="nav-link text-danger"
+                        onclick="return confirm('Yakin ingin logout?')"
+                    >
                         Logout
                     </a>
                 </li>
@@ -429,7 +472,9 @@ if ($tampilan_wali_kelas && $guru_id > 0) {
 
         </aside>
 
-        <!-- KONTEN UTAMA -->
+        <!-- =================================
+             KONTEN UTAMA
+        ================================== -->
         <main class="col-md-9 col-lg-10 offset-md-3 offset-lg-2 p-4">
 
             <!-- DASHBOARD ADMIN -->
@@ -461,10 +506,16 @@ if ($tampilan_wali_kelas && $guru_id > 0) {
                     ?>
 
                         <div class="col-md-4 mb-3">
-                            <div class="card shadow-sm">
+                            <div class="card shadow-sm h-100">
                                 <div class="card-body">
-                                    <h5 class="card-title"><?= htmlspecialchars($menu[0]); ?></h5>
-                                    <p class="card-text"><?= htmlspecialchars($menu[1]); ?></p>
+                                    <h5 class="card-title">
+                                        <?= htmlspecialchars($menu[0]); ?>
+                                    </h5>
+
+                                    <p class="card-text">
+                                        <?= htmlspecialchars($menu[1]); ?>
+                                    </p>
+
                                     <a href="<?= htmlspecialchars($menu[2]); ?>" class="btn btn-primary">
                                         Lihat Data
                                     </a>
@@ -483,7 +534,7 @@ if ($tampilan_wali_kelas && $guru_id > 0) {
 
                 <p>
                     Selamat datang,
-                    <b><?= htmlspecialchars($_SESSION['name'] ?? 'Guru'); ?></b>
+                    <b><?= htmlspecialchars($nama_wali); ?></b>
                 </p>
 
                 <div class="row">
@@ -493,17 +544,23 @@ if ($tampilan_wali_kelas && $guru_id > 0) {
                         ['Catat Pelanggaran', 'Mencatat pelanggaran siswa.', 'catat_pelanggaran.php'],
                         ['Tindakan', 'Mengelola tindakan terhadap pelanggaran.', 'tindakan.php'],
                         ['Riwayat', 'Melihat riwayat pelanggaran.', 'riwayat.php'],
-                        ['Rekap Poin', 'Melihat rekap poin.', 'rekap_poin.php']
+                        ['Rekap Poin', 'Melihat rekap poin pelanggaran yang dicatat guru.', 'rekap_poin.php']
                     ];
 
                     foreach ($menuGuru as $menu) {
                     ?>
 
                         <div class="col-md-4 mb-3">
-                            <div class="card shadow-sm">
+                            <div class="card shadow-sm h-100">
                                 <div class="card-body">
-                                    <h5 class="card-title"><?= htmlspecialchars($menu[0]); ?></h5>
-                                    <p class="card-text"><?= htmlspecialchars($menu[1]); ?></p>
+                                    <h5 class="card-title">
+                                        <?= htmlspecialchars($menu[0]); ?>
+                                    </h5>
+
+                                    <p class="card-text">
+                                        <?= htmlspecialchars($menu[1]); ?>
+                                    </p>
+
                                     <a href="<?= htmlspecialchars($menu[2]); ?>" class="btn btn-primary">
                                         Buka
                                     </a>
@@ -534,20 +591,24 @@ if ($tampilan_wali_kelas && $guru_id > 0) {
                 <?php } else { ?>
 
                     <div class="mb-4">
+
                         <h5>Kelas Tanggung Jawab</h5>
 
                         <?php foreach ($daftar_kelas as $kelas) { ?>
+
                             <span class="badge bg-primary me-2 mb-2 p-2">
                                 <?= htmlspecialchars($kelas['nama_kelas']); ?>
                             </span>
+
                         <?php } ?>
+
                     </div>
 
                     <!-- RINGKASAN -->
                     <div class="row">
 
                         <div class="col-md-4 mb-3">
-                            <div class="card shadow-sm">
+                            <div class="card shadow-sm h-100">
                                 <div class="card-body">
                                     <h6 class="text-muted">Jumlah Siswa</h6>
                                     <h2><?= number_format($total_siswa); ?></h2>
@@ -556,7 +617,7 @@ if ($tampilan_wali_kelas && $guru_id > 0) {
                         </div>
 
                         <div class="col-md-4 mb-3">
-                            <div class="card shadow-sm">
+                            <div class="card shadow-sm h-100">
                                 <div class="card-body">
                                     <h6 class="text-muted">Total Pelanggaran</h6>
                                     <h2><?= number_format($total_pelanggaran); ?></h2>
@@ -565,7 +626,7 @@ if ($tampilan_wali_kelas && $guru_id > 0) {
                         </div>
 
                         <div class="col-md-4 mb-3">
-                            <div class="card shadow-sm">
+                            <div class="card shadow-sm h-100">
                                 <div class="card-body">
                                     <h6 class="text-muted">Total Poin</h6>
                                     <h2><?= number_format($total_poin); ?></h2>
@@ -575,15 +636,17 @@ if ($tampilan_wali_kelas && $guru_id > 0) {
 
                     </div>
 
-                    <!-- MENU DASHBOARD WALI KELAS -->
+                    <!-- MENU WALI KELAS -->
                     <div class="row mt-3">
 
                         <div class="col-md-4 mb-3">
                             <div class="card shadow-sm h-100">
                                 <div class="card-body">
-                                    <h5 class="card-title">Catat Pelanggaran</h5>
-                                    <p class="card-text">Mencatat pelanggaran siswa pada kelas tanggung jawab.</p>
-                                    <a href="catat_pelanggaran.php" class="btn btn-primary">Buka</a>
+                                    <h5>Catat Pelanggaran</h5>
+                                    <p>Mencatat pelanggaran siswa pada kelas tanggung jawab.</p>
+                                    <a href="catat_pelanggaran.php" class="btn btn-primary">
+                                        Buka
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -591,9 +654,11 @@ if ($tampilan_wali_kelas && $guru_id > 0) {
                         <div class="col-md-4 mb-3">
                             <div class="card shadow-sm h-100">
                                 <div class="card-body">
-                                    <h5 class="card-title">Data Siswa</h5>
-                                    <p class="card-text">Melihat data siswa pada kelas tanggung jawab.</p>
-                                    <a href="walikelas/data_siswa.php" class="btn btn-primary">Buka</a>
+                                    <h5>Data Siswa</h5>
+                                    <p>Melihat data siswa pada kelas tanggung jawab.</p>
+                                    <a href="walikelas/data_siswa.php" class="btn btn-primary">
+                                        Buka
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -601,9 +666,11 @@ if ($tampilan_wali_kelas && $guru_id > 0) {
                         <div class="col-md-4 mb-3">
                             <div class="card shadow-sm h-100">
                                 <div class="card-body">
-                                    <h5 class="card-title">Rekap Pelanggaran</h5>
-                                    <p class="card-text">Melihat rekap pelanggaran siswa.</p>
-                                    <a href="walikelas/rekap_pelanggaran.php" class="btn btn-primary">Buka</a>
+                                    <h5>Rekap Pelanggaran</h5>
+                                    <p>Melihat rekap pelanggaran siswa.</p>
+                                    <a href="walikelas/rekap_pelanggaran.php" class="btn btn-primary">
+                                        Buka
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -611,9 +678,11 @@ if ($tampilan_wali_kelas && $guru_id > 0) {
                         <div class="col-md-4 mb-3">
                             <div class="card shadow-sm h-100">
                                 <div class="card-body">
-                                    <h5 class="card-title">Laporan</h5>
-                                    <p class="card-text">Melihat laporan pelanggaran siswa.</p>
-                                    <a href="walikelas/laporan.php" class="btn btn-primary">Buka</a>
+                                    <h5>Laporan</h5>
+                                    <p>Melihat laporan pelanggaran siswa.</p>
+                                    <a href="walikelas/laporan.php" class="btn btn-primary">
+                                        Buka
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -621,9 +690,11 @@ if ($tampilan_wali_kelas && $guru_id > 0) {
                         <div class="col-md-4 mb-3">
                             <div class="card shadow-sm h-100">
                                 <div class="card-body">
-                                    <h5 class="card-title">Riwayat</h5>
-                                    <p class="card-text">Melihat riwayat catatan pelanggaran.</p>
-                                    <a href="riwayat.php" class="btn btn-primary">Buka</a>
+                                    <h5>Riwayat</h5>
+                                    <p>Melihat riwayat catatan pelanggaran.</p>
+                                    <a href="riwayat.php" class="btn btn-primary">
+                                        Buka
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -631,9 +702,11 @@ if ($tampilan_wali_kelas && $guru_id > 0) {
                         <div class="col-md-4 mb-3">
                             <div class="card shadow-sm h-100">
                                 <div class="card-body">
-                                    <h5 class="card-title">Rekap Poin</h5>
-                                    <p class="card-text">Melihat jumlah poin pelanggaran siswa.</p>
-                                    <a href="rekap_poin.php" class="btn btn-primary">Buka</a>
+                                    <h5>Rekap Poin</h5>
+                                    <p>Melihat jumlah poin siswa pada kelas tanggung jawab.</p>
+                                    <a href="walikelas/rekap_poin.php" class="btn btn-primary">
+                                        Buka
+                                    </a>
                                 </div>
                             </div>
                         </div>

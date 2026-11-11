@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 
@@ -30,20 +29,24 @@ $user_id = (int)(
 );
 
 $guru_id = 0;
+$namaGuruLogin = '';
 
 $daftarKelas = [];
 $daftarSiswa = [];
 
-// =====================================
-// CARI GURU BERDASARKAN USER LOGIN
-// =====================================
+/* =====================================
+   CARI GURU BERDASARKAN USER LOGIN
+===================================== */
+
 if (in_array($role, ['guru', 'wali_kelas'], true)) {
 
     if ($user_id > 0) {
+
         $stmtGuruLogin = mysqli_prepare($koneksi, "
-            SELECT id
+            SELECT id, nama
             FROM t_guru
             WHERE user_id = ?
+              AND status_aktif = 1
             LIMIT 1
         ");
 
@@ -62,17 +65,50 @@ if (in_array($role, ['guru', 'wali_kelas'], true)) {
 
         if ($dataGuruLogin) {
             $guru_id = (int)$dataGuruLogin['id'];
+            $namaGuruLogin = $dataGuruLogin['nama'];
         }
     }
 
+    /* CADANGAN GURU ID */
     if ($guru_id <= 0 && !empty($_SESSION['guru_id'])) {
+
         $guru_id = (int)$_SESSION['guru_id'];
+
+        $stmtGuruLogin = mysqli_prepare($koneksi, "
+            SELECT id, nama
+            FROM t_guru
+            WHERE id = ?
+              AND status_aktif = 1
+            LIMIT 1
+        ");
+
+        if ($stmtGuruLogin) {
+
+            mysqli_stmt_bind_param(
+                $stmtGuruLogin,
+                "i",
+                $guru_id
+            );
+
+            mysqli_stmt_execute($stmtGuruLogin);
+
+            $dataGuruLogin = mysqli_fetch_assoc(
+                mysqli_stmt_get_result($stmtGuruLogin)
+            );
+
+            mysqli_stmt_close($stmtGuruLogin);
+
+            if ($dataGuruLogin) {
+                $namaGuruLogin = $dataGuruLogin['nama'];
+            }
+        }
     }
 }
 
-// =====================================
-// AMBIL TAHUN AJARAN AKTIF
-// =====================================
+/* =====================================
+   TAHUN AJARAN AKTIF
+===================================== */
+
 $tahun = mysqli_query($koneksi, "
     SELECT id, nama
     FROM t_tahun_ajaran
@@ -81,23 +117,72 @@ $tahun = mysqli_query($koneksi, "
 ");
 
 if (!$tahun) {
-    exit("Gagal mengambil tahun ajaran: " . e(mysqli_error($koneksi)));
+    exit(
+        "Gagal mengambil tahun ajaran: "
+        . e(mysqli_error($koneksi))
+    );
 }
 
 $tahunAktif = mysqli_fetch_assoc($tahun);
 $tahun_id = (int)($tahunAktif['id'] ?? 0);
 
-// =====================================
-// AMBIL KELAS
-// ADMIN DAN GURU: SEMUA KELAS AKTIF
-// WALI KELAS: KELAS PENUGASANNYA SAJA
-// =====================================
+/* =====================================
+   DETEKSI MODE WALI KELAS
+===================================== */
+
+$mode_wali_kelas = ($role === 'wali_kelas');
+
+if ($role === 'guru' && $guru_id > 0 && $tahun_id > 0) {
+
+    $stmtModeWali = mysqli_prepare($koneksi, "
+        SELECT id
+        FROM t_wali_kelas
+        WHERE guru_id = ?
+          AND tahun_ajaran_id = ?
+          AND status_aktif = 1
+          AND CURDATE() BETWEEN tanggal_mulai AND tanggal_selesai
+        LIMIT 1
+    ");
+
+    if (!$stmtModeWali) {
+        exit(
+            "Gagal memeriksa tugas Wali Kelas: "
+            . e(mysqli_error($koneksi))
+        );
+    }
+
+    mysqli_stmt_bind_param(
+        $stmtModeWali,
+        "ii",
+        $guru_id,
+        $tahun_id
+    );
+
+    mysqli_stmt_execute($stmtModeWali);
+
+    $dataModeWali = mysqli_fetch_assoc(
+        mysqli_stmt_get_result($stmtModeWali)
+    );
+
+    mysqli_stmt_close($stmtModeWali);
+
+    if ($dataModeWali) {
+        $mode_wali_kelas = true;
+    }
+}
+
+/* =====================================
+   AMBIL KELAS
+===================================== */
+
 if ($tahun_id > 0) {
 
-    if ($role === 'wali_kelas') {
+    if ($mode_wali_kelas) {
 
         if ($guru_id <= 0) {
+
             $error = "Data guru untuk akun Wali Kelas tidak ditemukan.";
+
         } else {
 
             $queryKelas = mysqli_prepare($koneksi, "
@@ -120,7 +205,10 @@ if ($tahun_id > 0) {
             ");
 
             if (!$queryKelas) {
-                exit("Query kelas gagal: " . e(mysqli_error($koneksi)));
+                exit(
+                    "Query kelas gagal: "
+                    . e(mysqli_error($koneksi))
+                );
             }
 
             mysqli_stmt_bind_param(
@@ -140,8 +228,13 @@ if ($tahun_id > 0) {
 
             mysqli_stmt_close($queryKelas);
 
-            if (empty($daftarKelas) && $error === '') {
-                $error = "Tidak ada kelas yang menjadi tanggung jawab Anda pada tahun ajaran aktif.";
+            if (
+                empty($daftarKelas)
+                && $error === ''
+            ) {
+                $error =
+                    "Tidak ada kelas yang menjadi tanggung jawab Anda "
+                    . "pada tahun ajaran aktif.";
             }
         }
 
@@ -161,10 +254,18 @@ if ($tahun_id > 0) {
         ");
 
         if (!$queryKelas) {
-            exit("Query kelas gagal: " . e(mysqli_error($koneksi)));
+            exit(
+                "Query kelas gagal: "
+                . e(mysqli_error($koneksi))
+            );
         }
 
-        mysqli_stmt_bind_param($queryKelas, "i", $tahun_id);
+        mysqli_stmt_bind_param(
+            $queryKelas,
+            "i",
+            $tahun_id
+        );
+
         mysqli_stmt_execute($queryKelas);
 
         $hasilKelas = mysqli_stmt_get_result($queryKelas);
@@ -177,13 +278,13 @@ if ($tahun_id > 0) {
     }
 }
 
-// =====================================
-// AMBIL DATA SISWA
-// WALI KELAS HANYA SISWA KELAS TUGASNYA
-// =====================================
+/* =====================================
+   AMBIL DATA SISWA
+===================================== */
+
 if ($tahun_id > 0) {
 
-    if ($role === 'wali_kelas' && $guru_id > 0) {
+    if ($mode_wali_kelas && $guru_id > 0) {
 
         $querySiswa = mysqli_prepare($koneksi, "
             SELECT DISTINCT
@@ -214,7 +315,10 @@ if ($tahun_id > 0) {
         ");
 
         if (!$querySiswa) {
-            exit("Query siswa gagal: " . e(mysqli_error($koneksi)));
+            exit(
+                "Query siswa gagal: "
+                . e(mysqli_error($koneksi))
+            );
         }
 
         mysqli_stmt_bind_param(
@@ -245,10 +349,17 @@ if ($tahun_id > 0) {
         ");
 
         if (!$querySiswa) {
-            exit("Query siswa gagal: " . e(mysqli_error($koneksi)));
+            exit(
+                "Query siswa gagal: "
+                . e(mysqli_error($koneksi))
+            );
         }
 
-        mysqli_stmt_bind_param($querySiswa, "i", $tahun_id);
+        mysqli_stmt_bind_param(
+            $querySiswa,
+            "i",
+            $tahun_id
+        );
     }
 
     mysqli_stmt_execute($querySiswa);
@@ -262,9 +373,10 @@ if ($tahun_id > 0) {
     mysqli_stmt_close($querySiswa);
 }
 
-// =====================================
-// AMBIL DATA PELANGGARAN
-// =====================================
+/* =====================================
+   AMBIL DATA PELANGGARAN
+===================================== */
+
 $daftarPelanggaran = mysqli_query($koneksi, "
     SELECT id, nama, poin
     FROM t_pelanggaran
@@ -273,66 +385,78 @@ $daftarPelanggaran = mysqli_query($koneksi, "
 ");
 
 if (!$daftarPelanggaran) {
-    exit("Query pelanggaran gagal: " . e(mysqli_error($koneksi)));
+    exit(
+        "Query pelanggaran gagal: "
+        . e(mysqli_error($koneksi))
+    );
 }
 
-// =====================================
-// AMBIL DATA GURU
-// =====================================
-$daftarGuru = mysqli_query($koneksi, "
-    SELECT id, nama
-    FROM t_guru
-    WHERE status_aktif = 1
-    ORDER BY nama ASC
-");
+/* =====================================
+   PROSES SIMPAN
+===================================== */
 
-if (!$daftarGuru) {
-    exit("Query guru gagal: " . e(mysqli_error($koneksi)));
-}
-
-// =====================================
-// PROSES SIMPAN
-// =====================================
 if (isset($_POST['simpan'])) {
 
     $tanggal = trim($_POST['tanggal'] ?? '');
     $kelas_id = (int)($_POST['kelas_id'] ?? 0);
     $siswa_id = (int)($_POST['siswa_id'] ?? 0);
-    $nama_pelanggaran = trim($_POST['nama_pelanggaran'] ?? '');
-    $nama_guru = trim($_POST['nama_guru'] ?? '');
-    $keterangan = trim($_POST['keterangan'] ?? '');
-    $poin = (int)($_POST['poin'] ?? 0);
-    $tindakan = trim($_POST['tindakan'] ?? '');
-    $status = trim($_POST['status'] ?? '');
+
+    $nama_pelanggaran = trim(
+        $_POST['nama_pelanggaran'] ?? ''
+    );
+
+    $keterangan = trim(
+        $_POST['keterangan'] ?? ''
+    );
+
+    $tindakan = trim(
+        $_POST['tindakan'] ?? ''
+    );
+
+    $status = trim(
+        $_POST['status'] ?? ''
+    );
+
+    /* POIN TIDAK DIAMBIL DARI INPUT */
+    $poin = 0;
 
     if (!$tahun_id) {
+
         $error = "Tahun ajaran aktif belum tersedia.";
+
+    } elseif ($guru_id <= 0 || $namaGuruLogin === '') {
+
+        $error = "Data guru yang sedang login tidak ditemukan.";
 
     } elseif (
         $tanggal === '' ||
         $kelas_id <= 0 ||
         $siswa_id <= 0 ||
         $nama_pelanggaran === '' ||
-        $nama_guru === '' ||
         $keterangan === '' ||
-        $poin < 0 ||
         $tindakan === '' ||
-        !in_array($status, [
-            'Belum Ditindaklanjuti',
-            'Diproses',
-            'Selesai'
-        ], true)
+        !in_array(
+            $status,
+            [
+                'Belum Ditindaklanjuti',
+                'Diproses',
+                'Selesai'
+            ],
+            true
+        )
     ) {
+
         $error = "Semua kolom wajib diisi dengan benar.";
 
     } else {
 
         try {
 
-            // =====================================
-            // VALIDASI KELAS WALI KELAS
-            // =====================================
-            if ($role === 'wali_kelas') {
+            /* =====================================
+               VALIDASI KELAS WALI KELAS
+            ===================================== */
+
+            if ($mode_wali_kelas) {
 
                 $stmtCekKelas = mysqli_prepare($koneksi, "
                     SELECT wk.id
@@ -348,6 +472,10 @@ if (isset($_POST['simpan'])) {
                                         AND wk.tanggal_selesai
                     LIMIT 1
                 ");
+
+                if (!$stmtCekKelas) {
+                    throw new Exception(mysqli_error($koneksi));
+                }
 
                 mysqli_stmt_bind_param(
                     $stmtCekKelas,
@@ -366,15 +494,18 @@ if (isset($_POST['simpan'])) {
                 mysqli_stmt_close($stmtCekKelas);
 
                 if (!$cekKelas) {
+
                     throw new Exception(
-                        "Anda tidak memiliki hak untuk mencatat pelanggaran pada kelas tersebut."
+                        "Anda tidak memiliki hak untuk mencatat "
+                        . "pelanggaran pada kelas tersebut."
                     );
                 }
             }
 
-            // =====================================
-            // CARI SISWA BERDASARKAN KELAS
-            // =====================================
+            /* =====================================
+               CARI SISWA
+            ===================================== */
+
             $stmtSiswa = mysqli_prepare($koneksi, "
                 SELECT
                     s.id AS siswa_id,
@@ -395,6 +526,10 @@ if (isset($_POST['simpan'])) {
                 LIMIT 1
             ");
 
+            if (!$stmtSiswa) {
+                throw new Exception(mysqli_error($koneksi));
+            }
+
             mysqli_stmt_bind_param(
                 $stmtSiswa,
                 "iii",
@@ -411,9 +546,10 @@ if (isset($_POST['simpan'])) {
 
             mysqli_stmt_close($stmtSiswa);
 
-            // =====================================
-            // CARI JENIS PELANGGARAN
-            // =====================================
+            /* =====================================
+               CARI PELANGGARAN + POIN
+            ===================================== */
+
             $stmtPelanggaran = mysqli_prepare($koneksi, "
                 SELECT
                     id,
@@ -425,6 +561,10 @@ if (isset($_POST['simpan'])) {
                   AND status_aktif = 1
                 LIMIT 1
             ");
+
+            if (!$stmtPelanggaran) {
+                throw new Exception(mysqli_error($koneksi));
+            }
 
             mysqli_stmt_bind_param(
                 $stmtPelanggaran,
@@ -440,143 +580,131 @@ if (isset($_POST['simpan'])) {
 
             mysqli_stmt_close($stmtPelanggaran);
 
-            // =====================================
-            // CARI GURU
-            // =====================================
-            $stmtGuru = mysqli_prepare($koneksi, "
-                SELECT id, nama
-                FROM t_guru
-                WHERE nama = ?
-                  AND status_aktif = 1
-                LIMIT 1
-            ");
+            /* =====================================
+               VALIDASI
+            ===================================== */
 
-            mysqli_stmt_bind_param(
-                $stmtGuru,
-                "s",
-                $nama_guru
-            );
-
-            mysqli_stmt_execute($stmtGuru);
-
-            $dataGuru = mysqli_fetch_assoc(
-                mysqli_stmt_get_result($stmtGuru)
-            );
-
-            mysqli_stmt_close($stmtGuru);
-
-            // =====================================
-            // VALIDASI DATA
-            // =====================================
             if (!$dataSiswa) {
 
                 throw new Exception(
                     "Siswa tidak ditemukan pada kelas yang dipilih."
                 );
 
-            } elseif (!$dataPelanggaran) {
+            }
+
+            if (!$dataPelanggaran) {
 
                 throw new Exception(
                     "Nama pelanggaran tidak ditemukan."
                 );
-
-            } elseif (!$dataGuru) {
-
-                throw new Exception(
-                    "Nama guru tidak ditemukan."
-                );
-
-            } else {
-
-                // =====================================
-                // AMBIL DATA ASLI DARI DATABASE
-                // =====================================
-                $siswa_id = (int)$dataSiswa['siswa_id'];
-                $nama_siswa = $dataSiswa['nama_siswa'];
-
-                $kelas_id = (int)$dataSiswa['kelas_id'];
-                $nama_kelas = $dataSiswa['nama_kelas'];
-
-                $pelanggaran_id = (int)$dataPelanggaran['id'];
-                $nama_pelanggaran_db = $dataPelanggaran['nama'];
-
-                $kategori_id = (int)$dataPelanggaran['pelanggaran_kategori_id'];
-
-                $guru_id_input = (int)$dataGuru['id'];
-                $nama_guru_db = $dataGuru['nama'];
-
-                // =====================================
-                // SIMPAN DATA
-                // =====================================
-                $queryInsert = "
-                    INSERT INTO t_pelanggaran_siswa (
-                        tahun_ajaran_id,
-                        siswa_id,
-                        nama_siswa,
-                        kelas_id,
-                        nama_kelas,
-                        pelanggaran_id,
-                        nama_pelanggaran,
-                        pelanggaran_kategori_id,
-                        guru_id,
-                        nama_guru,
-                        tanggal,
-                        keterangan,
-                        poin,
-                        tindakan,
-                        status
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ";
-
-                $stmtInsert = mysqli_prepare(
-                    $koneksi,
-                    $queryInsert
-                );
-
-                if (!$stmtInsert) {
-                    throw new Exception(
-                        "Gagal menyiapkan penyimpanan: " . mysqli_error($koneksi)
-                    );
-                }
-
-                mysqli_stmt_bind_param(
-                    $stmtInsert,
-                    "iisisiisiississ",
-                    $tahun_id,
-                    $siswa_id,
-                    $nama_siswa,
-                    $kelas_id,
-                    $nama_kelas,
-                    $pelanggaran_id,
-                    $nama_pelanggaran_db,
-                    $kategori_id,
-                    $guru_id_input,
-                    $nama_guru_db,
-                    $tanggal,
-                    $keterangan,
-                    $poin,
-                    $tindakan,
-                    $status
-                );
-
-                if (!mysqli_stmt_execute($stmtInsert)) {
-                    throw new Exception(
-                        "Gagal menyimpan data: " . mysqli_stmt_error($stmtInsert)
-                    );
-                }
-
-                mysqli_stmt_close($stmtInsert);
-
-                header("Location: catat_pelanggaran.php?pesan=tambah");
-                exit;
             }
 
+            /* DATA SISWA */
+
+            $siswa_id = (int)$dataSiswa['siswa_id'];
+            $nama_siswa = $dataSiswa['nama_siswa'];
+
+            $kelas_id = (int)$dataSiswa['kelas_id'];
+            $nama_kelas = $dataSiswa['nama_kelas'];
+
+            /* DATA PELANGGARAN */
+
+            $pelanggaran_id = (int)$dataPelanggaran['id'];
+
+            $nama_pelanggaran_db =
+                $dataPelanggaran['nama'];
+
+            $kategori_id =
+                (int)$dataPelanggaran['pelanggaran_kategori_id'];
+
+            /* POIN OTOMATIS DARI DATABASE */
+
+            $poin = (int)$dataPelanggaran['poin'];
+
+            /* DATA GURU */
+
+            $guru_id_input = $guru_id;
+            $nama_guru_db = $namaGuruLogin;
+
+            /* =====================================
+               SIMPAN
+            ===================================== */
+
+            $queryInsert = "
+                INSERT INTO t_pelanggaran_siswa (
+                    tahun_ajaran_id,
+                    siswa_id,
+                    nama_siswa,
+                    kelas_id,
+                    nama_kelas,
+                    pelanggaran_id,
+                    nama_pelanggaran,
+                    pelanggaran_kategori_id,
+                    guru_id,
+                    nama_guru,
+                    tanggal,
+                    keterangan,
+                    poin,
+                    tindakan,
+                    status
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ";
+
+            $stmtInsert = mysqli_prepare(
+                $koneksi,
+                $queryInsert
+            );
+
+            if (!$stmtInsert) {
+                throw new Exception(
+                    "Gagal menyiapkan penyimpanan: "
+                    . mysqli_error($koneksi)
+                );
+            }
+
+            mysqli_stmt_bind_param(
+                $stmtInsert,
+                "iisisiisiississ",
+                $tahun_id,
+                $siswa_id,
+                $nama_siswa,
+                $kelas_id,
+                $nama_kelas,
+                $pelanggaran_id,
+                $nama_pelanggaran_db,
+                $kategori_id,
+                $guru_id_input,
+                $nama_guru_db,
+                $tanggal,
+                $keterangan,
+                $poin,
+                $tindakan,
+                $status
+            );
+
+            if (!mysqli_stmt_execute($stmtInsert)) {
+
+                throw new Exception(
+                    "Gagal menyimpan data: "
+                    . mysqli_stmt_error($stmtInsert)
+                );
+            }
+
+            mysqli_stmt_close($stmtInsert);
+
+            header(
+                "Location: tambah_catat_pelanggaran.php?pesan=tambah"
+            );
+
+            exit;
+
         } catch (Throwable $e) {
+
             $error = $e->getMessage();
         }
     }
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -585,22 +713,27 @@ if (isset($_POST['simpan'])) {
 <head>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
     <title>Tambah Catat Pelanggaran</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet">
 
 </head>
 
 <body>
 
 <div class="container-fluid">
+
     <div class="row">
 
         <!-- SIDEBAR -->
-        <aside class="col-md-3 col-lg-2 bg-dark text-white p-3 position-fixed top-0 bottom-0 start-0 overflow-auto">
+        <aside
+            class="col-md-3 col-lg-2 bg-dark text-white p-3 position-fixed top-0 bottom-0 start-0 overflow-auto">
 
             <h5 class="text-white mb-4">
                 Sistem Pelanggaran
@@ -609,7 +742,8 @@ if (isset($_POST['simpan'])) {
             <ul class="nav nav-pills flex-column gap-2">
 
                 <li class="nav-item">
-                    <a href="dashboard.php" class="nav-link text-white">
+                    <a href="dashboard.php"
+                       class="nav-link text-white">
                         Dashboard
                     </a>
                 </li>
@@ -617,93 +751,158 @@ if (isset($_POST['simpan'])) {
                 <?php if ($role === 'admin') { ?>
 
                     <li class="nav-item">
-                        <a href="siswa.php" class="nav-link text-white">Kelola Siswa</a>
+                        <a href="siswa.php"
+                           class="nav-link text-white">
+                            Kelola Siswa
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="guru.php" class="nav-link text-white">Kelola Guru</a>
+                        <a href="guru.php"
+                           class="nav-link text-white">
+                            Kelola Guru
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="kelas.php" class="nav-link text-white">Kelola Kelas</a>
+                        <a href="kelas.php"
+                           class="nav-link text-white">
+                            Kelola Kelas
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="tahun_ajaran.php" class="nav-link text-white">Tahun Ajaran</a>
+                        <a href="tahun_ajaran.php"
+                           class="nav-link text-white">
+                            Tahun Ajaran
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="penempatan_siswa.php" class="nav-link text-white">Penempatan Siswa</a>
+                        <a href="penempatan_siswa.php"
+                           class="nav-link text-white">
+                            Penempatan Siswa
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="wali_kelas.php" class="nav-link text-white">Wali Kelas</a>
+                        <a href="wali_kelas.php"
+                           class="nav-link text-white">
+                            Wali Kelas
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="kategori_pelanggaran.php" class="nav-link text-white">Kategori Pelanggaran</a>
+                        <a href="kategori_pelanggaran.php"
+                           class="nav-link text-white">
+                            Kategori Pelanggaran
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="jenis_pelanggaran.php" class="nav-link text-white">Jenis Pelanggaran</a>
+                        <a href="jenis_pelanggaran.php"
+                           class="nav-link text-white">
+                            Jenis Pelanggaran
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="catat_pelanggaran.php" class="nav-link active">Catat Pelanggaran</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a href="laporan.php" class="nav-link text-white">Laporan</a>
-                    </li>
-
-                <?php } ?>
-
-                <?php if (in_array($role, ['guru', 'wali_kelas'], true)) { ?>
-
-                    <li class="nav-item">
-                        <a href="catat_pelanggaran.php" class="nav-link active">
+                        <a href="catat_pelanggaran.php"
+                           class="nav-link active">
                             Catat Pelanggaran
                         </a>
                     </li>
 
-                    <?php if ($role === 'guru') { ?>
+                    <li class="nav-item">
+                        <a href="laporan.php"
+                           class="nav-link text-white">
+                            Laporan
+                        </a>
+                    </li>
 
-                        <li class="nav-item">
-                            <a href="tindakan.php" class="nav-link text-white">Tindakan</a>
-                        </li>
-
-                    <?php } ?>
+                <?php } elseif ($mode_wali_kelas) { ?>
 
                     <li class="nav-item">
-                        <a href="riwayat.php" class="nav-link text-white">Riwayat</a>
+                        <a href="catat_pelanggaran.php"
+                           class="nav-link active">
+                            Catat Pelanggaran
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="rekap_poin.php" class="nav-link text-white">Rekap Poin</a>
+                        <a href="walikelas/data_siswa.php"
+                           class="nav-link text-white">
+                            Data Siswa
+                        </a>
                     </li>
 
-                    <?php if ($role === 'wali_kelas') { ?>
+                    <li class="nav-item">
+                        <a href="walikelas/rekap_pelanggaran.php"
+                           class="nav-link text-white">
+                            Rekap Pelanggaran
+                        </a>
+                    </li>
 
-                        <li class="nav-item">
-                            <a href="walikelas/data_siswa.php" class="nav-link text-white">Data Siswa</a>
-                        </li>
+                    <li class="nav-item">
+                        <a href="walikelas/laporan.php"
+                           class="nav-link text-white">
+                            Laporan
+                        </a>
+                    </li>
 
-                        <li class="nav-item">
-                            <a href="walikelas/rekap_pelanggaran.php" class="nav-link text-white">Rekap Pelanggaran</a>
-                        </li>
+                    <li class="nav-item">
+                        <a href="riwayat.php"
+                           class="nav-link text-white">
+                            Riwayat
+                        </a>
+                    </li>
 
-                        <li class="nav-item">
-                            <a href="walikelas/laporan.php" class="nav-link text-white">Laporan</a>
-                        </li>
+                    <li class="nav-item">
+                        <a href="rekap_poin.php"
+                           class="nav-link text-white">
+                            Rekap Poin
+                        </a>
+                    </li>
 
-                    <?php } ?>
+                <?php } elseif ($role === 'guru') { ?>
+
+                    <li class="nav-item">
+                        <a href="catat_pelanggaran.php"
+                           class="nav-link active">
+                            Catat Pelanggaran
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="tindakan.php"
+                           class="nav-link text-white">
+                            Tindakan
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="riwayat.php"
+                           class="nav-link text-white">
+                            Riwayat
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="rekap_poin.php"
+                           class="nav-link text-white">
+                            Rekap Poin
+                        </a>
+                    </li>
 
                 <?php } ?>
 
                 <hr class="text-secondary">
 
                 <li class="nav-item">
-                    <a href="about_me.php" class="nav-link text-white">About Me</a>
+                    <a href="about_me.php"
+                       class="nav-link text-white">
+                        About Me
+                    </a>
                 </li>
 
                 <li class="nav-item">
@@ -718,20 +917,28 @@ if (isset($_POST['simpan'])) {
 
         </aside>
 
-        <!-- KONTEN UTAMA -->
+
+        <!-- KONTEN -->
         <main class="col-md-9 col-lg-10 p-4 offset-md-3 offset-lg-2">
 
-            <h2 class="mb-2">Tambah Catat Pelanggaran</h2>
+            <h2 class="mb-2">
+                Tambah Catat Pelanggaran
+            </h2>
 
             <p class="text-secondary mb-4">
                 Silakan isi data pelanggaran siswa.
             </p>
 
+
             <?php if ($tahunAktif) { ?>
 
                 <div class="alert alert-info">
+
                     Tahun Ajaran Aktif:
-                    <strong><?= e($tahunAktif['nama']); ?></strong>
+                    <strong>
+                        <?= e($tahunAktif['nama']); ?>
+                    </strong>
+
                 </div>
 
             <?php } else { ?>
@@ -742,6 +949,27 @@ if (isset($_POST['simpan'])) {
 
             <?php } ?>
 
+
+            <?php if (
+                isset($_GET['pesan'])
+                && $_GET['pesan'] === 'tambah'
+            ) { ?>
+
+                <div class="alert alert-success alert-dismissible fade show">
+
+                    Data pelanggaran berhasil ditambahkan.
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert">
+                    </button>
+
+                </div>
+
+            <?php } ?>
+
+
             <?php if ($error !== '') { ?>
 
                 <div class="alert alert-danger">
@@ -750,42 +978,68 @@ if (isset($_POST['simpan'])) {
 
             <?php } ?>
 
+
             <div class="card shadow-sm">
 
                 <div class="card-header bg-primary text-white">
+
                     Form Tambah Catat Pelanggaran
+
                 </div>
 
                 <div class="card-body">
 
                     <form method="POST">
 
+                        <!-- TANGGAL -->
                         <div class="mb-3">
-                            <label class="form-label">Tanggal</label>
 
-                            <input type="date"
-                                   name="tanggal"
-                                   class="form-control"
-                                   value="<?= e($_POST['tanggal'] ?? date('Y-m-d')); ?>"
-                                   required>
+                            <label class="form-label">
+                                Tanggal
+                            </label>
+
+                            <input
+                                type="date"
+                                name="tanggal"
+                                class="form-control"
+                                value="<?= e(
+                                    $_POST['tanggal']
+                                    ?? date('Y-m-d')
+                                ); ?>"
+                                required>
+
                         </div>
 
+
+                        <!-- KELAS -->
                         <div class="mb-3">
 
-                            <label class="form-label">Nama Kelas</label>
+                            <label class="form-label">
+                                Nama Kelas
+                            </label>
 
-                            <select name="kelas_id"
-                                    id="kelas_id"
-                                    class="form-select"
-                                    required>
+                            <select
+                                name="kelas_id"
+                                id="kelas_id"
+                                class="form-select"
+                                required>
 
-                                <option value="">-- Pilih Kelas --</option>
+                                <option value="">
+                                    -- Pilih Kelas --
+                                </option>
 
-                                <?php foreach ($daftarKelas as $kelas) { ?>
+                                <?php foreach (
+                                    $daftarKelas as $kelas
+                                ) { ?>
 
                                     <option
                                         value="<?= e($kelas['id']); ?>"
-                                        <?= (($_POST['kelas_id'] ?? '') == $kelas['id']) ? 'selected' : ''; ?>>
+                                        <?= (
+                                            ($_POST['kelas_id'] ?? '')
+                                            == $kelas['id']
+                                        )
+                                            ? 'selected'
+                                            : ''; ?>>
 
                                         <?= e($kelas['nama']); ?>
 
@@ -797,26 +1051,37 @@ if (isset($_POST['simpan'])) {
 
                         </div>
 
+
+                        <!-- SISWA -->
                         <div class="mb-3">
 
-                            <label class="form-label">Nama Siswa</label>
+                            <label class="form-label">
+                                Nama Siswa
+                            </label>
 
-                            <select name="siswa_id"
-                                    id="siswa_id"
-                                    class="form-select"
-                                    required>
+                            <select
+                                name="siswa_id"
+                                id="siswa_id"
+                                class="form-select"
+                                required>
 
-                                <option value="">-- Pilih Nama Siswa --</option>
+                                <option value="">
+                                    -- Pilih Nama Siswa --
+                                </option>
 
-                                <?php foreach ($daftarSiswa as $siswa) { ?>
+                                <?php foreach (
+                                    $daftarSiswa as $siswa
+                                ) { ?>
 
                                     <option
                                         value="<?= e($siswa['id']); ?>"
-                                        data-kelas="<?= e($siswa['kelas_id']); ?>"
-                                        <?= (($_POST['siswa_id'] ?? '') == $siswa['id']) ? 'selected' : ''; ?>>
+                                        data-kelas="<?= e(
+                                            $siswa['kelas_id']
+                                        ); ?>">
 
                                         <?= e($siswa['nama']); ?>
-                                        - NIS: <?= e($siswa['nis']); ?>
+                                        - NIS:
+                                        <?= e($siswa['nis']); ?>
 
                                     </option>
 
@@ -825,118 +1090,158 @@ if (isset($_POST['simpan'])) {
                             </select>
 
                             <small class="text-secondary">
-                                Pilih kelas terlebih dahulu untuk menampilkan siswa.
+                                Pilih kelas terlebih dahulu untuk
+                                menampilkan siswa.
                             </small>
 
                         </div>
 
+
+                        <!-- NAMA PELANGGARAN -->
                         <div class="mb-3">
 
-                            <label class="form-label">Nama Pelanggaran</label>
+                            <label class="form-label">
+                                Nama Pelanggaran
+                            </label>
 
-                            <input type="text"
-                                   name="nama_pelanggaran"
-                                   class="form-control"
-                                   list="listPelanggaran"
-                                   placeholder="Ketik atau pilih pelanggaran"
-                                   value="<?= e($_POST['nama_pelanggaran'] ?? ''); ?>"
-                                   required>
+                            <select
+                                name="nama_pelanggaran"
+                                id="nama_pelanggaran"
+                                class="form-select"
+                                required>
 
-                            <datalist id="listPelanggaran">
+                                <option value="">
+                                    -- Pilih Pelanggaran --
+                                </option>
 
-                                <?php while ($pelanggaran = mysqli_fetch_assoc($daftarPelanggaran)) { ?>
+                                <?php
+                                mysqli_data_seek(
+                                    $daftarPelanggaran,
+                                    0
+                                );
+
+                                while (
+                                    $pelanggaran =
+                                    mysqli_fetch_assoc(
+                                        $daftarPelanggaran
+                                    )
+                                ) {
+                                ?>
 
                                     <option
-                                        value="<?= e($pelanggaran['nama']); ?>"
-                                        label="Poin: <?= e($pelanggaran['poin']); ?>">
+                                        value="<?= e(
+                                            $pelanggaran['nama']
+                                        ); ?>"
+                                        data-poin="<?= (int)$pelanggaran['poin']; ?>">
+
+                                        <?= e(
+                                            $pelanggaran['nama']
+                                        ); ?>
 
                                     </option>
 
                                 <?php } ?>
 
-                            </datalist>
+                            </select>
 
                         </div>
 
+
+                        <!-- POIN OTOMATIS -->
                         <div class="mb-3">
 
-                            <label class="form-label">Nama Guru</label>
+                            <label class="form-label">
+                                Poin Pelanggaran
+                            </label>
 
-                            <input type="text"
-                                   name="nama_guru"
-                                   class="form-control"
-                                   list="listGuru"
-                                   placeholder="Ketik atau pilih nama guru"
-                                   value="<?= e($_POST['nama_guru'] ?? ''); ?>"
-                                   required>
-
-                            <datalist id="listGuru">
-
-                                <?php while ($guru = mysqli_fetch_assoc($daftarGuru)) { ?>
-
-                                    <option value="<?= e($guru['nama']); ?>"></option>
-
-                                <?php } ?>
-
-                            </datalist>
+                            <input
+                                type="number"
+                                name="poin"
+                                id="poin"
+                                class="form-control"
+                                min="0"
+                                readonly
+                                required
+                                placeholder="Poin otomatis muncul">
 
                         </div>
 
+
+                        <!-- GURU -->
                         <div class="mb-3">
 
-                            <label class="form-label">Poin Pelanggaran</label>
+                            <label class="form-label">
+                                Nama Guru
+                            </label>
 
-                            <input type="number"
-                                   name="poin"
-                                   class="form-control"
-                                   min="0"
-                                   value="<?= e($_POST['poin'] ?? ''); ?>"
-                                   required>
+                            <input
+                                type="text"
+                                name="nama_guru"
+                                class="form-control"
+                                value="<?= e(
+                                    $namaGuruLogin
+                                ); ?>"
+                                readonly
+                                required>
 
                         </div>
 
+
+                        <!-- KETERANGAN -->
                         <div class="mb-3">
 
-                            <label class="form-label">Keterangan</label>
+                            <label class="form-label">
+                                Keterangan
+                            </label>
 
-                            <textarea name="keterangan"
-                                      class="form-control"
-                                      rows="3"
-                                      placeholder="Masukkan keterangan pelanggaran"
-                                      required><?= e($_POST['keterangan'] ?? ''); ?></textarea>
+                            <textarea
+                                name="keterangan"
+                                class="form-control"
+                                rows="3"
+                                placeholder="Masukkan keterangan pelanggaran"
+                                required><?= e(
+                                    $_POST['keterangan'] ?? ''
+                                ); ?></textarea>
 
                         </div>
 
+
+                        <!-- TINDAKAN -->
                         <div class="mb-3">
 
-                            <label class="form-label">Tindakan</label>
+                            <label class="form-label">
+                                Tindakan
+                            </label>
 
-                            <textarea name="tindakan"
-                                      class="form-control"
-                                      rows="3"
-                                      placeholder="Masukkan tindakan yang diberikan"
-                                      required><?= e($_POST['tindakan'] ?? ''); ?></textarea>
+                            <textarea
+                                name="tindakan"
+                                class="form-control"
+                                rows="3"
+                                placeholder="Masukkan tindakan yang diberikan"
+                                required><?= e(
+                                    $_POST['tindakan'] ?? ''
+                                ); ?></textarea>
 
                         </div>
 
+
+                        <!-- STATUS -->
                         <div class="mb-4">
 
-                            <label class="form-label">Status</label>
+                            <label class="form-label">
+                                Status
+                            </label>
 
-                            <select name="status" class="form-select" required>
+                            <select
+                                name="status"
+                                class="form-select"
+                                required>
 
-                                <option value="Belum Ditindaklanjuti"
-                                    <?= ($_POST['status'] ?? 'Belum Ditindaklanjuti') === 'Belum Ditindaklanjuti' ? 'selected' : ''; ?>>
-                                    Belum Ditindaklanjuti
-                                </option>
-
-                                <option value="Diproses"
-                                    <?= ($_POST['status'] ?? '') === 'Diproses' ? 'selected' : ''; ?>>
+                                <option value="Diproses">
                                     Diproses
                                 </option>
 
-                                <option value="Selesai"
-                                    <?= ($_POST['status'] ?? '') === 'Selesai' ? 'selected' : ''; ?>>
+                                <option value="Selesai">
                                     Selesai
                                 </option>
 
@@ -944,15 +1249,33 @@ if (isset($_POST['simpan'])) {
 
                         </div>
 
-                        <button type="submit"
-                                name="simpan"
-                                class="btn btn-primary"
-                                <?= (!$tahun_id || ($role === 'wali_kelas' && empty($daftarKelas))) ? 'disabled' : ''; ?>>
+
+                        <!-- TOMBOL -->
+                        <button
+                            type="submit"
+                            name="simpan"
+                            class="btn btn-primary"
+                            <?= (
+                                !$tahun_id
+                                ||
+                                (
+                                    $mode_wali_kelas
+                                    && empty($daftarKelas)
+                                )
+                            )
+                                ? 'disabled'
+                                : ''; ?>>
+
                             Simpan
+
                         </button>
 
-                        <a href="catat_pelanggaran.php" class="btn btn-secondary">
+                        <a
+                            href="dashboard.php"
+                            class="btn btn-secondary">
+
                             Kembali
+
                         </a>
 
                     </form>
@@ -964,62 +1287,119 @@ if (isset($_POST['simpan'])) {
         </main>
 
     </div>
+
 </div>
 
+
 <script>
+
+/* ==========================================
+   FILTER SISWA BERDASARKAN KELAS
+========================================== */
+
 document.addEventListener('DOMContentLoaded', function () {
 
-    const pilihKelas = document.getElementById('kelas_id');
-    const pilihSiswa = document.getElementById('siswa_id');
+    const pilihKelas =
+        document.getElementById('kelas_id');
 
-    const semuaSiswa = Array.from(pilihSiswa.options).slice(1);
-    const siswaTerpilihAwal = <?= json_encode((string)($_POST['siswa_id'] ?? '')); ?>;
+    const pilihSiswa =
+        document.getElementById('siswa_id');
+
+    const semuaSiswa =
+        Array.from(pilihSiswa.options).slice(1);
 
     function filterSiswa() {
 
-        const kelasDipilih = pilihKelas.value;
+        const kelasDipilih =
+            pilihKelas.value;
 
         pilihSiswa.innerHTML = '';
 
-        const placeholder = document.createElement('option');
+        const placeholder =
+            document.createElement('option');
+
         placeholder.value = '';
-        placeholder.textContent = kelasDipilih
-            ? '-- Pilih Nama Siswa --'
-            : '-- Pilih Kelas Terlebih Dahulu --';
+
+        placeholder.textContent =
+            kelasDipilih
+                ? '-- Pilih Nama Siswa --'
+                : '-- Pilih Kelas Terlebih Dahulu --';
 
         pilihSiswa.appendChild(placeholder);
 
         semuaSiswa.forEach(function (option) {
 
             if (
-                option.dataset.kelas === kelasDipilih &&
+                option.dataset.kelas === kelasDipilih
+                &&
                 kelasDipilih !== ''
             ) {
-                pilihSiswa.appendChild(option.cloneNode(true));
+
+                pilihSiswa.appendChild(
+                    option.cloneNode(true)
+                );
+
             }
 
         });
-
-        if (
-            siswaTerpilihAwal &&
-            pilihSiswa.querySelector(
-                'option[value="' + CSS.escape(siswaTerpilihAwal) + '"]'
-            )
-        ) {
-            pilihSiswa.value = siswaTerpilihAwal;
-        }
     }
 
-    pilihKelas.addEventListener('change', function () {
-        filterSiswa();
-    });
+    pilihKelas.addEventListener(
+        'change',
+        filterSiswa
+    );
 
     filterSiswa();
 
+
+    /* ==========================================
+       POIN OTOMATIS
+    ========================================== */
+
+    const pilihPelanggaran =
+        document.getElementById(
+            'nama_pelanggaran'
+        );
+
+    const inputPoin =
+        document.getElementById(
+            'poin'
+        );
+
+    pilihPelanggaran.addEventListener(
+        'change',
+        function () {
+
+            const selectedOption =
+                this.options[this.selectedIndex];
+
+            if (
+                this.value !== ''
+                &&
+                selectedOption
+            ) {
+
+                inputPoin.value =
+                    selectedOption.dataset.poin || '';
+
+            } else {
+
+                inputPoin.value = '';
+
+            }
+
+        }
+    );
+
 });
+
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js">
+</script>
 
 </body>
+
 </html>

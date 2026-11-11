@@ -33,12 +33,16 @@ if (isset($_POST['simpan'])) {
     $alamat = trim($_POST['alamat'] ?? '');
     $status_aktif = $_POST['status_aktif'] ?? '1';
 
-    if (
-        $nis == "" || $nisn == "" || $nama == "" ||
-        $jenis_kelamin == "" || $tanggal_lahir == "" || $alamat == ""
-    ) {
-        $error = "Semua data wajib diisi.";
-    } elseif (!in_array($jenis_kelamin, ['L', 'P'], true)) {
+ if (
+    $nis == "" || $nisn == "" || $nama == "" ||
+    $jenis_kelamin == "" || $tanggal_lahir == "" || $alamat == ""
+) {
+    $error = "Semua data wajib diisi.";
+} elseif (!ctype_digit($nis) || strlen($nis) > 10) {
+    $error = "NIS harus berupa angka dan maksimal 10 digit.";
+} elseif (!ctype_digit($nisn) || strlen($nisn) > 8) {
+    $error = "NISN harus berupa angka dan maksimal 8 digit.";
+} elseif (!in_array($jenis_kelamin, ['L', 'P'], true)) {
         $error = "Jenis kelamin tidak valid.";
     } elseif (!in_array($status_aktif, ['0', '1'], true)) {
         $error = "Status aktif tidak valid.";
@@ -221,13 +225,14 @@ if (isset($_POST['simpan'])) {
                             <label for="nis" class="form-label">
                                 NIS
                             </label>
-
                             <input
                                 type="text"
                                 name="nis"
                                 id="nis"
                                 class="form-control"
                                 value="<?= htmlspecialchars($nis); ?>"
+                                maxlength="10"
+                                inputmode="numeric"
                                 required>
                         </div>
 
@@ -237,12 +242,14 @@ if (isset($_POST['simpan'])) {
                                 NISN
                             </label>
 
-                            <input
+                        <input
                                 type="text"
                                 name="nisn"
                                 id="nisn"
                                 class="form-control"
                                 value="<?= htmlspecialchars($nisn); ?>"
+                                maxlength="8"
+                                inputmode="numeric"
                                 required>
                         </div>
 
@@ -366,6 +373,19 @@ if (isset($_POST['simpan'])) {
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
+<script>
+document.getElementById('nis').addEventListener('input', function () {
+    this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
+});
+
+document.getElementById('nisn').addEventListener('input', function () {
+    this.value = this.value.replace(/[^0-9]/g, '').slice(0, 8);
+});
+</script>
+
+</body>
+</html>
 </body>
 </html>

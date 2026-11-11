@@ -72,16 +72,19 @@ if (!$tahun_ajaran || !$kelas || !$guru) {
 /* PROSES UPDATE */
 if (isset($_POST['simpan'])) {
 
-    $tahun_ajaran_id = $_POST['tahun_ajaran_id'] ?? '';
-    $kelas_id = $_POST['kelas_id'] ?? '';
-    $guru_id = $_POST['guru_id'] ?? '';
+    $tahun_ajaran_id = (int) ($_POST['tahun_ajaran_id'] ?? 0);
+    $kelas_id = (int) ($_POST['kelas_id'] ?? 0);
+    $guru_id = (int) ($_POST['guru_id'] ?? 0);
     $tanggal_mulai = $_POST['tanggal_mulai'] ?? '';
     $tanggal_selesai = $_POST['tanggal_selesai'] ?? '';
-    $status_aktif = $_POST['status_aktif'] ?? '1';
+    $status_aktif = (int) ($_POST['status_aktif'] ?? 1);
 
     if (
-        $tahun_ajaran_id == '' || $kelas_id == '' || $guru_id == '' ||
-        $tanggal_mulai == '' || $tanggal_selesai == ''
+        $tahun_ajaran_id <= 0 ||
+        $kelas_id <= 0 ||
+        $guru_id <= 0 ||
+        $tanggal_mulai == '' ||
+        $tanggal_selesai == ''
     ) {
 
         $error = "Semua data wajib diisi.";
@@ -92,58 +95,91 @@ if (isset($_POST['simpan'])) {
 
     } else {
 
-        $query = "UPDATE t_wali_kelas SET
-                  tahun_ajaran_id = ?,
-                  kelas_id = ?,
-                  guru_id = ?,
-                  tanggal_mulai = ?,
-                  tanggal_selesai = ?,
-                  status_aktif = ?,
-                  update_at = NOW()
-                  WHERE id = ?";
+        /*
+         * CEK APAKAH KELAS SUDAH MEMPUNYAI WALI KELAS AKTIF
+         * KECUALI DATA YANG SEDANG DIEDIT
+         */
+        $cek = mysqli_prepare(
+            $koneksi,
+            "SELECT id
+             FROM t_wali_kelas
+             WHERE kelas_id = ?
+             AND tahun_ajaran_id = ?
+             AND status_aktif = 1
+             AND id != ?"
+        );
 
-        $stmt = mysqli_prepare($koneksi, $query);
+        mysqli_stmt_bind_param(
+            $cek,
+            "iii",
+            $kelas_id,
+            $tahun_ajaran_id,
+            $id
+        );
 
-        if ($stmt) {
+        mysqli_stmt_execute($cek);
 
-            $ta_id = (int)$tahun_ajaran_id;
-            $k_id = (int)$kelas_id;
-            $g_id = (int)$guru_id;
-            $status = (int)$status_aktif;
+        $hasil_cek = mysqli_stmt_get_result($cek);
 
-            mysqli_stmt_bind_param(
-                $stmt,
-                "iiissii",
-                $ta_id,
-                $k_id,
-                $g_id,
-                $tanggal_mulai,
-                $tanggal_selesai,
-                $status,
-                $id
-            );
+        if (mysqli_num_rows($hasil_cek) > 0) {
 
-            if (mysqli_stmt_execute($stmt)) {
+            $error = "Kelas tersebut sudah mempunyai wali kelas aktif.";
 
-                mysqli_stmt_close($stmt);
-
-                $_SESSION['notifikasi'] = [
-                    'tipe' => 'success',
-                    'pesan' => 'Data wali kelas berhasil diperbarui!'
-                ];
-
-                header("Location: wali_kelas.php");
-                exit;
-
-            } else {
-
-                $error = "Gagal mengubah data wali kelas.";
-                mysqli_stmt_close($stmt);
-            }
+            mysqli_stmt_close($cek);
 
         } else {
 
-            $error = "Query gagal diproses.";
+            mysqli_stmt_close($cek);
+
+            /* UPDATE DATA */
+            $query = "UPDATE t_wali_kelas SET
+                      tahun_ajaran_id = ?,
+                      kelas_id = ?,
+                      guru_id = ?,
+                      tanggal_mulai = ?,
+                      tanggal_selesai = ?,
+                      status_aktif = ?,
+                      update_at = NOW()
+                      WHERE id = ?";
+
+            $stmt = mysqli_prepare($koneksi, $query);
+
+            if ($stmt) {
+
+                mysqli_stmt_bind_param(
+                    $stmt,
+                    "iiissii",
+                    $tahun_ajaran_id,
+                    $kelas_id,
+                    $guru_id,
+                    $tanggal_mulai,
+                    $tanggal_selesai,
+                    $status_aktif,
+                    $id
+                );
+
+                if (mysqli_stmt_execute($stmt)) {
+
+                    mysqli_stmt_close($stmt);
+
+                    $_SESSION['notifikasi'] = [
+                        'tipe' => 'success',
+                        'pesan' => 'Data wali kelas berhasil diperbarui!'
+                    ];
+
+                    header("Location: wali_kelas.php");
+                    exit;
+
+                } else {
+
+                    $error = "Gagal mengubah data wali kelas.";
+                    mysqli_stmt_close($stmt);
+                }
+
+            } else {
+
+                $error = "Query gagal diproses.";
+            }
         }
     }
 }

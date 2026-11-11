@@ -1,21 +1,24 @@
-
 <?php
 session_start();
 
+// ==========================================
+// CEK LOGIN
+// ==========================================
 if (!isset($_SESSION['login']) || $_SESSION['login'] !== true) {
-    header("Location: ../login.php");
+    header("Location: login.php");
     exit;
 }
 
-include "../config/koneksi.php";
+include "config/koneksi.php";
 
 // ==========================================
 // CEK ROLE
-// HALAMAN KHUSUS WALI KELAS
+// ADMIN DAN WALI KELAS SAJA
 // ==========================================
 $role = strtolower(trim($_SESSION['role'] ?? ''));
+$role = str_replace([' ', '-'], '_', $role);
 
-if ($role !== 'wali_kelas') {
+if (!in_array($role, ['admin', 'wali_kelas'], true)) {
     exit("Anda tidak memiliki akses ke halaman ini.");
 }
 
@@ -28,75 +31,83 @@ $user_id = (int) (
     ?? 0
 );
 
-if ($user_id <= 0) {
-    exit("ID user tidak ditemukan. Silakan login kembali.");
-}
+$nama_pengguna = $_SESSION['nama'] ?? $_SESSION['username'] ?? 'Pengguna';
 
 // ==========================================
-// AMBIL NAMA WALI KELAS
+// AMBIL NAMA DAN KELAS WALI KELAS
 // ==========================================
-$nama_wali = $_SESSION['nama'] ?? 'Wali Kelas';
+$daftar_kelas = [];
 
-$stmtNama = mysqli_prepare($koneksi, "
-    SELECT nama
-    FROM t_guru
-    WHERE user_id = ?
-    LIMIT 1
-");
+if ($role === 'wali_kelas') {
 
-if ($stmtNama) {
+    if ($user_id <= 0) {
+        exit("ID user tidak ditemukan. Silakan login kembali.");
+    }
+
+    // Ambil nama guru
+    $stmtNama = mysqli_prepare($koneksi, "
+        SELECT nama
+        FROM t_guru
+        WHERE user_id = ?
+        LIMIT 1
+    ");
+
     mysqli_stmt_bind_param($stmtNama, "i", $user_id);
     mysqli_stmt_execute($stmtNama);
 
     $hasilNama = mysqli_stmt_get_result($stmtNama);
 
     if ($dataNama = mysqli_fetch_assoc($hasilNama)) {
-        $nama_wali = $dataNama['nama'];
+        $nama_pengguna = $dataNama['nama'];
     }
 
     mysqli_stmt_close($stmtNama);
+
+    // Ambil kelas tanggung jawab wali kelas
+    $queryKelas = "
+        SELECT DISTINCT
+            k.id,
+            k.nama
+        FROM t_wali_kelas wk
+        INNER JOIN t_guru g
+            ON g.id = wk.guru_id
+        INNER JOIN t_kelas k
+            ON k.id = wk.kelas_id
+        WHERE g.user_id = ?
+          AND wk.status_aktif = 1
+        ORDER BY k.nama ASC
+    ";
+
+    $stmtKelas = mysqli_prepare($koneksi, $queryKelas);
+
+    mysqli_stmt_bind_param($stmtKelas, "i", $user_id);
+    mysqli_stmt_execute($stmtKelas);
+
+    $resultKelas = mysqli_stmt_get_result($stmtKelas);
+
+    while ($kelas = mysqli_fetch_assoc($resultKelas)) {
+        $daftar_kelas[] = $kelas;
+    }
+
+    mysqli_stmt_close($stmtKelas);
+
+} else {
+
+    // ==========================================
+    // ADMIN: AMBIL SEMUA KELAS
+    // ==========================================
+    $queryKelas = "
+        SELECT id, nama
+        FROM t_kelas
+        ORDER BY nama ASC
+    ";
+
+    $resultKelas = mysqli_query($koneksi, $queryKelas);
+
+    while ($kelas = mysqli_fetch_assoc($resultKelas)) {
+        $daftar_kelas[] = $kelas;
+    }
 }
-
-// ==========================================
-// AMBIL KELAS TANGGUNG JAWAB WALI KELAS
-// ==========================================
-$queryKelas = "
-    SELECT DISTINCT
-        k.id,
-        k.nama
-
-    FROM t_wali_kelas wk
-
-    INNER JOIN t_guru g
-        ON g.id = wk.guru_id
-
-    INNER JOIN t_kelas k
-        ON k.id = wk.kelas_id
-
-    WHERE g.user_id = ?
-      AND wk.status_aktif = 1
-
-    ORDER BY k.nama ASC
-";
-
-$stmtKelas = mysqli_prepare($koneksi, $queryKelas);
-
-if (!$stmtKelas) {
-    die("Gagal mengambil kelas: " . mysqli_error($koneksi));
-}
-
-mysqli_stmt_bind_param($stmtKelas, "i", $user_id);
-mysqli_stmt_execute($stmtKelas);
-
-$resultKelas = mysqli_stmt_get_result($stmtKelas);
-
-$daftar_kelas = [];
-
-while ($kelas = mysqli_fetch_assoc($resultKelas)) {
-    $daftar_kelas[] = $kelas;
-}
-
-mysqli_stmt_close($stmtKelas);
 
 // ==========================================
 // FILTER LAPORAN
@@ -111,11 +122,17 @@ $tanggal_awal = trim($_GET['tanggal_awal'] ?? '');
 $tanggal_akhir = trim($_GET['tanggal_akhir'] ?? '');
 
 // ==========================================
-// VALIDASI KELAS YANG DIPILIH
+// VALIDASI KELAS
 // ==========================================
-$id_kelas_valid = array_column($daftar_kelas, 'id');
+$id_kelas_valid = array_map(
+    'intval',
+    array_column($daftar_kelas, 'id')
+);
 
-if ($filter_kelas > 0 && !in_array($filter_kelas, $id_kelas_valid)) {
+if (
+    $filter_kelas > 0 &&
+    !in_array($filter_kelas, $id_kelas_valid, true)
+) {
     $filter_kelas = 0;
 }
 
@@ -152,8 +169,7 @@ if (
 }
 
 // ==========================================
-// QUERY LAPORAN WALI KELAS
-// HANYA KELAS TANGGUNG JAWAB
+// QUERY DASAR LAPORAN
 // ==========================================
 $query = "
     SELECT
@@ -199,28 +215,44 @@ $query = "
     LEFT JOIN t_pelanggaran p
         ON p.id = ps.pelanggaran_id
 
-    WHERE EXISTS (
-        SELECT 1
-        FROM t_wali_kelas wk
-
-        INNER JOIN t_guru g
-            ON g.id = wk.guru_id
-
-        WHERE g.user_id = ?
-          AND wk.kelas_id = ps.kelas_id
-          AND wk.tahun_ajaran_id = ps.tahun_ajaran_id
-          AND wk.status_aktif = 1
-    )
+    WHERE 1=1
 ";
 
-$types = "i";
-$params = [$user_id];
+// ==========================================
+// PEMBATASAN KHUSUS WALI KELAS
+// ADMIN MELIHAT SEMUA DATA
+// ==========================================
+$types = "";
+$params = [];
+
+if ($role === 'wali_kelas') {
+
+    $query .= "
+        AND EXISTS (
+            SELECT 1
+            FROM t_wali_kelas wk
+
+            INNER JOIN t_guru g
+                ON g.id = wk.guru_id
+
+            WHERE g.user_id = ?
+              AND wk.kelas_id = ps.kelas_id
+              AND wk.tahun_ajaran_id = ps.tahun_ajaran_id
+              AND wk.status_aktif = 1
+        )
+    ";
+
+    $types .= "i";
+    $params[] = $user_id;
+}
 
 // ==========================================
 // FILTER KELAS
 // ==========================================
 if ($filter_kelas > 0) {
+
     $query .= " AND ps.kelas_id = ? ";
+
     $types .= "i";
     $params[] = $filter_kelas;
 }
@@ -229,7 +261,9 @@ if ($filter_kelas > 0) {
 // FILTER STATUS
 // ==========================================
 if ($filter_status !== '') {
+
     $query .= " AND LOWER(TRIM(ps.status)) = LOWER(?) ";
+
     $types .= "s";
     $params[] = $filter_status;
 }
@@ -238,7 +272,9 @@ if ($filter_status !== '') {
 // FILTER TANGGAL AWAL
 // ==========================================
 if ($tanggal_awal !== '') {
+
     $query .= " AND ps.tanggal >= ? ";
+
     $types .= "s";
     $params[] = $tanggal_awal;
 }
@@ -247,7 +283,9 @@ if ($tanggal_awal !== '') {
 // FILTER TANGGAL AKHIR
 // ==========================================
 if ($tanggal_akhir !== '') {
+
     $query .= " AND ps.tanggal <= ? ";
+
     $types .= "s";
     $params[] = $tanggal_akhir;
 }
@@ -265,7 +303,10 @@ if (!$stmt) {
     die("Gagal menyiapkan laporan: " . mysqli_error($koneksi));
 }
 
-mysqli_stmt_bind_param($stmt, $types, ...$params);
+if (!empty($params)) {
+    mysqli_stmt_bind_param($stmt, $types, ...$params);
+}
+
 mysqli_stmt_execute($stmt);
 
 $result = mysqli_stmt_get_result($stmt);
@@ -297,14 +338,21 @@ while ($row = mysqli_fetch_assoc($result)) {
     }
 }
 
+mysqli_stmt_close($stmt);
+
 // ==========================================
 // NAMA KELAS TERPILIH
 // ==========================================
-$nama_kelas_terpilih = "Semua Kelas Tanggung Jawab";
+$nama_kelas_terpilih = $role === 'admin'
+    ? 'Semua Kelas'
+    : 'Semua Kelas Tanggung Jawab';
 
 foreach ($daftar_kelas as $kelas) {
-    if ((int)$kelas['id'] === $filter_kelas) {
+
+    if ((int) $kelas['id'] === $filter_kelas) {
+
         $nama_kelas_terpilih = $kelas['nama'];
+
         break;
     }
 }
@@ -313,14 +361,21 @@ foreach ($daftar_kelas as $kelas) {
 // PERIODE LAPORAN
 // ==========================================
 if ($tanggal_awal !== '' && $tanggal_akhir !== '') {
+
     $periode = date('d-m-Y', strtotime($tanggal_awal))
         . " sampai "
         . date('d-m-Y', strtotime($tanggal_akhir));
+
 } elseif ($tanggal_awal !== '') {
+
     $periode = "Mulai " . date('d-m-Y', strtotime($tanggal_awal));
+
 } elseif ($tanggal_akhir !== '') {
+
     $periode = "Sampai " . date('d-m-Y', strtotime($tanggal_akhir));
+
 } else {
+
     $periode = "Semua tanggal";
 }
 ?>
@@ -401,16 +456,40 @@ if ($tanggal_awal !== '' && $tanggal_akhir !== '') {
 
             <nav class="nav nav-pills flex-column gap-2">
 
-                <a href="../dashboard.php" class="nav-link text-white">
+                <a href="dashboard.php" class="nav-link text-white">
                     Dashboard
                 </a>
 
-                <a href="data_siswa.php" class="nav-link text-white">
-                    Data Siswa
+                <a href="siswa.php" class="nav-link text-white">
+                    Kelola Siswa
                 </a>
 
-                <a href="rekap_pelanggaran.php" class="nav-link text-white">
-                    Rekap Pelanggaran
+                <a href="guru.php" class="nav-link text-white">
+                    Kelola Guru
+                </a>
+
+                <a href="kelas.php" class="nav-link text-white">
+                    Kelola Kelas
+                </a>
+
+                <a href="tahun_ajaran.php" class="nav-link text-white">
+                    Tahun Ajaran
+                </a>
+
+                <a href="penempatan_siswa.php" class="nav-link text-white">
+                    Penempatan Siswa
+                </a>
+
+                <a href="wali_kelas.php" class="nav-link text-white">
+                    Wali Kelas
+                </a>
+
+                <a href="kategori_pelanggaran.php" class="nav-link text-white">
+                    Kategori Pelanggaran
+                </a>
+
+                <a href="jenis_pelanggaran.php" class="nav-link text-white">
+                    Jenis Pelanggaran
                 </a>
 
                 <a href="laporan.php" class="nav-link active">
@@ -419,11 +498,11 @@ if ($tanggal_awal !== '' && $tanggal_akhir !== '') {
 
                 <hr class="text-secondary">
 
-                <a href="../about_me.php" class="nav-link text-white">
+                <a href="about_me.php" class="nav-link text-white">
                     About Me
                 </a>
 
-                <a href="../logout.php"
+                <a href="logout.php"
                    class="nav-link text-danger"
                    onclick="return confirm('Yakin ingin logout?')">
                     Logout
@@ -446,7 +525,11 @@ if ($tanggal_awal !== '' && $tanggal_akhir !== '') {
 
                     <p class="text-muted mb-0">
                         Selamat datang,
-                        <strong><?= htmlspecialchars($nama_wali); ?></strong>
+                        <strong><?= htmlspecialchars($nama_pengguna); ?></strong>
+
+                        <span class="badge bg-primary ms-1">
+                            <?= $role === 'admin' ? 'Admin' : 'Wali Kelas'; ?>
+                        </span>
                     </p>
                 </div>
 
@@ -466,27 +549,38 @@ if ($tanggal_awal !== '' && $tanggal_akhir !== '') {
 
             </div>
 
-            <!-- KELAS TANGGUNG JAWAB -->
+            <!-- KELAS -->
             <div class="card border-0 shadow-sm mb-4">
 
                 <div class="card-body">
 
                     <small class="text-muted">
-                        Kelas Tanggung Jawab
+                        <?= $role === 'admin' ? 'Seluruh Kelas' : 'Kelas Tanggung Jawab'; ?>
                     </small>
 
                     <h5 class="fw-bold mb-0">
+
                         <?php
-                        if (count($daftar_kelas) > 0) {
+                        if ($role === 'admin') {
+
+                            echo $filter_kelas > 0
+                                ? htmlspecialchars($nama_kelas_terpilih)
+                                : 'Semua Kelas';
+
+                        } elseif (count($daftar_kelas) > 0) {
+
                             echo htmlspecialchars(
                                 $filter_kelas > 0
                                     ? $nama_kelas_terpilih
                                     : implode(', ', array_column($daftar_kelas, 'nama'))
                             );
+
                         } else {
+
                             echo "Belum ada kelas yang ditugaskan";
                         }
                         ?>
+
                     </h5>
 
                 </div>
@@ -581,7 +675,7 @@ if ($tanggal_awal !== '' && $tanggal_akhir !== '') {
                                         class="form-select">
 
                                     <option value="0">
-                                        Semua Kelas Tanggung Jawab
+                                        <?= $role === 'admin' ? 'Semua Kelas' : 'Semua Kelas Tanggung Jawab'; ?>
                                     </option>
 
                                     <?php foreach ($daftar_kelas as $kelas): ?>
@@ -690,12 +784,15 @@ if ($tanggal_awal !== '' && $tanggal_akhir !== '') {
 
                     <div class="mb-3">
                         <small class="text-muted">
+
                             Kelas:
                             <strong><?= htmlspecialchars($nama_kelas_terpilih); ?></strong>
+
                             <br>
 
                             Periode:
                             <strong><?= htmlspecialchars($periode); ?></strong>
+
                         </small>
                     </div>
 
@@ -773,10 +870,15 @@ if ($tanggal_awal !== '' && $tanggal_akhir !== '') {
                                                 $status = strtolower(trim($row['status'] ?? ''));
 
                                                 if ($status === 'selesai') {
+
                                                     echo '<span class="badge bg-success">Selesai</span>';
+
                                                 } elseif ($status === 'diproses') {
+
                                                     echo '<span class="badge bg-warning text-dark">Diproses</span>';
+
                                                 } else {
+
                                                     echo '<span class="badge bg-secondary">'
                                                         . htmlspecialchars($row['status'] ?? '-')
                                                         . '</span>';

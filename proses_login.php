@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 include "config/koneksi.php";
@@ -67,7 +66,8 @@ if (!$password_valid) {
 // ==========================================
 $role = strtolower(trim($user['role'] ?? ''));
 
-if (!in_array($role, ['admin', 'guru', 'wali_kelas'], true)) {
+// HANYA ADMIN DAN GURU
+if (!in_array($role, ['admin', 'guru'], true)) {
     $_SESSION['error'] = "Role akun tidak memiliki akses.";
     header("Location: login.php");
     exit;
@@ -80,8 +80,8 @@ $guru_id = 0;
 $is_wali_kelas = false;
 $nama_login = $user['nama'] ?? '';
 
-// Admin tidak diubah meskipun menjadi wali kelas
-if (in_array($role, ['guru', 'wali_kelas'], true)) {
+// Hanya akun GURU yang dicek ke t_guru
+if ($role === 'guru') {
 
     $sql_guru = "
         SELECT id, nama
@@ -144,13 +144,10 @@ if (in_array($role, ['guru', 'wali_kelas'], true)) {
 
     mysqli_stmt_close($stmt_wali);
 
+    // Guru tetap role guru.
+    // Jika memiliki penugasan wali kelas aktif,
+    // maka is_wali_kelas menjadi true.
     $is_wali_kelas = ($wali !== null);
-
-    if ($role === 'wali_kelas' && !$is_wali_kelas) {
-        $_SESSION['error'] = "Penugasan Wali Kelas belum aktif.";
-        header("Location: login.php");
-        exit;
-    }
 }
 
 // ==========================================
@@ -166,6 +163,7 @@ if ($info_hash['algo'] === null) {
     );
 
     if ($update) {
+
         mysqli_stmt_bind_param(
             $update,
             "si",

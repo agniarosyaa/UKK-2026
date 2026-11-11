@@ -17,8 +17,8 @@ include "config/koneksi.php";
 $notifikasi = $_SESSION['notifikasi'] ?? null;
 unset($_SESSION['notifikasi']);
 
-/* AMBIL DATA TAHUN AJARAN */
-$query = "SELECT * FROM t_tahun_ajaran ORDER BY id ASC";
+/* AMBIL DATA TAHUN AJARAN AKTIF SAJA */
+$query = "SELECT * FROM t_tahun_ajaran WHERE status_aktif = 1 ORDER BY id ASC";
 $result = mysqli_query($koneksi, $query);
 
 if (!$result) {
